@@ -1,0 +1,89 @@
+@extends('layouts.crud')
+
+@section('content')
+<div class="max-w-3xl mx-auto bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-semibold text-stone-800">Editar Usuario</h2>
+    </div>
+
+    @if ($errors->any())
+        <div class="mb-4 p-4 bg-rose-100 text-rose-800 rounded">
+            <ul class="list-disc pl-5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form action="{{ route('usuarios.actualizar', $usuario->ciUsuario) }}" method="POST" class="space-y-4">
+        @csrf
+        @method('PUT')
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="ciUsuario" class="block text-sm font-medium text-stone-700">CI del Usuario</label>
+                <input type="text" name="ciUsuario" id="ciUsuario" value="{{ old('ciUsuario', $usuario->ciUsuario) }}"
+                       class="mt-1 block w-full border border-stone-300 rounded-lg px-3 py-2 bg-gray-100" readonly>
+            </div>
+
+            <div>
+                <label for="usuario" class="block text-sm font-medium text-stone-700">Usuario</label>
+                <input type="text" name="usuario" id="usuario" value="{{ old('usuario', $usuario->usuario) }}"
+                       class="mt-1 block w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200">
+            </div>
+
+            <div>
+                <label for="nombre" class="block text-sm font-medium text-stone-700">Nombre</label>
+                <input type="text" name="nombre" id="nombre" value="{{ old('nombre', $usuario->nombre) }}"
+                       class="mt-1 block w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200">
+            </div>
+
+            <div>
+                <label for="apellido" class="block text-sm font-medium text-stone-700">Apellido</label>
+                <input type="text" name="apellido" id="apellido" value="{{ old('apellido', $usuario->apellido) }}"
+                       class="mt-1 block w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200">
+            </div>
+
+            <div>
+                <label for="correo" class="block text-sm font-medium text-stone-700">Correo Electrónico</label>
+                <input type="email" name="correo" id="correo" value="{{ old('correo', $usuario->correo) }}"
+                       class="mt-1 block w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200">
+            </div>
+
+            <div>
+                <label for="telefono" class="block text-sm font-medium text-stone-700">Teléfono</label>
+                <input type="text" name="telefono" id="telefono" value="{{ old('telefono', $usuario->telefono) }}"
+                       class="mt-1 block w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200">
+            </div>
+
+            <div>
+                <label for="contrasena" class="block text-sm font-medium text-stone-700">Nueva Contraseña</label>
+                <input type="password" name="contrasena" id="contrasena"
+                       class="mt-1 block w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                       placeholder="Dejar en blanco para mantener la actual">
+            </div>
+
+            <div>
+                <label for="rolId" class="block text-sm font-medium text-stone-700">Rol</label>
+                <select name="rolId" id="rolId"
+                        class="mt-1 block w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200">
+                    <option value="">-- Seleccione un rol --</option>
+                    @foreach($roles as $rol)
+                        <option value="{{ $rol->idRol }}" {{ old('rolId', $usuario->rolId) == $rol->idRol ? 'selected' : '' }}>
+                            {{ $rol->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+            <button type="submit"
+                    class="px-6 py-2 bg-amber-400 hover:bg-amber-300 text-white font-semibold rounded-lg shadow">
+                Actualizar Usuario
+            </button>
+        </div>
+    </form>
+</div>
+@endsection

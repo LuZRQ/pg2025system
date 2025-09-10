@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+
+// Página pública
+Route::get('/', [PublicController::class, 'index'])->name('home');
+
+// Autenticación (login y logout)
+Route::get('/ingresar', [AuthenticatedSessionController::class, 'create'])->name('login');
+Route::post('/ingresar', [AuthenticatedSessionController::class, 'store']);
+Route::post('/salir', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+// Registro
+Route::get('/registro', [RegisteredUserController::class, 'create'])->name('register');
+Route::post('/registro', [RegisteredUserController::class, 'store']);
+
+
+
+
+
+// Rutas de admin separadas
+require __DIR__.'/admin.php';

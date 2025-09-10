@@ -1,0 +1,19 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Reporte extends Model
+{
+   protected $table = 'Reporte';
+    protected $primaryKey = 'idReporte';
+
+    protected $fillable = [
+        'tipo',
+        'periodo',
+        'generadoPor',
+        'fechaGeneracion',
+        'archivo'
+    ];
+}
