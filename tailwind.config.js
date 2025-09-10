@@ -8,7 +8,14 @@ export default {
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
     ],
-
+    safelist: [
+        'bg-purple-500',
+        'bg-green-500',
+        'bg-red-500',
+        'bg-gray-100',
+        'text-white',
+        'text-gray-800'
+    ],
     theme: {
         extend: {
             fontFamily: {
