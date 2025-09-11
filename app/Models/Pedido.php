@@ -8,6 +8,7 @@ class Pedido extends Model
 {
     protected $table = 'Pedido';
     protected $primaryKey = 'idPedido';
+    public $timestamps = false; // porque usas fechaCreacion
 
     protected $fillable = [
         'ciUsuario',
@@ -27,7 +28,8 @@ class Pedido extends Model
         return $this->hasOne(Venta::class, 'idPedido', 'idPedido');
     }
 
-    public function detallePedidos()
+    // 👇 renómbralo a "detalles" para usarlo más natural
+    public function detalles()
     {
         return $this->hasMany(DetallePedido::class, 'idPedido', 'idPedido');
     }

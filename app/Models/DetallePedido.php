@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class DetallePedido extends Model
 {
+    
     protected $table = 'DetallePedido';
     protected $primaryKey = 'idDetallePedido';
+    public $timestamps = false;
 
     protected $fillable = [
         'idPedido',
@@ -16,10 +18,11 @@ class DetallePedido extends Model
         'subtotal'
     ];
 
-    public function pedido()
-    {
-        return $this->belongsTo(Pedido::class, 'idPedido', 'idPedido');
-    }
+   public function detallePedidos()
+{
+    return $this->hasMany(DetallePedido::class, 'idPedido', 'idPedido');
+}
+
 
     public function producto()
     {

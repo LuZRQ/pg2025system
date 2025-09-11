@@ -45,10 +45,10 @@
             <!-- Menú -->
 
 
-            <a href="#" class="block py-2 hover:text-amber-300">Gestión de Ventas</a>
+            <a href="{{ route('ventas.index') }}" class="block py-2 hover:text-amber-300">Gestión de Ventas</a>
             <a href="{{ route('productos.index') }}" class="block py-2 hover:text-amber-300">Gestión de Productos</a>
             <a href="{{ route('stock.index') }}" class="block py-2 hover:text-amber-300">Control de Stock</a>
-            <a href="#" class="block py-2 hover:text-amber-300">Pedidos de Cocina</a>
+            <a href="{{ route('pedidos.index') }}" class="block py-2 hover:text-amber-300">Pedidos de Cocina</a>
             <a href="#" class="block py-2 hover:text-amber-300">Gestión de Reportes</a>
 
             <a href="#" class="block py-2 hover:text-amber-300">Gestión de Auditoría</a>

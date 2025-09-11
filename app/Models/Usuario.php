@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * @property string $ciUsuario
+ * @property string $nombre
+ * @property string $apellido
+ * @property string $correo
+ * @property string $telefono
+ */
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
