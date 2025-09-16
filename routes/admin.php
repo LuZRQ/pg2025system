@@ -63,9 +63,9 @@ Route::prefix('ventas')->name('ventas.')->group(function () {
 // Rutas para cocina
 // Ver pedidos de cocina (index)
 Route::get('/cocina/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
+
 Route::post('/ventas/enviarACocina', [VentaController::class, 'enviarACocina'])
-    ->name('ventas.enviarACocina')
-    ->middleware('auth');
+    ->name('ventas.enviarACocina');
 
 // Cambiar estado de un pedido
 Route::post('/cocina/pedidos/{pedido}/estado', [PedidoController::class, 'cambiarEstado'])->name('pedidos.cambiarEstado');

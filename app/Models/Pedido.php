@@ -12,7 +12,8 @@ class Pedido extends Model
 
     protected $fillable = [
         'ciUsuario',
-        'direccion',
+        'mesa',        
+        'comentarios',
         'estado',
         'total',
         'fechaCreacion'
