@@ -8,14 +8,34 @@
         <div class="flex justify-center mb-6 border-b pb-4">
             <h1 class="font-bold text-2xl text-amber-900">👨‍🍳 Módulo de Pedidos de Cocina</h1>
         </div>
+@auth
+    <p>Usuario logueado: {{ Auth::user()->nombre }} (CI: {{ Auth::user()->ciUsuario }})</p>
+@endauth
+
+@guest
+    <p>No hay usuario logueado 🚨</p>
+@endguest
 
         {{-- Filtros --}}
         <div class="flex space-x-3 mb-8 justify-center">
-            <button class="px-4 py-2 rounded-lg bg-amber-700 text-white shadow hover:bg-amber-800">Todos</button>
-            <button class="px-4 py-2 rounded-lg bg-gray-100 text-amber-800 hover:bg-amber-200">Pendientes</button>
-            <button class="px-4 py-2 rounded-lg bg-gray-100 text-amber-800 hover:bg-amber-200">En preparación</button>
-            <button class="px-4 py-2 rounded-lg bg-gray-100 text-amber-800 hover:bg-amber-200">Completado</button>
+            <a href="{{ route('pedidos.index') }}"
+                class="px-4 py-2 rounded-lg {{ request('estado') ? 'bg-gray-100 text-amber-800 hover:bg-amber-200' : 'bg-amber-700 text-white shadow hover:bg-amber-800' }}">
+                Todos
+            </a>
+            <a href="{{ route('pedidos.index', ['estado' => 'pendiente']) }}"
+                class="px-4 py-2 rounded-lg {{ request('estado') == 'pendiente' ? 'bg-amber-700 text-white shadow hover:bg-amber-800' : 'bg-gray-100 text-amber-800 hover:bg-amber-200' }}">
+                Pendientes
+            </a>
+            <a href="{{ route('pedidos.index', ['estado' => 'en preparación']) }}"
+                class="px-4 py-2 rounded-lg {{ request('estado') == 'en preparación' ? 'bg-amber-700 text-white shadow hover:bg-amber-800' : 'bg-gray-100 text-amber-800 hover:bg-amber-200' }}">
+                En preparación
+            </a>
+            <a href="{{ route('pedidos.index', ['estado' => 'listo']) }}"
+                class="px-4 py-2 rounded-lg {{ request('estado') == 'listo' ? 'bg-amber-700 text-white shadow hover:bg-amber-800' : 'bg-gray-100 text-amber-800 hover:bg-amber-200' }}">
+                Completado
+            </a>
         </div>
+
 
         {{-- Pedidos --}}
         <div class="grid grid-cols-3 gap-6">

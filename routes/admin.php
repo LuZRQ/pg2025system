@@ -65,8 +65,8 @@ Route::prefix('ventas')->name('ventas.')->group(function () {
 Route::get('/cocina/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
 
 Route::post('/ventas/enviarACocina', [VentaController::class, 'enviarACocina'])
-    ->name('ventas.enviarACocina');
-
+    ->name('ventas.enviarACocina')
+    ->middleware('auth');
 // Cambiar estado de un pedido
 Route::post('/cocina/pedidos/{pedido}/estado', [PedidoController::class, 'cambiarEstado'])->name('pedidos.cambiarEstado');
 
