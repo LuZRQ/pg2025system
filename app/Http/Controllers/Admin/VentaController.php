@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @property string $ciUsuario
  * @property string $nombre
@@ -6,6 +7,7 @@
  * @property string $correo
  * @property string $telefono
  */
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -15,6 +17,8 @@ use App\Models\Pedido;
 use App\Models\CategoriaProducto;
 use App\Models\Producto;
 use App\Models\Usuario;
+use Illuminate\Support\Facades\Auth;
+
 
 class VentaController extends Controller
 {
@@ -40,40 +44,49 @@ class VentaController extends Controller
 
         return view('admin.ventas.index', compact('categorias', 'productos', 'ventas', 'pedidos'));
     }
-  public function enviarACocina(Request $request)
+   public function enviarACocina(Request $request)
 {
-   
     $request->validate([
         'mesa' => 'required',
-        'productos' => 'required', // lo validamos como string (vendrá en JSON)
+        'productos' => 'required', // JSON con los productos
     ]);
 
-    // Convertir productos del JSON del formulario oculto a array
+    // Convertir productos JSON a array
     $productos = json_decode($request->productos, true);
 
-  $usuario = auth()->user() ?? Usuario::first(); // toma el primer usuario si no hay sesión
+    // Calcular el total del pedido
+    $total = collect($productos)->sum(fn($p) => $p['cantidad'] * $p['precio']);
 
-$pedido = Pedido::create([
-    'mesa' => $request->mesa,
-    'estado' => 'pendiente',
-    'comentarios' => $request->comentarios ?? null,
-    'ciUsuario' => $usuario->ciUsuario,
-    'fechaCreacion' => now(),
-]);
+    // Obtener el usuario logueado (o null si no hay sesión)
+    $usuario = Auth::user();
 
+    if (!$usuario) {
+        return redirect()->back()->with('error', 'Debes iniciar sesión para registrar pedidos.');
+    }
+
+    // Crear pedido con total calculado
+    $pedido = Pedido::create([
+        'ciUsuario'   => $usuario->ciUsuario,  // 👈 ahora sí seguro
+        'mesa'        => $request->mesa,
+        'estado'      => 'pendiente',
+        'comentarios' => $request->comentarios ?? null,
+        'fechaCreacion' => now(),
+        'total'       => $total,
+    ]);
 
     // Crear detalle del pedido
     foreach ($productos as $producto) {
-        $pedido->detalles()->create([  // 👈 tu relación en Pedido se llama detalles()
-            'idProducto' => $producto['idProducto'], 
-            'cantidad' => $producto['cantidad'],
-            'subtotal' => $producto['cantidad'] * $producto['precio'],
+        $pedido->detalles()->create([
+            'idProducto' => $producto['idProducto'],
+            'cantidad'   => $producto['cantidad'],
+            'subtotal'   => $producto['cantidad'] * $producto['precio'],
         ]);
     }
 
-    return redirect()->route('admin.ventas.index')
+    return redirect()->route('ventas.index')
         ->with('success', 'Pedido enviado a Cocina ✅');
 }
+
 
 
     /**

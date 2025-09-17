@@ -9,16 +9,20 @@ use Illuminate\Http\Request;
 class PedidoController extends Controller
 {
     // Mostrar pedidos pendientes en cocina
-    public function index()
+    public function index(Request $request)
     {
-        $pedidos = Pedido::with('detalles.producto', 'usuario')
-        ->whereIn('estado', ['pendiente', 'en preparación']) // Traer pendientes y en preparación
-        ->orderBy('fechaCreacion', 'asc')
-        ->get();
+        $estado = $request->get('estado');
 
-    return view('admin.pedidos.index', compact('pedidos')); // tu blade está en pedidos/index.blade.php
+        $pedidos = Pedido::with(['detalles.producto', 'usuario'])
+            ->when($estado, function ($query, $estado) {
+                $query->where('estado', $estado);
+            })
+            ->orderBy('fechaCreacion', 'desc')
+            ->get();
 
+        return view('admin.pedidos.index', compact('pedidos'));
     }
+
 
     // Mostrar detalle de un pedido específico
     public function show($idPedido)

@@ -12,13 +12,16 @@ class Pedido extends Model
 
     protected $fillable = [
         'ciUsuario',
-        'mesa',        
+        'mesa',
         'comentarios',
         'estado',
         'total',
         'fechaCreacion'
     ];
-
+    // 👇 aquí agregamos el cast para que Laravel lo trate como Carbon
+    protected $casts = [
+        'fechaCreacion' => 'datetime',
+    ];
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'ciUsuario', 'ciUsuario');

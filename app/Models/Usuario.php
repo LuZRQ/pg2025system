@@ -36,10 +36,22 @@ class Usuario extends Authenticatable
         'rolId'
     ];
 
-    protected $hidden = [
-        'contrasena',
-        'remember_token',
-    ];
+   protected $hidden = [
+    'contrasena',
+    'remember_token',
+];
+
+public function getAuthPassword()
+{
+    return $this->contrasena; // Laravel usará este campo al hacer login
+}
+
+public function getAuthIdentifierName()
+{
+    return 'ciUsuario'; // en vez de 'email'
+}
+
+
 
         public function rol()
     {
