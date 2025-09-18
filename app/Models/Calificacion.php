@@ -8,7 +8,7 @@ class Calificacion extends Model
 {
    protected $table = 'Calificacion';
     protected $primaryKey = 'idCalificacion';
-
+public $timestamps = false;
     protected $fillable = [
         'ciUsuario',
         'calificacion',

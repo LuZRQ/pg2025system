@@ -5,7 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-
+use App\Http\Controllers\OpinionController;
 // Página pública
 Route::get('/', [PublicController::class, 'index'])->name('home');
 
@@ -18,6 +18,11 @@ Route::post('/salir', [AuthenticatedSessionController::class, 'destroy'])->name(
 Route::get('/registro', [RegisteredUserController::class, 'create'])->name('register');
 Route::post('/registro', [RegisteredUserController::class, 'store']);
 
+
+
+Route::middleware(['auth', 'verificarRol:Cliente'])->group(function () {
+    Route::post('/opiniones', [OpinionController::class, 'store'])->name('opiniones.store');
+});
 
 
 

@@ -12,8 +12,24 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+         // Alias para tu middleware personalizado
         $middleware->alias([
-            'verificarRol' => VerificarRolMiddleware::class, // 👈 aquí lo registras
+            'verificarRol' => VerificarRolMiddleware::class,
+        ]);
+
+        // 👇 IMPORTANTE: registrar el grupo web
+        $middleware->group('web', [
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
+
+        // 👇 opcional, si algún día usas API
+        $middleware->group('api', [
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

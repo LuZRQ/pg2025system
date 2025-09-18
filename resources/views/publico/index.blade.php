@@ -34,54 +34,85 @@
     </section>
 
 
-    {{-- Opiniones y resumen --}}
-<section class="py-5">
-    <div class="container">
-        <div class="row g-4">
+ {{-- Opiniones y formulario --}}
+<section class="py-5 bg-amber-50">
+    <div class="container mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-         @auth
-    @if(Auth::user()->rol && Auth::user()->rol->nombre === 'Cliente')
-        <!-- Columna Izquierda (Formulario de opinión) -->
-        <div class="col-12 col-lg-6">
-            <form method="POST" action="{{ route('opiniones.store') }}">
-                @csrf
-                <h3 class="section-title mb-3">¿Cómo fue tu experiencia?</h3>
-
-                <!-- Campo oculto donde guardamos la selección -->
-                <input type="hidden" name="rating" id="ratingInput">
-
-                <!-- Botones Emoji -->
-                <div class="d-flex gap-3 fs-4 mb-3">
-                    <!-- ... -->
-                </div>
-            </form>
-        </div>
-    @endif
-@endauth
-
-
-            <!-- Columna Derecha (Resumen) -->
-            <div class="col-12 col-lg-6">
-                <h3 class="section-title mb-3">Resumen de calificaciones</h3>
-                <div class="vstack gap-3">
-                    @foreach ($ratings as $r)
-                        <div>
-                            <div class="d-flex justify-content-between small mb-1">
-                                <span>{{ $r['label'] }}</span><span>{{ $r['value'] }}%</span>
+            {{-- Formulario para clientes --}}
+            @auth
+                @if(Auth::user()->rol && Auth::user()->rol->nombre === 'Cliente')
+                    <div class="bg-white p-6 rounded-2xl shadow-lg border border-amber-200">
+                        <h3 class="text-xl font-bold text-amber-900 mb-4">¿Cómo fue tu experiencia?</h3>
+                        <form method="POST" action="{{ route('opiniones.store') }}">
+                            @csrf
+                            <input type="hidden" name="rating" id="ratingInput">
+                            
+                            {{-- Emojis grandes --}}
+                            <div class="flex gap-4 mb-4 text-3xl justify-center">
+                                <button type="button" class="hover:scale-125 transition-transform" onclick="setRating(5)">😃</button>
+                                <button type="button" class="hover:scale-125 transition-transform" onclick="setRating(4)">🙂</button>
+                                <button type="button" class="hover:scale-125 transition-transform" onclick="setRating(3)">😐</button>
+                                <button type="button" class="hover:scale-125 transition-transform" onclick="setRating(2)">☹️</button>
+                                <button type="button" class="hover:scale-125 transition-transform" onclick="setRating(1)">😡</button>
                             </div>
-                            <div class="progress">
-                                <div class="progress-bar coffee" role="progressbar"
-                                    style="width: {{ $r['value'] }}%">
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
+
+                            <textarea name="comentario" class="w-full border rounded-lg p-2 mb-4" rows="3" placeholder="Escribe tu opinión..."></textarea>
+
+                            <button type="submit" class="w-full bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 rounded-lg shadow-md transition-colors">
+                                Enviar
+                            </button>
+                        </form>
+                    </div>
+                @endif
+            @endauth
+
+ {{-- Opiniones recientes --}}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+    @forelse ($opiniones as $opinion)
+        <div class="flex bg-amber-50 border border-amber-200 rounded-2xl shadow-lg p-4 items-start gap-4 hover:shadow-xl transition-shadow">
+            
+            {{-- Emoji grande a la izquierda --}}
+            <div class="text-6xl animate-bounce">
+                @switch($opinion->calificacion)
+                    @case(5) 😃 @break
+                    @case(4) 🙂 @break
+                    @case(3) 😐 @break
+                    @case(2) ☹️ @break
+                    @case(1) 😡 @break
+                    @default 😐
+                @endswitch
             </div>
 
+            {{-- Contenido del card --}}
+            <div class="flex-1">
+                {{-- Nombre del cliente --}}
+                <div class="flex items-center justify-between mb-2">
+                    <strong class="text-amber-900 text-lg">{{ $opinion->usuario->nombre ?? 'Anónimo' }}</strong>
+                    
+                    {{-- Estrellas doradas --}}
+                    <span class="text-yellow-400 text-lg">
+                        @for($i = 1; $i <= 5; $i++)
+                            @if($i <= $opinion->calificacion)
+                                ★
+                            @else
+                                ☆
+                            @endif
+                        @endfor
+                    </span>
+                </div>
+
+                {{-- Comentario --}}
+                <p class="text-gray-800 mb-1">{{ $opinion->comentario }}</p>
+
+                {{-- Fecha --}}
+                <small class="text-gray-500">{{ \Carbon\Carbon::parse($opinion->fecha)->format('d/m/Y H:i') }}</small>
+            </div>
         </div>
-    </div>
-</section>
+    @empty
+        <p class="text-gray-500">Aún no hay opiniones registradas.</p>
+    @endforelse
+</div>
 
 
 

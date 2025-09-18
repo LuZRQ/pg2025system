@@ -116,7 +116,7 @@
             {{-- Extras --}}
  <div class="mt-6 space-y-3">
     {{-- Botón historial visible para Mesero y Cajero --}}
-    <a href="{{ route('ventas.historial') }}"
+    <a href=""
        class="block w-full text-center bg-amber-500 text-white py-2 rounded-lg hover:bg-amber-600 shadow">
         Ver historial
     </a>
