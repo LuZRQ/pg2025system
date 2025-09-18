@@ -18,10 +18,6 @@ class DetallePedido extends Model
         'subtotal'
     ];
 
-   public function detallePedidos()
-{
-    return $this->hasMany(DetallePedido::class, 'idPedido', 'idPedido');
-}
 
 
     public function producto()

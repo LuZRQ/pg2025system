@@ -1,5 +1,5 @@
 {{-- resources/views/caja/index.blade.php --}}
-@extends('layouts.admin')
+@extends('layouts.crud')
 
 @section('content')
 <div class="p-6 bg-gradient-to-br from-amber-50 via-orange-100 to-amber-200 min-h-screen">

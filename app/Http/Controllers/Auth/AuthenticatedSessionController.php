@@ -57,6 +57,8 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->route('ventas.index');
             case 'Cocina':
                 return redirect()->route('pedidos.index');
+            case 'Mesero':
+                return redirect()->route('ventas.index');
             case 'Cliente':
                 return redirect()->route('home');
             default:

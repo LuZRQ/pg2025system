@@ -12,7 +12,7 @@ class UsuarioSeeder extends Seeder
     public function run(): void
     {
         $usuarios = [
-            ['ciUsuario' => '11111111', 'nombre' => 'Rafaela', 'apellido' => 'Lima', 'correo' => 'rafaelafabiana.lv@gmail.com', 'telefono' => '76760238', 'usuario' => 'rafaela.lima', 'rolId' => 3], // Mesera/Cocinera
+            ['ciUsuario' => '11111111', 'nombre' => 'Rafaela', 'apellido' => 'Lima', 'correo' => 'rafaelafabiana.lv@gmail.com', 'telefono' => '76760238', 'usuario' => 'rafaela.lima', 'rolId' => 3], // Mesera
             ['ciUsuario' => '22222222', 'nombre' => 'Ignacio', 'apellido' => 'Flores', 'correo' => 'ignaciof324@gmail.com', 'telefono' => '70612344', 'usuario' => 'ignacio.f', 'rolId' => 2], // Cajero
             ['ciUsuario' => '33333333', 'nombre' => 'Carla', 'apellido' => 'Flores', 'correo' => 'carlaf@garabato.com', 'telefono' => '70642866', 'usuario' => 'carla.f', 'rolId' => 4], // Cocinera
             ['ciUsuario' => '44444444', 'nombre' => 'Ana', 'apellido' => 'Benavides', 'correo' => 'anitab@garabato.com', 'telefono' => '76751171', 'usuario' => 'ana.b', 'rolId' => 4], // Cocinera

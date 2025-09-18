@@ -34,12 +34,12 @@ class VentaController extends Controller
         $productos = Producto::with('categoria')->get();
 
         // Ventas realizadas
-        $ventas = Venta::with('pedido.usuario', 'pedido.detallePedidos.producto')->get();
+        $ventas = Venta::with('pedido.usuario', 'pedido.detalles.producto')->get();
 
         // Pedidos listos en cocina
         $pedidos = Pedido::where('estado', 'listo')
             ->doesntHave('venta')
-            ->with('detallePedidos.producto')
+            ->with('detalles.producto')
             ->get();
 
         return view('admin.ventas.index', compact('categorias', 'productos', 'ventas', 'pedidos'));
@@ -97,7 +97,7 @@ class VentaController extends Controller
 
         $pedidos = Pedido::where('estado', 'listo')
             ->doesntHave('venta')
-            ->with('detallePedidos.producto')
+            ->with('detalles.producto')
             ->get();
 
         return view('admin.ventas.create', compact('pedidos'));
@@ -112,7 +112,7 @@ class VentaController extends Controller
             'idPedido' => 'required|exists:Pedido,idPedido',
         ]);
 
-        $pedido = Pedido::with('detallePedidos')->findOrFail($request->idPedido);
+        $pedido = Pedido::with('detalles')->findOrFail($request->idPedido);
 
         // Calcular total desde detallePedidos
         $montoTotal = $pedido->detallePedidos->sum(function ($detalle) {
@@ -158,7 +158,7 @@ class VentaController extends Controller
             'idPedido' => 'required|exists:Pedido,idPedido',
         ]);
 
-        $pedido = Pedido::with('detallePedidos')->findOrFail($request->idPedido);
+        $pedido = Pedido::with('detalles')->findOrFail($request->idPedido);
         $montoTotal = $pedido->detallePedidos->sum(fn($d) => $d->subtotal);
 
         $venta = Venta::findOrFail($id);

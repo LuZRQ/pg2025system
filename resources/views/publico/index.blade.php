@@ -39,48 +39,26 @@
     <div class="container">
         <div class="row g-4">
 
-            @auth
-                @if(Auth::user()->role->nombre === 'Cliente')
-                    <!-- Columna Izquierda (Formulario de opinión) -->
-                    <div class="col-12 col-lg-6">
-                        <form method="POST" action="{{ route('opiniones.store') }}">
-                            @csrf
-                            <h3 class="section-title mb-3">¿Cómo fue tu experiencia?</h3>
+         @auth
+    @if(Auth::user()->rol && Auth::user()->rol->nombre === 'Cliente')
+        <!-- Columna Izquierda (Formulario de opinión) -->
+        <div class="col-12 col-lg-6">
+            <form method="POST" action="{{ route('opiniones.store') }}">
+                @csrf
+                <h3 class="section-title mb-3">¿Cómo fue tu experiencia?</h3>
 
-                            <!-- Campo oculto donde guardamos la selección -->
-                            <input type="hidden" name="rating" id="ratingInput">
+                <!-- Campo oculto donde guardamos la selección -->
+                <input type="hidden" name="rating" id="ratingInput">
 
-                            <!-- Botones Emoji -->
-                            <div class="d-flex gap-3 fs-4 mb-3">
-                                @foreach ([5 => '😊', 4 => '🙂', 3 => '😐', 2 => '🙁', 1 => '😣'] as $value => $emoji)
-                                    <button type="button" class="btn btn-outline-secondary rounded-circle p-2 emoji-btn"
-                                        data-value="{{ $value }}">
-                                        {{ $emoji }}
-                                    </button>
-                                @endforeach
-                            </div>
-
-                            <!-- Comentario -->
-                            <div class="mb-3">
-                                <label class="form-label">Cuéntanos más (opcional)</label>
-                                <textarea name="comentario" rows="3" class="form-control"
-                                    placeholder="Escribe tu comentario..."></textarea>
-                            </div>
-
-                            <!-- Botón de enviar -->
-                            <button type="submit" class="btn btn-dark">Enviar opinión</button>
-                        </form>
-                    </div>
-                @else
-                    <div class="col-12">
-                        <p class="text-muted">Solo los clientes pueden calificar.</p>
-                    </div>
-                @endif
-            @else
-                <div class="col-12 text-center">
-                    <p class="text-muted">Debes <a href="{{ route('login') }}">iniciar sesión</a> como cliente para opinar :D</p>
+                <!-- Botones Emoji -->
+                <div class="d-flex gap-3 fs-4 mb-3">
+                    <!-- ... -->
                 </div>
-            @endauth
+            </form>
+        </div>
+    @endif
+@endauth
+
 
             <!-- Columna Derecha (Resumen) -->
             <div class="col-12 col-lg-6">
