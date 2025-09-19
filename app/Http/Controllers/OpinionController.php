@@ -7,13 +7,17 @@ use App\Models\Calificacion;
 use Illuminate\Support\Facades\Auth;
 class OpinionController extends Controller
 {
+    
     // Guardar la opinión del cliente
     public function store(Request $request)
     {
+        
+
         $request->validate([
             'rating' => 'required|integer|min:1|max:5',
             'comentario' => 'nullable|string|max:500',
         ]);
+
 
         Calificacion::create([
             'ciUsuario' => Auth::user()->ciUsuario,

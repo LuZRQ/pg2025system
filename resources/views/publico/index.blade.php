@@ -25,7 +25,7 @@
                             <a href="{{ route('register') }}" class="btn btn-outline-light px-4 py-2">
                                 <i class="bi bi-person-vcard me-1"></i> Registrarse
                             </a>
-                           
+
                         </div>
                     </div>
                 </div>
@@ -34,133 +34,299 @@
     </section>
 
 
- {{-- Opiniones y formulario --}}
-<section class="py-5 bg-amber-50">
-    <div class="container mx-auto">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-            {{-- Formulario para clientes --}}
+    {{-- OPINIONES Y COMENTARIOS --}}
+    <section class="py-5">
+        <div class="container">
+
+            {{-- FORMULARIO --}}
+            {{-- FORMULARIO --}}
             @auth
-                @if(Auth::user()->rol && Auth::user()->rol->nombre === 'Cliente')
-                    <div class="bg-white p-6 rounded-2xl shadow-lg border border-amber-200">
-                        <h3 class="text-xl font-bold text-amber-900 mb-4">¿Cómo fue tu experiencia?</h3>
-                        <form method="POST" action="{{ route('opiniones.store') }}">
-                            @csrf
-                            <input type="hidden" name="rating" id="ratingInput">
-                            
-                            {{-- Emojis grandes --}}
-                            <div class="flex gap-4 mb-4 text-3xl justify-center">
-                                <button type="button" class="hover:scale-125 transition-transform" onclick="setRating(5)">😃</button>
-                                <button type="button" class="hover:scale-125 transition-transform" onclick="setRating(4)">🙂</button>
-                                <button type="button" class="hover:scale-125 transition-transform" onclick="setRating(3)">😐</button>
-                                <button type="button" class="hover:scale-125 transition-transform" onclick="setRating(2)">☹️</button>
-                                <button type="button" class="hover:scale-125 transition-transform" onclick="setRating(1)">😡</button>
+                @if (Auth::user()->rol && Auth::user()->rol->nombre === 'Cliente')
+                    <div class="row justify-content-center mb-5">
+                        <div class="col-md-6">
+                            <div class="form-box shadow-lg p-4">
+                                <h3 class="section-title mb-4 text-center">¿Cómo fue tu experiencia?</h3>
+                                <form method="POST" action="{{ route('opiniones.store') }}" class="text-center">
+                                    @csrf
+                                    <input type="hidden" name="rating" id="ratingInput">
+
+                                    {{-- Emojis PNG circulares --}}
+                                    <div class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
+                                        @php
+                                            $emojis = [
+                                                5 => 'feliz.png',
+                                                4 => 'sonriente.png',
+                                                3 => 'neutro.png',
+                                                2 => 'triste.png',
+                                                1 => 'enojado.png',
+                                            ];
+                                        @endphp
+
+                                        @foreach ($emojis as $val => $img)
+                                            <button type="button" class="emoji-btn border bg-light rounded-circle p-2"
+                                                data-value="{{ $val }}">
+                                                <img src="{{ asset('img/' . $img) }}" alt="emoji" width="30"
+                                                    height="30">
+                                            </button>
+                                        @endforeach
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <textarea name="comentario" class="form-control" rows="3" placeholder="Escribe tu opinión..."></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-dark px-4 py-2 fw-bold"
+                                        style="background: linear-gradient(45deg, #3c2a21, #000); border: 2px solid gold; color: gold;">
+                                        Enviar ✨
+                                    </button>
+                                </form>
                             </div>
-
-                            <textarea name="comentario" class="w-full border rounded-lg p-2 mb-4" rows="3" placeholder="Escribe tu opinión..."></textarea>
-
-                            <button type="submit" class="w-full bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 rounded-lg shadow-md transition-colors">
-                                Enviar
-                            </button>
-                        </form>
+                        </div>
                     </div>
                 @endif
             @endauth
 
- {{-- Opiniones recientes --}}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-    @forelse ($opiniones as $opinion)
-        <div class="flex bg-amber-50 border border-amber-200 rounded-2xl shadow-lg p-4 items-start gap-4 hover:shadow-xl transition-shadow">
-            
-            {{-- Emoji grande a la izquierda --}}
-            <div class="text-6xl animate-bounce">
-                @switch($opinion->calificacion)
-                    @case(5) 😃 @break
-                    @case(4) 🙂 @break
-                    @case(3) 😐 @break
-                    @case(2) ☹️ @break
-                    @case(1) 😡 @break
-                    @default 😐
-                @endswitch
-            </div>
 
-            {{-- Contenido del card --}}
-            <div class="flex-1">
-                {{-- Nombre del cliente --}}
-                <div class="flex items-center justify-between mb-2">
-                    <strong class="text-amber-900 text-lg">{{ $opinion->usuario->nombre ?? 'Anónimo' }}</strong>
-                    
-                    {{-- Estrellas doradas --}}
-                    <span class="text-yellow-400 text-lg">
-                        @for($i = 1; $i <= 5; $i++)
-                            @if($i <= $opinion->calificacion)
-                                ★
-                            @else
-                                ☆
-                            @endif
-                        @endfor
-                    </span>
-                </div>
+            {{-- OPINIONES --}}
+            <div>
+                <h3 class="section-title mb-4">Opiniones de clientes</h3>
+                <div class="row g-4">
+                    @forelse ($opiniones->take(3) as $opinion)
+                        <div class="col-md-4">
+                            <div class="opinion-bubble">
+                                <div class="d-flex align-items-center mb-2">
+                                    @php
+                                        $icons = [
+                                            1 => 'enojado.gif',
+                                            2 => 'triste.gif',
+                                            3 => 'neutro.gif',
+                                            4 => 'sonriente.gif',
+                                            5 => 'feliz.gif',
+                                        ];
+                                    @endphp
 
-                {{-- Comentario --}}
-                <p class="text-gray-800 mb-1">{{ $opinion->comentario }}</p>
+                                    <img src="{{ asset('img/' . $icons[$opinion->calificacion]) }}" width="48"
+                                        height="48" class="me-2">
 
-                {{-- Fecha --}}
-                <small class="text-gray-500">{{ \Carbon\Carbon::parse($opinion->fecha)->format('d/m/Y H:i') }}</small>
-            </div>
-        </div>
-    @empty
-        <p class="text-gray-500">Aún no hay opiniones registradas.</p>
-    @endforelse
-</div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">{{ $opinion->usuario->nombre ?? 'Anónimo' }}</h6>
+                                        <div class="text-warning">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                <span style="font-size: 1.1rem;">{!! $i <= $opinion->calificacion ? '★' : '☆' !!}</span>
+                                            @endfor
+                                        </div>
+                                    </div>
+                                </div>
 
-
-
-
-
-    {{-- Menú --}}
-    <section id="menu" class="py-5 bg-light">
-        <div class="container">
-            <h3 class="text-center section-title mb-4">✨ Nuestro Menú ✨</h3>
-
-            {{-- Filtros dinámicos --}}
-            <ul class="nav nav-pills justify-content-center gap-2 pill-filter mb-4">
-                <li class="nav-item">
-                    <a class="nav-link active" data-category="all" href="#">Todo</a>
-                </li>
-                @foreach ($categorias as $categoria)
-                    <li class="nav-item">
-                        <a class="nav-link" data-category="{{ $categoria->id }}"
-                            href="#">{{ $categoria->nombre }}</a>
-                    </li>
-                @endforeach
-            </ul>
-
-            {{-- Cards de productos --}}
-            <div class="row g-4" id="menu-items">
-                @foreach ($productos as $p)
-                    <div class="col-12 col-md-6 col-lg-4 menu-item" data-category="{{ $p->categoria_producto_id }}">
-                        <div class="menu-card garabato-card rounded-4 p-3 h-100 shadow-sm">
-                            {{-- Imagen --}}
-                            <div class="ratio ratio-16x9 mb-3 rounded-3 overflow-hidden border garabato-img">
-                                @if ($p->imagen)
-                                    <img src="{{ asset('storage/' . $p->imagen) }}" class="w-100 h-100 object-fit-cover"
-                                        alt="{{ $p->nombre }}">
-                                @else
-                                    <div class="d-flex align-items-center justify-content-center text-muted fs-3">🍴</div>
-                                @endif
+                                <p class="mb-2">{{ $opinion->comentario }}</p>
+                                <small class="text-muted">{{ $opinion->fecha }}</small>
                             </div>
-
-                            {{-- Texto --}}
-                            <h5 class="mb-1 fw-bold">{{ $p->nombre }}</h5>
-                            <p class="text-muted small mb-2">{{ $p->descripcion }}</p>
-                            <div class="fw-bold text-coffee">Bs. {{ number_format($p->precio, 2, ',', '.') }}</div>
                         </div>
-                    </div>
-                @endforeach
+                    @empty
+                        <p class="text-muted">Aún no hay opiniones registradas.</p>
+                    @endforelse
+                </div>
             </div>
         </div>
     </section>
+
+    {{-- Script para resaltar emoji seleccionado --}}
+    <script>
+        const emojiBtns = document.querySelectorAll('.emoji-btn');
+        const ratingInput = document.getElementById('ratingInput');
+
+        emojiBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                emojiBtns.forEach(b => b.classList.remove('active-emoji'));
+                btn.classList.add('active-emoji');
+                ratingInput.value = btn.dataset.value;
+            });
+        });
+    </script>
+
+    <style>
+        /* ==== Caja del formulario ==== */
+        .form-box {
+            background: linear-gradient(135deg, #fdfaf0, #ffe985cc);
+            border-radius: 16px;
+            border: 2px solid #f0f0ddb0;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+           
+        }
+
+        .form-box:hover {
+           
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        /* ==== Opiniones (burbuja mejorada) ==== */
+        .opinion-bubble {
+            position: relative;
+            background: linear-gradient(135deg, #fffbea, #fdf2d7);
+            border-radius: 16px;
+            padding: 1rem;
+            border: 2px solid #d4a017;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15),
+                inset 0 0 10px rgba(255, 223, 0, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .opinion-bubble:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.25),
+                inset 0 0 12px rgba(255, 223, 0, 0.3);
+        }
+
+        .opinion-bubble::after {
+            content: "";
+            position: absolute;
+            bottom: -12px;
+            left: 30px;
+            border-width: 12px 12px 0;
+            border-style: solid;
+            border-color: #fffbea transparent;
+            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
+        }
+
+        /* ==== Emojis circulares ==== */
+        .emoji-btn {
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .emoji-btn:hover {
+            transform: scale(1.2);
+            background: #e0eefd;
+        }
+
+        .active-emoji {
+            background: rgba(255, 219, 15, 0.575) !important;
+            border-color: #000 !important;
+        }
+    </style>
+
+
+
+
+
+  {{-- =================== MENÚ =================== --}}
+<section id="menu" class="py-5 bg-light">
+    <div class="container">
+        <h3 class="text-center section-title mb-4">Nuestro Menú</h3>
+
+        {{-- Filtros dinámicos con contador --}}
+        <ul class="nav nav-pills justify-content-center gap-2 pill-filter mb-4">
+            @php
+                $totalProductos = count($productos);
+            @endphp
+            <li class="nav-item">
+                <a class="nav-link active" data-category="all" href="#">Todo ({{ $totalProductos }})</a>
+            </li>
+
+            @foreach ($categorias as $categoria)
+                @php
+                    $countCat = $productos->where('categoria_producto_id', $categoria->id)->count();
+                @endphp
+                <li class="nav-item">
+                    <a class="nav-link" data-category="{{ $categoria->id }}" href="#">
+                        {{ $categoria->nombre }} ({{ $countCat }})
+                    </a>
+                </li>
+            @endforeach
+        </ul>
+
+        {{-- Grilla de productos --}}
+        <div class="row g-4" id="menu-items">
+            @foreach ($productos as $p)
+                <div class="col-12 col-md-6 col-lg-4 menu-item" data-category="{{ $p->categoria_producto_id }}">
+                    <div class="menu-card garabato-card rounded-4 p-3 h-100 shadow-sm">
+                        {{-- Imagen --}}
+                        <div class="ratio ratio-16x9 mb-3 rounded-3 overflow-hidden border garabato-img">
+                            @if ($p->imagen)
+                                <img src="{{ asset('storage/' . $p->imagen) }}"
+                                    class="w-100 h-100 object-fit-cover"
+                                    alt="{{ $p->nombre }}">
+                            @else
+                                <div class="d-flex align-items-center justify-content-center text-muted fs-3">
+                                    🍴
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- Texto --}}
+                        <h5 class="mb-1 fw-bold">{{ $p->nombre }}</h5>
+                        <p class="text-muted small mb-2">{{ $p->descripcion }}</p>
+                        <div class="fw-bold text-coffee">Bs. {{ number_format($p->precio, 2, ',', '.') }}</div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+{{-- =================== ESTILOS =================== --}}
+<style>
+    /* Cards */
+    .menu-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background: linear-gradient(135deg, #fffaf0, #fdf3e5);
+        border-radius: 16px;
+        border: 1px solid #e0cda9;
+    }
+
+   
+
+    .garabato-img img {
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .garabato-img img:hover {
+        transform: scale(1.05);
+    }
+
+    /* Botones de filtro */
+   
+
+    .nav-link {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+        background-color: #b8734e;
+        color: gold !important;
+    }
+</style>
+
+{{-- =================== SCRIPT =================== --}}
+<script>
+    // Filtro de categorías con conteo
+    const filterLinks = document.querySelectorAll('.nav-link[data-category]');
+    const menuItems = document.querySelectorAll('.menu-item');
+
+    filterLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Activar visualmente
+            filterLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+
+            const category = this.dataset.category;
+
+            // Mostrar/ocultar productos
+            menuItems.forEach(item => {
+                if(category === 'all' || item.dataset.category.toString() === category.toString()) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+
 
 
     {{-- Nuestra Historia --}}
@@ -226,10 +392,12 @@
                 {{-- Texto dirección --}}
                 <div class="col-12 col-lg-4">
                     <div class="p-4 bg-white rounded-4 shadow-sm h-100">
-                        <h6 class="fw-bold text-coffee mb-1"><i class="bi bi-geo-alt-fill me-2"></i>Dirección</h6>
+                        <h6 class="fw-bold text-coffee mb-1"><i class="bi bi-geo-alt-fill me-2"></i>Dirección
+                        </h6>
                         <p class="text-muted mb-4">Calle Pinilla esq. Av. 6 de Agosto – La Paz, Bolivia</p>
 
-                        <h6 class="fw-bold text-coffee mb-1"><i class="bi bi-clock-fill me-2"></i>Horarios</h6>
+                        <h6 class="fw-bold text-coffee mb-1"><i class="bi bi-clock-fill me-2"></i>Horarios
+                        </h6>
                         <p class="text-muted mb-0">Lunes a Viernes <br> 4:00 PM – 10:00 PM</p>
                     </div>
                 </div>
