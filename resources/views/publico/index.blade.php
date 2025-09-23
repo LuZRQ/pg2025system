@@ -209,7 +209,7 @@
 
 
 
-  {{-- =================== MENÚ =================== --}}
+ {{-- =================== MENÚ =================== --}}
 <section id="menu" class="py-5 bg-light">
     <div class="container">
         <h3 class="text-center section-title mb-4">Nuestro Menú</h3>
@@ -225,11 +225,11 @@
 
             @foreach ($categorias as $categoria)
                 @php
-                    $countCat = $productos->where('categoria_producto_id', $categoria->id)->count();
+                    $countCat = $productos->where('categoriaId', $categoria->idCategoria)->count();
                 @endphp
                 <li class="nav-item">
-                    <a class="nav-link" data-category="{{ $categoria->id }}" href="#">
-                        {{ $categoria->nombre }} ({{ $countCat }})
+                    <a class="nav-link" data-category="{{ $categoria->idCategoria }}" href="#">
+                        {{ $categoria->nombreCategoria }} ({{ $countCat }})
                     </a>
                 </li>
             @endforeach
@@ -238,7 +238,7 @@
         {{-- Grilla de productos --}}
         <div class="row g-4" id="menu-items">
             @foreach ($productos as $p)
-                <div class="col-12 col-md-6 col-lg-4 menu-item" data-category="{{ $p->categoria_producto_id }}">
+                <div class="col-12 col-md-6 col-lg-4 menu-item" data-category="{{ $p->categoriaId }}">
                     <div class="menu-card garabato-card rounded-4 p-3 h-100 shadow-sm">
                         {{-- Imagen --}}
                         <div class="ratio ratio-16x9 mb-3 rounded-3 overflow-hidden border garabato-img">
@@ -247,9 +247,10 @@
                                     class="w-100 h-100 object-fit-cover"
                                     alt="{{ $p->nombre }}">
                             @else
-                                <div class="d-flex align-items-center justify-content-center text-muted fs-3">
-                                    🍴
-                                </div>
+                                {{-- Imagen por defecto --}}
+                                <img src="{{ asset('storage/default.jpg') }}"
+                                    class="w-100 h-100 object-fit-cover"
+                                    alt="Imagen no disponible">
                             @endif
                         </div>
 
@@ -263,6 +264,7 @@
         </div>
     </div>
 </section>
+
 
 {{-- =================== ESTILOS =================== --}}
 <style>

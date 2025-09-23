@@ -15,13 +15,16 @@
 
     {{-- Google Fonts --}}
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 
     <!-- CSS -->
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 
 <body class="bg-white" style="background-color: #13339c77;">
-    
+
     {{-- Navbar directo en el layout --}}
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
@@ -38,7 +41,8 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">Inicio</a>
+                        <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}"
+                            href="{{ route('home') }}">Inicio</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url('/#menu') }}">Menú</a>
@@ -49,7 +53,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url('/#direccion') }}">Dirección</a>
                     </li>
-                   
+
                     {{-- Botón Login / Logout --}}
                     <li class="nav-item ms-3">
                         @auth
@@ -72,18 +76,52 @@
 
     {{-- Contenido dinámico --}}
     <main class="pt-1">
+        @if (session('exito'))
+            <div class="position-fixed top-0 end-0 p-3" style="z-index: 1100">
+                <div id="toastExito"
+                    class="toast align-items-center text-dark border-0 show shadow-lg animate__animated animate__fadeInDown"
+                    style="
+                background: linear-gradient(135deg, #fffbe6, #f7f305e6);
+                font-weight: bold;
+                border-radius: 20px;
+                box-shadow: 0 0 15px rgba(247, 243, 5, 0.8), 0 0 30px rgba(247, 243, 5, 0.5);
+            ">
+                    <div class="d-flex">
+                        <div class="toast-body d-flex align-items-center">
+                            <i class="fa-solid fa-mug-hot fa-bounce me-2 text-warning fs-4"></i>
+                            <span class="fs-6">
+                                {{ session('exito') }}
+                            </span>
+                        </div>
+                        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                setTimeout(() => {
+                    const toast = document.getElementById('toastExito');
+                    toast.classList.remove('animate__fadeInDown');
+                    toast.classList.add('animate__fadeOut');
+                    setTimeout(() => toast.remove(), 1000); // elimina del DOM
+                }, 4000); // 4 segundos
+            </script>
+        @endif
+
+
+
         @yield('content')
     </main>
 
     {{-- Footer directo en el layout --}}
     <footer class="bg-black text-light mt-5 py-4">
         <div class="container text-center">
-            
+
             <!-- Texto -->
             <div class="small mb-3">
                 © Garabato Café {{ date('Y') }} - Todos los derechos reservados.
             </div>
-            
+
             <!-- Redes -->
             <div class="d-flex justify-content-center gap-4 fs-5">
                 <a class="text-light opacity-75 hover-opacity" href="#" aria-label="Instagram">

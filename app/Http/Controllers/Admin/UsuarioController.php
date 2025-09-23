@@ -12,23 +12,27 @@ use Illuminate\Support\Facades\Hash;
 class UsuarioController extends Controller
 {
     public function index(Request $request)
-{
-    $usuarios = Usuario::with('rol')
-        ->when($request->search, function ($query) use ($request) {
-            $query->where('nombre', 'like', "%{$request->search}%")
-                  ->orWhere('apellido', 'like', "%{$request->search}%")
-                  ->orWhere('usuario', 'like', "%{$request->search}%")
-                  ->orWhere('correo', 'like', "%{$request->search}%");
-        })
-        ->get();
+    {
+        $usuarios = Usuario::with('rol')
+            ->when($request->search, function ($query) use ($request) {
+                $query->where('nombre', 'like', "%{$request->search}%")
+                    ->orWhere('apellido', 'like', "%{$request->search}%")
+                    ->orWhere('usuario', 'like', "%{$request->search}%")
+                    ->orWhere('correo', 'like', "%{$request->search}%");
+            })
+            ->when($request->filled('estado'), function ($query) use ($request) {
+                $query->where('estado', $request->estado);
+            })
+            ->get();
 
-    $roles = Rol::all();
-    $modulos = Modulo::with('roles')->get();
+        $roles = Rol::all();
+        $modulos = Modulo::with('roles')->get();
 
-    return view('admin.usuarios.index', compact('usuarios', 'roles', 'modulos'));
-}
+        return view('admin.usuarios.index', compact('usuarios', 'roles', 'modulos'));
+    }
 
-    
+
+
 
     public function crear()
     {

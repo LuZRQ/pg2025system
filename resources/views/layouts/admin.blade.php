@@ -77,6 +77,38 @@
 
     <!-- Contenido principal -->
     <main class="flex-1 p-6 w-full">
+        @foreach (['exito', 'error', 'info'] as $msg)
+    @if(session($msg))
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 1100">
+            <div class="toast align-items-center text-dark border-0 show shadow-lg animate__animated animate__fadeInDown"
+                 style="
+                     background: {{ $msg == 'exito' ? 'linear-gradient(135deg, #fffbe6, #f7f305e6)' : ($msg == 'error' ? 'linear-gradient(135deg, #f8d7da, #f5a4a8)' : 'linear-gradient(135deg, #d1ecf1, #a0e1f5)') }};
+                     font-weight: bold;
+                     border-radius: 20px;
+                     box-shadow: 0 0 15px rgba(0,0,0,0.2);
+                 ">
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center">
+                        <i class="fa-solid fa-mug-hot fa-bounce me-2 text-warning fs-4"></i>
+                        <span class="fs-6">
+                            {{ session($msg) }}
+                        </span>
+                    </div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+        <script>
+            setTimeout(() => {
+                const toast = document.querySelector('.toast.show');
+                toast.classList.remove('animate__fadeInDown');
+                toast.classList.add('animate__fadeOut');
+                setTimeout(() => toast.remove(), 1000);
+            }, 4000);
+        </script>
+    @endif
+@endforeach
+
         @yield('content')
     </main>
 

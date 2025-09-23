@@ -61,6 +61,6 @@ class RegisteredUserController extends Controller
         Auth::login($usuario);
 
         // Redirigir a la página pública
-        return redirect()->route('home');
+        return redirect()->route('home')->with('exito', '¡Bienvenido a Garabato Café! Tu cuenta se creó exitosamente.');;
     }
 }
