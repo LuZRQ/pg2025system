@@ -26,6 +26,28 @@ class OpinionController extends Controller
             'fecha' => now(),
         ]);
 
+
         return redirect()->back()->with('success', '¡Gracias por tu opinión!');
     }
+
+     // Actualizar la opinión existente del cliente
+   public function update(Request $request)
+{
+    $usuario = Auth::user();
+    $calificacion = Calificacion::where('ciUsuario', $usuario->ciUsuario)->firstOrFail();
+
+    $request->validate([
+        'rating' => 'required|integer|min:1|max:5',
+        'comentario' => 'nullable|string|max:500',
+    ]);
+
+    $calificacion->update([
+        'calificacion' => $request->rating,
+        'comentario' => $request->comentario,
+        'fecha' => now(),
+    ]);
+
+    return redirect()->back()->with('success', '¡Opinión actualizada!');
+}
+
 }

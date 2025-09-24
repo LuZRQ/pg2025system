@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use App\Models\Modulo;
 class VerificarRolMiddleware
 {
     /**
@@ -15,22 +15,25 @@ class VerificarRolMiddleware
      * @param  \Closure  $next
      * @param  mixed  ...$roles  // Los roles permitidos
      */
-    public function handle(Request $request, Closure $next, ...$roles)
-    {
-        $usuario = Auth::user();
+   public function handle(Request $request, Closure $next, $moduloNombre)
+{
+    $usuario = Auth::user();
 
-        if (!$usuario) {
-            return redirect('/ingresar')->withErrors(['auth' => 'Debes iniciar sesión primero']);
-        }
-/** @var \App\Models\Usuario $usuario */
-        // Cargar la relación rol si no está cargada
-        $usuario->loadMissing('rol');
-
-        // Verificar el rol
-        if (!$usuario->rol || !in_array($usuario->rol->nombre, $roles)) {
-            return redirect('/')->withErrors(['auth' => 'No tienes permiso para acceder']);
-        }
-
-        return $next($request);
+    if (!$usuario) {
+        return redirect('/ingresar')->withErrors(['auth' => 'Debes iniciar sesión primero']);
     }
+
+    $modulo = Modulo::where('nombre', $moduloNombre)->with('roles')->first();
+
+    if (!$modulo) {
+        abort(403, 'Módulo no encontrado');
+    }
+
+    if (!$modulo->roles->contains($usuario->rolId)) {
+        abort(403, 'No tienes permisos para este módulo');
+    }
+
+    return $next($request);
+}
+
 }

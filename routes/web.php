@@ -22,6 +22,10 @@ Route::post('/registro', [RegisteredUserController::class, 'store']);
 
 Route::middleware(['auth', 'verificarRol:Cliente'])->group(function () {
     Route::post('/opiniones', [OpinionController::class, 'store'])->name('opiniones.store');
+  // web.php
+Route::put('/opiniones', [OpinionController::class, 'update'])->name('opiniones.update')->middleware('auth', 'verificarRol:Cliente');
+
+
 });
 
 

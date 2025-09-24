@@ -30,6 +30,19 @@
                 <textarea name="descripcion" id="descripcion" rows="3"
                           class="mt-1 block w-full border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-200">{{ old('descripcion') }}</textarea>
             </div>
+
+            <div>
+                <label class="block text-sm font-medium text-stone-700 mb-2">Asignar Módulos</label>
+                <div class="grid grid-cols-2 gap-2">
+                    @foreach ($modulos as $modulo)
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" name="modulos[]" value="{{ $modulo->idModulo }}"
+                                class="h-4 w-4 text-amber-400 border-gray-300 rounded focus:ring-amber-200">
+                            <span class="text-gray-700">{{ $modulo->nombre }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
         </div>
 
         <div class="mt-6 flex justify-end">
@@ -41,3 +54,4 @@
     </form>
 </div>
 @endsection
+

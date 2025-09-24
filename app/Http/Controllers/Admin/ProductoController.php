@@ -6,23 +6,36 @@ use App\Http\Controllers\Controller;
 use App\Models\Producto;
 use Illuminate\Http\Request;
 use App\Models\CategoriaProducto;
+
 class ProductoController extends Controller
 {
-    
-    public function index()
+
+    public function index(Request $request)
     {
-        $productos = Producto::with('categoria')->get();
-        return view('admin.productos.index', compact('productos'));
+        $categorias = CategoriaProducto::all();
+
+        $productos = Producto::with('categoria')
+            ->when($request->search, function ($query) use ($request) {
+                $query->where('nombre', 'like', "%{$request->search}%")
+                    ->orWhere('descripcion', 'like', "%{$request->search}%");
+            })
+            ->when($request->categoria, function ($query) use ($request) {
+                $query->where('categoriaId', $request->categoria);
+            })
+            ->when($request->estado !== null && $request->estado !== '', function ($query) use ($request) {
+                $query->where('estado', $request->estado);
+            })
+            ->get();
+
+        return view('admin.productos.index', compact('productos', 'categorias'));
     }
 
-    // Formulario crear producto
     public function crear()
     {
         $categorias = CategoriaProducto::all();
         return view('admin.productos.crear', compact('categorias'));
     }
 
-    // Guardar nuevo producto
     public function guardar(Request $request)
     {
         $request->validate([
@@ -31,14 +44,22 @@ class ProductoController extends Controller
             'precio' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'categoriaId' => 'required|exists:CategoriaProducto,idCategoria',
+            'estado' => 'required|boolean', // <-- agregamos validación
+            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048', // valida imagen
         ]);
+
+        if ($request->hasFile('imagen')) {
+            $archivo = $request->file('imagen');
+            $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
+            $archivo->move(public_path('images'), $nombreArchivo);
+            $request->merge(['imagen' => $nombreArchivo]);
+        }
 
         Producto::create($request->all());
 
         return redirect()->route('productos.index')->with('exito', 'Producto creado correctamente.');
     }
 
-    // Formulario editar producto
     public function editar($idProducto)
     {
         $producto = Producto::findOrFail($idProducto);
@@ -46,7 +67,6 @@ class ProductoController extends Controller
         return view('admin.productos.editar', compact('producto', 'categorias'));
     }
 
-    // Actualizar producto
     public function actualizar(Request $request, $idProducto)
     {
         $producto = Producto::findOrFail($idProducto);
@@ -57,13 +77,21 @@ class ProductoController extends Controller
             'precio' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'categoriaId' => 'required|exists:CategoriaProducto,idCategoria',
+            'estado' => 'required|boolean', // <-- agregamos validación
+            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
         ]);
+
+        if ($request->hasFile('imagen')) {
+            $archivo = $request->file('imagen');
+            $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
+            $archivo->move(public_path('images'), $nombreArchivo);
+            $request->merge(['imagen' => $nombreArchivo]);
+        }
 
         $producto->update($request->all());
 
         return redirect()->route('productos.index')->with('exito', 'Producto actualizado correctamente.');
     }
-
     // Eliminar producto
     public function eliminar($idProducto)
     {
@@ -74,9 +102,8 @@ class ProductoController extends Controller
     }
 
     public function ver($idProducto)
-{
-    $producto = Producto::with('categoria')->findOrFail($idProducto);
-    return view('admin.productos.ver', compact('producto'));
-}
-
+    {
+        $producto = Producto::with('categoria')->findOrFail($idProducto);
+        return view('admin.productos.ver', compact('producto'));
+    }
 }

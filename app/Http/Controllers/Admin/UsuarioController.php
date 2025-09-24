@@ -31,9 +31,6 @@ class UsuarioController extends Controller
         return view('admin.usuarios.index', compact('usuarios', 'roles', 'modulos'));
     }
 
-
-
-
     public function crear()
     {
         $roles = Rol::all();
@@ -50,7 +47,8 @@ class UsuarioController extends Controller
             'telefono'    => 'nullable|string|max:8',
             'usuario'     => 'required|string|max:50|unique:Usuario,usuario',
             'contrasena'  => 'required|string|min:6',
-            'rolId'       => 'required|exists:Rol,idRol'
+            'rolId'       => 'required|exists:Rol,idRol',
+            'estado'      => 'required|boolean',
         ]);
 
         Usuario::create([
@@ -62,16 +60,17 @@ class UsuarioController extends Controller
             'usuario'     => $request->usuario,
             'contrasena'  => Hash::make($request->contrasena),
             'rolId'       => $request->rolId,
+            'estado'      => $request->estado ?? 1,
         ]);
 
         return redirect()->route('usuarios.index')->with('exito', 'Usuario creado correctamente.');
     }
+
     public function mostrar($ciUsuario)
     {
         $usuario = Usuario::findOrFail($ciUsuario);
         return view('admin.usuarios.mostrar', compact('usuario'));
     }
-
 
     public function editar($ciUsuario)
     {
@@ -90,7 +89,8 @@ class UsuarioController extends Controller
             'correo'      => 'required|email|unique:Usuario,correo,' . $ciUsuario . ',ciUsuario',
             'telefono'    => 'nullable|string|max:8',
             'usuario'     => 'required|string|max:50|unique:Usuario,usuario,' . $ciUsuario . ',ciUsuario',
-            'rolId'       => 'required|exists:Rol,idRol'
+            'rolId'       => 'required|exists:Rol,idRol',
+            'estado'      => 'required|boolean',
         ]);
 
         $datos = $request->all();
@@ -100,8 +100,6 @@ class UsuarioController extends Controller
         } else {
             unset($datos['contrasena']);
         }
-
-
         $usuario->update($datos);
 
         return redirect()->route('usuarios.index')->with('exito', 'Usuario actualizado correctamente.');

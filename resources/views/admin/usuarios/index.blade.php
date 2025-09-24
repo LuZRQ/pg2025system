@@ -123,7 +123,7 @@
                 @foreach ($roles as $rol)
                     <div class="flex justify-between items-center">
                         <p><span class="font-semibold">{{ $rol->nombre }}:</span> {{ $rol->descripcion }}</p>
-                        <a href="{{ route('roles.index', $rol->idRol) }}" class="text-stone-600 hover:text-stone-800">
+                        <a href="{{ route('roles.index', $rol->idRol) }}" class="text-stone-600 hover:text-stone-800" title="Ajustes">
                             <i class="fas fa-cog"></i>
                         </a>
                     </div>

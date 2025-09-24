@@ -6,15 +6,18 @@ use Illuminate\Http\Request;
 use App\Models\Producto;
 use App\Models\CategoriaProducto;
 use App\Models\Calificacion;
+use Illuminate\Support\Facades\Auth;
 
 class PublicController extends Controller
 {
-      public function index()
+
+    public function index()
     {
-        $productos = Producto::with('categoria')->get();
+        // Solo productos activos para la página pública
+        $productos = Producto::activos()->with('categoria')->get();
         $categorias = CategoriaProducto::all();
 
-        // Opiniones recientes (ejemplo: últimas 5)
+        // Opiniones recientes (últimas 5)
         $opiniones = Calificacion::with('usuario')
             ->orderBy('fecha', 'desc')
             ->take(5)
@@ -43,7 +46,13 @@ class PublicController extends Controller
                 ],
             ];
         }
+        // Revisar si el usuario ya opinó
+        $usuario = Auth::user(); // null si es visitante
+        $yaOpino = null;
+        if ($usuario) {
+            $yaOpino = Calificacion::where('ciUsuario', $usuario->ciUsuario)->first();
+        }
 
-        return view('publico.index', compact('productos', 'categorias', 'ratings', 'opiniones'));
+        return view('publico.index', compact('productos', 'categorias', 'ratings', 'opiniones', 'usuario', 'yaOpino'));
     }
 }

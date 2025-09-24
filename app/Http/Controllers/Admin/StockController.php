@@ -9,15 +9,52 @@ use Carbon\Carbon;
 
 class StockController extends Controller
 { // Mostrar estado general del stock
-    public function index()
+    public function index(Request $request)
     {
-        $productos = Producto::all()->map(function ($producto) {
+        $query = Producto::with('categoria'); // traemos productos con categoría
+
+        // 🔎 Filtro por categoría
+        if ($request->filled('categoria')) {
+            $query->whereHas('categoria', function ($q) use ($request) {
+                $q->where('nombreCategoria', $request->categoria);
+            });
+        }
+
+        // 🔎 Filtro por estado de stock
+        if ($request->filled('estado')) {
+            $estado = $request->estado;
+
+            $query = $query->get()->filter(function ($producto) use ($estado) {
+                $estadoStock = $this->getEstadoStock($producto);
+                return $estadoStock === $estado;
+            });
+        } else {
+            $query = $query->get();
+        }
+
+        // 🔎 Filtro por búsqueda
+        if ($request->filled('buscar')) {
+            $buscar = strtolower($request->buscar);
+            $query = $query->filter(function ($producto) use ($buscar) {
+                return str_contains(strtolower($producto->nombre), $buscar);
+            });
+        }
+
+        // Asignar estadoStock a cada producto
+        $productos = $query->map(function ($producto) {
             $producto->estadoStock = $this->getEstadoStock($producto);
             return $producto;
         });
 
         return view('admin.stock.index', compact('productos'));
     }
+public function update(Request $request, Producto $producto)
+{
+    // validar y guardar como ya lo tienes...
+
+    $redirect = $request->input('redirect', 'productos.index');
+    return redirect()->route($redirect)->with('exito', 'Producto actualizado correctamente.');
+}
 
     // Registrar entrada de stock
     public function entrada(Request $request, $idProducto)
@@ -29,7 +66,7 @@ class StockController extends Controller
         ]);
 
         $producto->stock += $request->cantidad;
-        // Ajusta el stock inicial si quieres mantener un histórico de "stock inicial"
+
         if ($producto->stock_inicial < $producto->stock) {
             $producto->stock_inicial = $producto->stock;
         }

@@ -40,9 +40,15 @@ class AuthenticatedSessionController extends Controller
 
         $usuario = Usuario::where('ciUsuario', $request->ci)->first();
 
+        // Verificar credenciales
         if (!$usuario || !Hash::check($request->contrasena, $usuario->contrasena)) {
             RateLimiter::hit($key, 10800); // cada error suma, bloqueo 3h (10800s)
             return back()->withErrors(['ci' => 'Credenciales inválidas']);
+        }
+
+        // 🚨 Verificar estado
+        if (!$usuario->estado) {
+            return back()->withErrors(['ci' => 'Tu cuenta está inactiva, no puedes acceder.']);
         }
 
         RateLimiter::clear($key); // si el login es correcto, reiniciamos contador
@@ -66,6 +72,7 @@ class AuthenticatedSessionController extends Controller
                 return redirect('/')->withErrors(['ci' => 'Rol no permitido']);
         }
     }
+
 
     public function destroy(Request $request)
     {

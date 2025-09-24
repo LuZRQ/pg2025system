@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Pedido;
+
 use App\Http\Controllers\Admin\{
     PublicController,
     UsuarioController,
@@ -13,7 +16,7 @@ use App\Http\Controllers\Admin\{
     ReporteController
 };
 // =============== DUEÑO (todo el sistema) ===============
-Route::middleware(['auth', 'verificarRol:Dueno'])->group(function () {
+Route::middleware(['auth', 'verificarRol:Usuarios y Roles'])->group(function () {
     // -------- Usuarios --------
     Route::get('usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
     Route::get('usuarios/crear', [UsuarioController::class, 'crear'])->name('usuarios.crear');
@@ -40,36 +43,45 @@ Route::middleware(['auth', 'verificarRol:Dueno'])->group(function () {
     Route::get('auditoria/{id}', [AuditoriaController::class, 'show'])->name('auditoria.show');
 });
 
-// =============== VENTAS (Cajero + Mesero) ===============
-Route::middleware(['auth', 'verificarRol:Cajero,Mesero'])->group(function () {
+// =============== VENTAS (modulo: Gestión de Ventas) ===============
+Route::middleware(['auth', 'verificarRol:Gestión de Ventas'])->group(function () {
     Route::prefix('ventas')->name('ventas.')->group(function () {
         Route::get('/', [VentaController::class, 'index'])->name('index');
         Route::get('/crear', [VentaController::class, 'create'])->name('crear');
         Route::post('/', [VentaController::class, 'store'])->name('guardar');
 
         // Historial de ventas
-        Route::get('/historial', function () {
-            return view('admin.ventas.historial');
-        })->name('historial');
-    });
+       Route::get('/historial', [VentaController::class, 'historial'])->name('historial');
 
-    // Enviar pedidos a cocina
-    Route::post('/ventas/enviarACocina', [VentaController::class, 'enviarACocina'])
-        ->name('ventas.enviarACocina');
+
+        // Enviar pedidos a cocina
+        Route::post('/enviarACocina', [VentaController::class, 'enviarACocina'])->name('enviarACocina');
+    });
 });
 
-// =============== CAJA (solo Cajero) ===============
-Route::middleware(['auth', 'verificarRol:Cajero'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::prefix('ventas')->name('ventas.')->group(function () {
-        Route::get('/caja', function () {
-            return view('admin.ventas.caja');
-        })->name('caja');
+
+        // Caja: solo el rol Cajero
+        Route::get('/caja', [VentaController::class, 'caja'])->name('caja');
+
+        // Cobrar un pedido (POST)
+     Route::post('/cobrar', [VentaController::class, 'cobrar'])->name('cobrar');
+
+Route::get('/recibo/{idVenta}', [VentaController::class, 'recibo'])->name('ventas.recibo');
+
+
     });
 });
 
 
-// =============== COCINA (Cocina + Dueño) ===============
-Route::middleware(['auth', 'verificarRol:Cocina,Dueno'])->group(function () {
+
+
+
+
+
+// =============== COCINA (modulos: Pedidos de Cocina, Gestión de Productos, Control de Stock) ===============
+Route::middleware(['auth', 'verificarRol:Pedidos de Cocina,Gestión de Productos,Control de Stock'])->group(function () {
     // Pedidos de cocina
     Route::get('/cocina/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
     Route::post('/cocina/pedidos/{pedido}/estado', [PedidoController::class, 'cambiarEstado'])->name('pedidos.cambiarEstado');

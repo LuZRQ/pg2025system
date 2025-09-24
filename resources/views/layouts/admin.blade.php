@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <!-- Dentro de <head> -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+
 
 </head>
 
@@ -114,7 +116,11 @@
 
     @vite('resources/js/app.js')
     <script src="{{ asset('js/crudDelete.js') }}"></script>
-
+<script>
+    // Definimos la variable global que usará el JS externo
+    window.rolUsuario = @json(Auth::user()?->rol?->nombre ?? '');
+</script>
+@vite('resources/js/ventas.js')
 </body>
 
 </html>

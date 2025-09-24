@@ -48,10 +48,7 @@
                 @error('contrasena') <small class="text-warning">{{ $message }}</small> @enderror
             </div>
 
-            <div class="mb-3 form-check">
-                <input type="checkbox" name="remember" class="form-check-input" id="remember">
-                <label for="remember" class="form-check-label fw-bold">Recordarme</label>
-            </div>
+           
 
             <button type="submit" class="btn w-100 fw-bold text-dark border border-black" style=" background-color: #f0dd97;">
                 Entrar
