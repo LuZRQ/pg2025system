@@ -155,30 +155,39 @@ class VentaController extends Controller
 
 
     public function cobrar(Request $request)
-    {
-        $request->validate([
-            'idPedido' => 'required|exists:Pedido,idPedido',
-            'tipo_pago' => 'required|string',
-            'pago_cliente' => 'required|numeric|min:0',
-        ]);
+{
+    $request->validate([
+        'idPedido' => 'required|exists:Pedido,idPedido',
+        'tipo_pago' => 'required|string',
+        'pago_cliente' => 'required|numeric|min:0',
+    ]);
 
-        $pedido = Pedido::with('detalles.producto')->findOrFail($request->idPedido);
+    $pedido = Pedido::with('detalles.producto')->findOrFail($request->idPedido);
 
-     
-$total = $pedido->detalles->sum(fn($d) => $d->subtotal);
+    // Calcular total del pedido
+    $total = $pedido->detalles->sum(fn($d) => $d->subtotal);
 
-$venta = Venta::create([
-    'idPedido'    => $pedido->idPedido,
-    'montoTotal'  => $total,
-    'fechaPago'   => now(),
-    'metodo_pago' => $request->tipo_pago,
-]);
+    // Pago y cambio
+    $pagoCliente = $request->pago_cliente;
+    $cambio = $pagoCliente - $total;
 
-        $pedido->update(['estado' => 'pagado']);
+    // Crear la venta
+    $venta = Venta::create([
+        'idPedido'     => $pedido->idPedido,
+        'montoTotal'   => $total,
+        'fechaPago'    => now(),
+        'metodo_pago'  => $request->tipo_pago,
+        'pago_cliente' => $pagoCliente,
+        'cambio'       => $cambio,
+    ]);
 
-        // Redirigir al recibo
+    // Actualizar estado del pedido
+    $pedido->update(['estado' => 'pagado']);
+
+    // Redirigir al recibo
     return redirect()->route('ventas.recibo', $venta->idVenta);
-    }
+}
+
     public function recibo($idVenta)
     {
         $venta = Venta::with(['pedido.detalles.producto', 'pedido.usuario'])->findOrFail($idVenta);

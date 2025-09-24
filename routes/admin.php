@@ -3,10 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Pedido;
-
 use App\Http\Controllers\Admin\{
     PublicController,
     UsuarioController,
+    PdfController,
     AuditoriaController,
     RolController,
     ProductoController,
@@ -15,6 +15,8 @@ use App\Http\Controllers\Admin\{
     PedidoController,
     ReporteController
 };
+use App\Http\Controllers\PdfController as ControllersPdfController;
+
 // =============== DUEÑO (todo el sistema) ===============
 Route::middleware(['auth', 'verificarRol:Usuarios y Roles'])->group(function () {
     // -------- Usuarios --------
@@ -61,18 +63,13 @@ Route::middleware(['auth', 'verificarRol:Gestión de Ventas'])->group(function (
 
 Route::middleware(['auth'])->group(function () {
     Route::prefix('ventas')->name('ventas.')->group(function () {
-
-        // Caja: solo el rol Cajero
         Route::get('/caja', [VentaController::class, 'caja'])->name('caja');
-
-        // Cobrar un pedido (POST)
-     Route::post('/cobrar', [VentaController::class, 'cobrar'])->name('cobrar');
-
-Route::get('/recibo/{idVenta}', [VentaController::class, 'recibo'])->name('ventas.recibo');
-
-
+        Route::post('/cobrar', [VentaController::class, 'cobrar'])->name('cobrar');
+        Route::get('/recibo/{idVenta}', [VentaController::class, 'recibo'])->name('recibo');
+        Route::get('/recibo/pdf/{idVenta}', [PdfController::class, 'reciboVenta'])->name('recibo.pdf');
     });
 });
+
 
 
 

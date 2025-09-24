@@ -13,8 +13,15 @@ class Venta extends Model
     protected $fillable = [
         'idPedido',
         'montoTotal',
-        'fechaPago'
+        'fechaPago',
+        'metodo_pago',
+        'pago_cliente',
+        'cambio',
     ];
+ protected $casts = [
+    'fechaPago' => 'datetime',
+];
+
 
     public function pedido()
     {

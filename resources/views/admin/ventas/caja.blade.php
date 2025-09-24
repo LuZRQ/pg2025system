@@ -83,10 +83,11 @@
                     {{-- Tipo de pago --}}
                     <div class="mb-4">
                         <label class="block text-sm text-amber-700">Tipo de pago</label>
-                        <select class="w-full border rounded-lg px-2 py-2 mt-1 text-amber-800" id="tipoPago">
-                            <option>Efectivo</option>
-                            <option>Tarjeta</option>
-                            <option>QR</option>
+                        <select class="w-full border rounded-lg px-2 py-2 mt-1 text-amber-800" id="tipoPago"
+                            name="tipo_pago"">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Tarjeta">Tarjeta</option>
+                            <option value="QR">QR</option>
                         </select>
                     </div>
 
@@ -94,7 +95,7 @@
                     <div class="mb-4">
                         <label class="block text-sm text-amber-700">Pago del cliente</label>
                         <input type="number" class="w-full border rounded-lg px-2 py-2 mt-1 text-amber-900"
-                            id="pagoCliente" placeholder="0.00">
+                            id="pagoCliente" name="pago_cliente" placeholder="0.00">
                     </div>
 
                     {{-- Cambio --}}
@@ -127,16 +128,19 @@
                             ✖ Cerrar
                         </a>
 
-                        {{-- Terminar: manda a cobrar --}}
-                        <form action="{{ route('ventas.cobrar') }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="idPedido" id="pedidoIdSeleccionado">
-                            <input type="hidden" name="montoTotal" id="montoTotalInput">
-                            <button type="submit"
-                                class="px-6 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 shadow">
-                                ✔ Terminar orden
-                            </button>
-                        </form>
+                       <form action="{{ route('ventas.cobrar') }}" method="POST">
+    @csrf
+    <input type="hidden" name="idPedido" id="pedidoIdSeleccionado">
+    <input type="hidden" name="montoTotal" id="montoTotalInput">
+    <input type="hidden" name="tipo_pago" id="tipoPagoInput">
+    <input type="hidden" name="pago_cliente" id="pagoClienteInput">
+
+    <button type="submit"
+        class="px-6 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 shadow">
+        ✔ Terminar orden
+    </button>
+</form>
+
                     </div>
 
                 </div>
