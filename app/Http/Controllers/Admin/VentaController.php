@@ -121,6 +121,7 @@ class VentaController extends Controller
             abort(403, 'No tienes permisos para acceder a la caja');
         }
 
+        // Pedidos listos sin venta
         $pedidos = Pedido::where('estado', 'listo')
             ->doesntHave('venta')
             ->with('detalles.producto')
@@ -138,15 +139,30 @@ class VentaController extends Controller
                         'precio' => $d->producto->precio,
                         'subtotal' => $d->subtotal,
                     ];
-                })->values(), // 👈 importante
+                })->values(),
             ];
-        })->values(); // 👈 forzamos array
+        })->values();
 
+        // 👇 Datos de resumen de caja
+        $ultimoCierre = \App\Models\CierreCaja::latest()->first();
+        $fondoInicial = $ultimoCierre ? $ultimoCierre->total_caja : 1000;
 
-        // 👇 OJO: hay que enviar $pedidos Y $pedidosJS a la vista
+        $ventasHoy = \App\Models\Venta::whereDate('fechaPago', now()->toDateString())->get();
+        $totalEfectivo = $ventasHoy->where('metodo_pago', 'efectivo')->sum('montoTotal');
+        $totalTarjeta  = $ventasHoy->where('metodo_pago', 'tarjeta')->sum('montoTotal');
+        $totalQR       = $ventasHoy->where('metodo_pago', 'qr')->sum('montoTotal');
+
+        $totalEnCaja = $fondoInicial + $totalEfectivo + $totalTarjeta + $totalQR;
+
+        // Pasamos **todo** a la vista
         return view('admin.ventas.caja', [
             'pedidos' => $pedidos,
             'pedidosJS' => $pedidosJS,
+            'fondoInicial' => $fondoInicial,
+            'totalEnCaja' => $totalEnCaja,
+            'totalEfectivo' => $totalEfectivo,
+            'totalTarjeta' => $totalTarjeta,
+            'totalQR' => $totalQR,
         ]);
     }
 
@@ -154,39 +170,40 @@ class VentaController extends Controller
 
 
 
+
     public function cobrar(Request $request)
-{
-    $request->validate([
-        'idPedido' => 'required|exists:Pedido,idPedido',
-        'tipo_pago' => 'required|string',
-        'pago_cliente' => 'required|numeric|min:0',
-    ]);
+    {
+        $request->validate([
+            'idPedido' => 'required|exists:Pedido,idPedido',
+            'tipo_pago' => 'required|string',
+            'pago_cliente' => 'required|numeric|min:0',
+        ]);
 
-    $pedido = Pedido::with('detalles.producto')->findOrFail($request->idPedido);
+        $pedido = Pedido::with('detalles.producto')->findOrFail($request->idPedido);
 
-    // Calcular total del pedido
-    $total = $pedido->detalles->sum(fn($d) => $d->subtotal);
+        // Calcular total del pedido
+        $total = $pedido->detalles->sum(fn($d) => $d->subtotal);
 
-    // Pago y cambio
-    $pagoCliente = $request->pago_cliente;
-    $cambio = $pagoCliente - $total;
+        // Pago y cambio
+        $pagoCliente = $request->pago_cliente;
+        $cambio = $pagoCliente - $total;
 
-    // Crear la venta
-    $venta = Venta::create([
-        'idPedido'     => $pedido->idPedido,
-        'montoTotal'   => $total,
-        'fechaPago'    => now(),
-        'metodo_pago'  => $request->tipo_pago,
-        'pago_cliente' => $pagoCliente,
-        'cambio'       => $cambio,
-    ]);
+        // Crear la venta
+        $venta = Venta::create([
+            'idPedido'     => $pedido->idPedido,
+            'montoTotal'   => $total,
+            'fechaPago'    => now(),
+            'metodo_pago'  => $request->tipo_pago,
+            'pago_cliente' => $pagoCliente,
+            'cambio'       => $cambio,
+        ]);
 
-    // Actualizar estado del pedido
-    $pedido->update(['estado' => 'pagado']);
+        // Actualizar estado del pedido
+        $pedido->update(['estado' => 'pagado']);
 
-    // Redirigir al recibo
-    return redirect()->route('ventas.recibo', $venta->idVenta);
-}
+        // Redirigir al recibo
+        return redirect()->route('ventas.recibo', $venta->idVenta);
+    }
 
     public function recibo($idVenta)
     {

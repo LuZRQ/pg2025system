@@ -77,4 +77,35 @@ document.addEventListener('DOMContentLoaded', () => {
         // Actualizamos el input hidden
         pagoClienteInput.value = pagoCliente.value;
     });
+
+    // 🚀 Aquí viene lo nuevo: manejar el submit vía AJAX
+    const formCobrar = document.getElementById('formCobrar');
+    formCobrar.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const data = new FormData(this);
+
+        fetch(this.action, {
+            method: 'POST',
+            body: data,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        })
+        .then(res => res.json())
+        .then(json => {
+            if (json.success) {
+                // Actualizamos totales de caja en tiempo real
+                document.getElementById('totalEfectivo').textContent = `Bs. ${json.totalEfectivo.toFixed(2)}`;
+                document.getElementById('totalTarjeta').textContent = `Bs. ${json.totalTarjeta.toFixed(2)}`;
+                document.getElementById('totalQR').textContent = `Bs. ${json.totalQR.toFixed(2)}`;
+                document.getElementById('totalEnCaja').textContent = `Bs. ${json.totalCaja.toFixed(2)}`;
+
+                alert("✅ Venta registrada correctamente");
+            } else {
+                alert("❌ Error: " + json.message);
+            }
+        })
+        .catch(err => console.error(err));
+    });
 });

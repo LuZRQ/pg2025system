@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\{
     StockController,
     VentaController,
     PedidoController,
+    CajaController,
     ReporteController
 };
 use App\Http\Controllers\PdfController as ControllersPdfController;
@@ -70,8 +71,17 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
+// =============== CAJA ===============
+Route::middleware(['auth'])->group(function () {
 
+    Route::prefix('caja')->name('caja.')->group(function () {
+      
+        Route::post('/cerrar', [CajaController::class, 'cerrarCaja'])->name('cerrar');
+        Route::get('/export/excel', [CajaController::class, 'exportExcel'])->name('export.excel');
+        Route::get('/export/pdf', [CajaController::class, 'exportPDF'])->name('export.pdf');
+    });
 
+});
 
 
 

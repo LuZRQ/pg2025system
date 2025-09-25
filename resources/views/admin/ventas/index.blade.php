@@ -136,12 +136,7 @@
                                 <li>- {{ $detalle->cantidad }} x {{ $detalle->producto->nombre }}</li>
                             @endforeach
                         </ul>
-                        <div class="flex justify-end">
-                            @if (Auth::user()->rol?->nombre === 'Cajero')
-                                <button
-                                    class="bg-amber-700 text-white px-3 py-1 rounded-lg hover:bg-amber-800 text-sm">Cobrar</button>
-                            @endif
-                        </div>
+                       
                     </div>
                 @empty
                     <p class="text-gray-500">No hay pedidos listos todavía.</p>
