@@ -7,16 +7,22 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 class VentasExport implements FromCollection
 {
-   
-     public function collection()
+protected $ventas;
+
+    public function __construct($ventas)
     {
-        return Venta::with('pedido.usuario')->get()->map(function($venta) {
+        $this->ventas = $ventas;
+    }
+
+    public function collection()
+    {
+        return $this->ventas->map(function($venta) {
             return [
                 'ID Venta'      => $venta->idVenta,
                 'ID Pedido'     => $venta->idPedido,
                 'Usuario'       => $venta->pedido->usuario->nombre ?? '',
                 'Monto Total'   => $venta->montoTotal,
-                'Método Pago'   => $venta->metodo_pago ?? '',
+                'Método Pago'   => ucfirst($venta->metodo_pago ?? ''),
                 'Fecha Pago'    => $venta->fechaPago,
             ];
         });

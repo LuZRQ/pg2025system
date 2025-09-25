@@ -8,13 +8,7 @@
         <div class="flex justify-center mb-6 border-b pb-4">
             <h1 class="font-bold text-2xl text-amber-900">👨‍🍳 Módulo de Pedidos de Cocina</h1>
         </div>
-@auth
-    <p>Usuario logueado: {{ Auth::user()->nombre }} (CI: {{ Auth::user()->ciUsuario }})</p>
-@endauth
 
-@guest
-    <p>No hay usuario logueado 🚨</p>
-@endguest
 
         {{-- Filtros --}}
         <div class="flex space-x-3 mb-8 justify-center">

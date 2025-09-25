@@ -46,7 +46,7 @@ Route::middleware(['auth', 'verificarRol:Usuarios y Roles'])->group(function () 
     Route::get('auditoria/{id}', [AuditoriaController::class, 'show'])->name('auditoria.show');
 });
 
-// =============== VENTAS (modulo: Gestión de Ventas) ===============
+// =============== VENTAS (módulo: Gestión de Ventas) ===============
 Route::middleware(['auth', 'verificarRol:Gestión de Ventas'])->group(function () {
     Route::prefix('ventas')->name('ventas.')->group(function () {
         Route::get('/', [VentaController::class, 'index'])->name('index');
@@ -54,37 +54,25 @@ Route::middleware(['auth', 'verificarRol:Gestión de Ventas'])->group(function (
         Route::post('/', [VentaController::class, 'store'])->name('guardar');
 
         // Historial de ventas
-       Route::get('/historial', [VentaController::class, 'historial'])->name('historial');
-
+        Route::get('/historial', [VentaController::class, 'historial'])->name('historial');
 
         // Enviar pedidos a cocina
         Route::post('/enviarACocina', [VentaController::class, 'enviarACocina'])->name('enviarACocina');
-    });
-});
 
-Route::middleware(['auth'])->group(function () {
-    Route::prefix('ventas')->name('ventas.')->group(function () {
-        Route::get('/caja', [VentaController::class, 'caja'])->name('caja');
-        Route::post('/cobrar', [VentaController::class, 'cobrar'])->name('cobrar');
-        Route::get('/recibo/{idVenta}', [VentaController::class, 'recibo'])->name('recibo');
+        // 💰 Caja (parte de ventas, pero usa CajaController)
+        Route::get('/caja', [CajaController::class, 'index'])->name('caja');
+        Route::post('/cobrar', [CajaController::class, 'cobrar'])->name('cobrar');
+        Route::get('/recibo/{idVenta}', [CajaController::class, 'recibo'])->name('recibo');
+        Route::post('/cerrarCaja', [CajaController::class, 'cerrarCaja'])->name('cerrarCaja');
+
+        // Exportaciones
+        Route::get('/caja/export/excel', [CajaController::class, 'exportExcel'])->name('caja.export.excel');
+        Route::get('/caja/export/pdf', [CajaController::class, 'exportPDF'])->name('caja.export.pdf');
+
+        // Recibo en PDF con PdfController (si lo mantienes)
         Route::get('/recibo/pdf/{idVenta}', [PdfController::class, 'reciboVenta'])->name('recibo.pdf');
     });
 });
-
-// =============== CAJA ===============
-Route::middleware(['auth'])->group(function () {
-
-    Route::prefix('caja')->name('caja.')->group(function () {
-      
-        Route::post('/cerrar', [CajaController::class, 'cerrarCaja'])->name('cerrar');
-        Route::get('/export/excel', [CajaController::class, 'exportExcel'])->name('export.excel');
-        Route::get('/export/pdf', [CajaController::class, 'exportPDF'])->name('export.pdf');
-    });
-
-});
-
-
-
 
 
 // =============== COCINA (modulos: Pedidos de Cocina, Gestión de Productos, Control de Stock) ===============
@@ -109,3 +97,28 @@ Route::middleware(['auth', 'verificarRol:Pedidos de Cocina,Gestión de Productos
     Route::post('stock/{idProducto}/entrada', [StockController::class, 'entrada'])->name('stock.entrada');
     Route::post('stock/{idProducto}/salida', [StockController::class, 'salida'])->name('stock.salida');
 });
+
+
+
+// =============== REPORTES (Módulo: Ventas, Stock) ===============
+// Reportes
+Route::middleware(['auth', 'verificarRol:Gestión de Reportes'])->group(function () {
+
+    // -------- Página principal de reportes --------
+    Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+
+    // -------- Ventas --------
+    Route::get('/reportes/ventas/dia/pdf', [ReporteController::class, 'ventasPDF'])->name('reportes.ventasPDF');
+    Route::get('/reportes/ventas/dia/excel', [ReporteController::class, 'ventasDiaExcel'])->name('reportes.ventasDiaExcel');
+
+    Route::get('/reportes/ventas/semana/pdf', [ReporteController::class, 'ventasSemanalPDF'])->name('reportes.ventasSemanalPDF');
+    Route::get('/reportes/ventas/semana/excel', [ReporteController::class, 'ventasSemanaExcel'])->name('reportes.ventasSemanaExcel');
+
+    Route::get('/reportes/ventas/mes/pdf', [ReporteController::class, 'ventasMesPDF'])->name('reportes.ventasMesPDF');
+    Route::get('/reportes/ventas/mes/excel', [ReporteController::class, 'ventasMesExcel'])->name('reportes.ventasMesExcel');
+
+    // -------- Stock --------
+    Route::get('/reportes/stock/pdf', [ReporteController::class, 'stockPDF'])->name('reportes.stockPDF');
+    Route::get('/reportes/stock/excel', [ReporteController::class, 'stockExcel'])->name('reportes.stockExcel');
+});
+

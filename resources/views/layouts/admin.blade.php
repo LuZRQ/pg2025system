@@ -11,6 +11,9 @@
     <!-- Dentro de <head> -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+<link rel="stylesheet" href="{{ asset('ayonix/style.css') }}" type="text/css">
+<script src="{{ asset('ayonix/app.js') }}"></script>
+@vite(['resources/js/reporte.js'])
 
 
 </head>
@@ -51,7 +54,7 @@
             <a href="{{ route('productos.index') }}" class="block py-2 hover:text-amber-300">Gestión de Productos</a>
             <a href="{{ route('stock.index') }}" class="block py-2 hover:text-amber-300">Control de Stock</a>
             <a href="{{ route('pedidos.index') }}" class="block py-2 hover:text-amber-300">Pedidos de Cocina</a>
-            <a href="#" class="block py-2 hover:text-amber-300">Gestión de Reportes</a>
+            <a href="{{ route('reportes.index') }}" class="block py-2 hover:text-amber-300">Gestión de Reportes</a>
 
             <a href="#" class="block py-2 hover:text-amber-300">Gestión de Auditoría</a>
 

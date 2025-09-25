@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tipoPagoInput = document.getElementById('tipoPagoInput');
     const pagoClienteInput = document.getElementById('pagoClienteInput');
 
-    // Parseamos los pedidos desde el dataset
+    // Pedidos listos y sin venta (desde dataset)
     const pedidos = JSON.parse(selectPedido.dataset.pedidos || '[]');
 
     function mostrarPedido(idPedido) {
@@ -60,52 +60,26 @@ document.addEventListener('DOMContentLoaded', () => {
         pagoClienteInput.value = '';
     }
 
+    // Al cambiar el pedido seleccionado
     selectPedido.addEventListener('change', () => {
         mostrarPedido(selectPedido.value);
     });
 
+    // Al cambiar el tipo de pago
     tipoPago.addEventListener('change', () => {
         tipoPagoInput.value = tipoPago.value;
     });
 
+    // Calcular cambio en tiempo real
     pagoCliente.addEventListener('input', () => {
         const total = parseFloat(totalPagar.textContent.replace('Bs. ', '')) || 0;
         const pago = parseFloat(pagoCliente.value) || 0;
         const restante = pago - total;
         cambio.textContent = `Bs. ${restante >= 0 ? restante.toFixed(2) : '0.00'}`;
 
-        // Actualizamos el input hidden
         pagoClienteInput.value = pagoCliente.value;
     });
 
-    // 🚀 Aquí viene lo nuevo: manejar el submit vía AJAX
-    const formCobrar = document.getElementById('formCobrar');
-    formCobrar.addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        const data = new FormData(this);
-
-        fetch(this.action, {
-            method: 'POST',
-            body: data,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            }
-        })
-        .then(res => res.json())
-        .then(json => {
-            if (json.success) {
-                // Actualizamos totales de caja en tiempo real
-                document.getElementById('totalEfectivo').textContent = `Bs. ${json.totalEfectivo.toFixed(2)}`;
-                document.getElementById('totalTarjeta').textContent = `Bs. ${json.totalTarjeta.toFixed(2)}`;
-                document.getElementById('totalQR').textContent = `Bs. ${json.totalQR.toFixed(2)}`;
-                document.getElementById('totalEnCaja').textContent = `Bs. ${json.totalCaja.toFixed(2)}`;
-
-                alert("✅ Venta registrada correctamente");
-            } else {
-                alert("❌ Error: " + json.message);
-            }
-        })
-        .catch(err => console.error(err));
-    });
+    // ✅ No AJAX: dejamos que el formulario haga submit normal
+    // Laravel se encargará de registrar la venta y redirigir al recibo
 });
