@@ -19,68 +19,69 @@ class ReporteController extends Controller
     public function index()
     {
         // 1️⃣ Total Ventas del Día
-        $totalVentasDia = Venta::whereDate('fechaPago', now()->toDateString())
-            ->sum('montoTotal');
+$totalVentasDia = Venta::whereDate('fechaPago', now()->toDateString())
+    ->sum('montoTotal');
 
-        // 2️⃣ Pedidos Atendidos del Día
-        $pedidosAtendidosDia = Pedido::whereDate('updated_at', now()->toDateString())
-            ->where('estado', 'pagado')
-            ->count();
+// 2️⃣ Pedidos Atendidos del Día
+$pedidosAtendidosDia = Pedido::whereDate('fechaCreacion', now()->toDateString()) // 🔹 cambiado
+    ->where('estado', 'pagado')
+    ->count();
 
-        // 3️⃣ Producto Más Vendido del Día
-        $productoMasVendido = DetallePedido::selectRaw('producto_id, SUM(cantidad) as cantidad')
-            ->whereHas('pedido', function ($q) {
-                $q->whereDate('updated_at', now()->toDateString())
-                    ->where('estado', 'pagado');
-            })
-            ->groupBy('producto_id')
-            ->orderByDesc('cantidad')
-            ->with('producto')
-            ->first();
+// 3️⃣ Producto Más Vendido del Día
+$productoMasVendido = DetallePedido::selectRaw('idProducto, SUM(cantidad) as cantidad')
+    ->whereHas('pedido', function ($q) {
+        $q->whereDate('fechaCreacion', now()->toDateString()) // 🔹 cambiado
+          ->where('estado', 'pagado');
+    })
+    ->groupBy('idProducto')
+    ->orderByDesc('cantidad')
+    ->with('producto')
+    ->first();
 
-        // 4️⃣ Top 5 Productos del Día
-        $top5Productos = DetallePedido::selectRaw('producto_id, SUM(cantidad) as cantidad')
-            ->whereHas('pedido', function ($q) {
-                $q->whereDate('updated_at', now()->toDateString())
-                    ->where('estado', 'pagado');
-            })
-            ->groupBy('producto_id')
-            ->orderByDesc('cantidad')
-            ->with('producto')
-            ->take(5)
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'nombre' => $item->producto->nombre ?? 'Producto',
-                    'cantidad' => $item->cantidad
-                ];
-            });
+// 4️⃣ Top 5 Productos del Día
+$top5Productos = DetallePedido::selectRaw('idProducto, SUM(cantidad) as cantidad')
+    ->whereHas('pedido', function ($q) {
+        $q->whereDate('fechaCreacion', now()->toDateString()) // 🔹 cambiado
+          ->where('estado', 'pagado');
+    })
+    ->groupBy('idProducto')
+    ->orderByDesc('cantidad')
+    ->with('producto')
+    ->take(5)
+    ->get()
+    ->map(function ($item) {
+        return [
+            'nombre'   => $item->producto->nombre ?? 'Producto',
+            'cantidad' => $item->cantidad
+        ];
+    });
 
-        // 5️⃣ Ventas últimos 7 días (para gráfico de barras)
-        $ventasSemana = collect();
-        for ($i = 6; $i >= 0; $i--) {
-            $fecha = now()->subDays($i)->toDateString();
-            $total = Venta::whereDate('fechaPago', $fecha)->sum('montoTotal');
-            $ventasSemana->push([
-                'fecha' => $fecha,
-                'total' => $total
-            ]);
-        }
+// 5️⃣ Ventas últimos 7 días (para gráfico de barras)
+$ventasSemana = collect();
+for ($i = 6; $i >= 0; $i--) {
+    $fecha = now()->subDays($i)->toDateString();
+    $total = Venta::whereDate('fechaPago', $fecha)->sum('montoTotal');
+    $ventasSemana->push([
+        'fecha' => $fecha,
+        'total' => $total
+    ]);
+}
 
-        // 6️⃣ Stock crítico (ejemplo: stock <= 5)
-        $stockCritico = Producto::where('stock', '<=', 5)->get();
+// 6️⃣ Stock crítico (ejemplo: stock <= 5)
+$stockCritico = Producto::where('stock', '<=', 5)->get();
 
-        return view('reportes.index', [
-            'totalVentasDia'     => $totalVentasDia,
-            'pedidosAtendidosDia' => $pedidosAtendidosDia,
-            'productoMasVendido' => $productoMasVendido ? (object)[
-                'nombre' => $productoMasVendido->producto->nombre ?? '-',
-                'cantidad' => $productoMasVendido->cantidad
-            ] : null,
-            'top5Productos'      => $top5Productos,
-            'ventasSemana'       => $ventasSemana,
-            'stockCritico'       => $stockCritico,
-        ]);
+return view('admin.reportes.index', [
+    'totalVentasDia'      => $totalVentasDia,
+    'pedidosAtendidosDia' => $pedidosAtendidosDia,
+    'productoMasVendido'  => $productoMasVendido ? (object)[
+        'nombre'   => $productoMasVendido->producto->nombre ?? '-',
+        'cantidad' => $productoMasVendido->cantidad
+    ] : null,
+    'top5Productos'       => $top5Productos,
+    'ventasSemana'        => $ventasSemana,
+    'stockCritico'        => $stockCritico,
+]);
+
     }
 
  // Ventas del día - PDF

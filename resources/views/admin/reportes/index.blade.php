@@ -93,14 +93,16 @@
             </a>
 
             {{-- Resumen mensual PDF/Excel --}}
-            <a href="{{ route('reportes.resumenPDF') }}"
-                class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
-                <i class="fas fa-download"></i> Resumen Mensual (PDF)
-            </a>
-            <a href="{{ route('reportes.resumenExcel') }}"
-                class="px-6 py-2 bg-amber-700 hover:bg-amber-500 text-white font-medium rounded-lg shadow flex items-center gap-2">
-                <i class="fas fa-file-excel"></i> Resumen Mensual (Excel)
-            </a>
+           {{-- Resumen mensual PDF/Excel --}}
+<a href="{{ route('reportes.ventasMesPDF') }}"
+    class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
+    <i class="fas fa-download"></i> Resumen Mensual (PDF)
+</a>
+<a href="{{ route('reportes.ventasMesExcel') }}"
+    class="px-6 py-2 bg-amber-700 hover:bg-amber-500 text-white font-medium rounded-lg shadow flex items-center gap-2">
+    <i class="fas fa-file-excel"></i> Resumen Mensual (Excel)
+</a>
+
         </div>
 
 
