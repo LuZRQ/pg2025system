@@ -93,7 +93,9 @@ document.querySelectorAll('.btn-categoria').forEach(btn => {
     }
 
     // Enviar pedido
-    document.getElementById('btn-enviar-pedido').addEventListener('click', () => {
+    const btnEnviar = document.getElementById('btn-enviar-pedido');
+if (btnEnviar) {
+    btnEnviar.addEventListener('click', () => {
         if (pedido.length === 0) return alert("No hay productos en el pedido");
 
         formEnviar.mesa.value = mesaSelect.value.replace("Mesa: ", "");
@@ -103,11 +105,17 @@ document.querySelectorAll('.btn-categoria').forEach(btn => {
         alert("✅ Pedido enviado correctamente a cocina.");
         cancelarPedido();
     });
+}
+
 
     // Cancelar pedido
-    document.getElementById('btn-cancelar-pedido').addEventListener('click', () => {
+ const btnCancelar = document.getElementById('btn-cancelar-pedido');
+if (btnCancelar) {
+    btnCancelar.addEventListener('click', () => {
         cancelarPedido();
     });
+}
+
 
     function cancelarPedido() {
         pedido = [];
