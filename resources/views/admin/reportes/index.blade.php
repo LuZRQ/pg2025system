@@ -92,14 +92,36 @@
             @endforelse
         </div>
     </div>
+    {{-- Tendencias de Productos --}}
+    <div class="bg-white p-6 rounded-2xl shadow border border-indigo-200 mb-10">
+        <h3 class="font-semibold text-indigo-900 mb-4">Alertas de Tendencia de Productos</h3>
+        <div class="space-y-3">
+            @forelse($tendencias as $t)
+                <div
+                    class="flex items-center gap-3 p-3 {{ $t['tipo'] == 'subiendo' ? 'bg-green-50 border-l-4 border-green-500' : 'bg-red-50 border-l-4 border-red-500' }} rounded">
+                    <span class="{{ $t['tipo'] == 'subiendo' ? 'text-green-600' : 'text-red-600' }}">
+                        <i class="{{ $t['tipo'] == 'subiendo' ? 'fas fa-arrow-up' : 'fas fa-arrow-down' }}"></i>
+                    </span>
+                    <p class="text-gray-700">
+                        {{ $t['producto'] }} está {{ $t['tipo'] == 'subiendo' ? 'en aumento' : 'disminuyendo' }}
+                        ({{ $t['cambio'] }}%)
+                    </p>
+                </div>
+            @empty
+                <p class="text-gray-500">No hay productos con cambios significativos esta semana.</p>
+            @endforelse
+        </div>
+    </div>
+
 
     {{-- Reportes para Descargar --}}
     <div class="flex flex-wrap gap-4 mt-4">
         {{-- Ventas PDF/Excel --}}
-        <a href="{{ route('reportes.ventasPDF') }}"
-            class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
-            <i class="fas fa-download"></i> Ventas (PDF)
-        </a>
+      <a href="{{ route('reportes.ventasDiaPDF') }}"
+    class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
+    <i class="fas fa-download"></i> Ventas del Día (PDF)
+</a>
+
         <a href="{{ route('reportes.ventasDiaExcel') }}"
             class="px-6 py-2 bg-amber-700 hover:bg-amber-500 text-white font-medium rounded-lg shadow flex items-center gap-2">
             <i class="fas fa-file-excel"></i> Ventas (Excel)
@@ -193,10 +215,10 @@
                 <tbody class="divide-y divide-gray-200">
                     @forelse($reportes as $reporte)
                         <tr class="hover:bg-brown-50 transition">
-                            <td class="px-4 py-3 text-gray-700">{{ $reporte->fecha }}</td>
+                            <td class="px-4 py-3 text-gray-700">{{ $reporte->fechaGeneracion }}</td>
                             <td class="px-4 py-3 text-gray-700">{{ $reporte->tipo }}</td>
                             <td class="px-4 py-3 text-center">
-                                <a href="{{ route('reportes.show', $reporte->id) }}"
+                                <a href="{{ route('reportes.show', $reporte->idReporte) }}"
                                     class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-brown-500 hover:bg-brown-600 rounded-md shadow-sm transition">
                                     <i class="fa-solid fa-eye"></i> Ver
                                 </a>

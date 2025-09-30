@@ -6,94 +6,164 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Venta;
 use App\Models\Pedido;
+use App\Models\Reporte;
 use App\Models\Producto;
 use App\Models\DetallePedido;
-use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\VentasExport;
-
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 use App\Exports\StockExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ReporteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // 1️⃣ Total Ventas del Día
-$totalVentasDia = Venta::whereDate('fechaPago', now()->toDateString())
-    ->sum('montoTotal');
+        // ✅ 1. Estadísticas del día
+        $totalVentasDia = Venta::whereDate('fechaPago', now()->toDateString())->sum('montoTotal');
 
-// 2️⃣ Pedidos Atendidos del Día
-$pedidosAtendidosDia = Pedido::whereDate('fechaCreacion', now()->toDateString()) // 🔹 cambiado
-    ->where('estado', 'pagado')
-    ->count();
+        $pedidosAtendidosDia = Pedido::whereDate('fechaCreacion', now()->toDateString())
+            ->where('estado', 'pagado')
+            ->count();
 
-// 3️⃣ Producto Más Vendido del Día
-$productoMasVendido = DetallePedido::selectRaw('idProducto, SUM(cantidad) as cantidad')
-    ->whereHas('pedido', function ($q) {
-        $q->whereDate('fechaCreacion', now()->toDateString()) // 🔹 cambiado
-          ->where('estado', 'pagado');
-    })
-    ->groupBy('idProducto')
-    ->orderByDesc('cantidad')
-    ->with('producto')
-    ->first();
+        $productoMasVendido = DetallePedido::selectRaw('idProducto, SUM(cantidad) as cantidad')
+            ->whereHas('pedido', function ($q) {
+                $q->whereDate('fechaCreacion', now()->toDateString())
+                    ->where('estado', 'pagado');
+            })
+            ->groupBy('idProducto')
+            ->orderByDesc('cantidad')
+            ->with('producto')
+            ->first();
 
-// 4️⃣ Top 5 Productos del Día
-$top5Productos = DetallePedido::selectRaw('idProducto, SUM(cantidad) as cantidad')
-    ->whereHas('pedido', function ($q) {
-        $q->whereDate('fechaCreacion', now()->toDateString()) // 🔹 cambiado
-          ->where('estado', 'pagado');
-    })
-    ->groupBy('idProducto')
-    ->orderByDesc('cantidad')
-    ->with('producto')
-    ->take(5)
-    ->get()
-    ->map(function ($item) {
-        return [
-            'nombre'   => $item->producto->nombre ?? 'Producto',
-            'cantidad' => $item->cantidad
-        ];
-    });
+        $top5Productos = DetallePedido::selectRaw('idProducto, SUM(cantidad) as cantidad')
+            ->whereHas('pedido', function ($q) {
+                $q->whereDate('fechaCreacion', now()->toDateString())
+                    ->where('estado', 'pagado');
+            })
+            ->groupBy('idProducto')
+            ->orderByDesc('cantidad')
+            ->with('producto')
+            ->take(5)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'nombre'   => $item->producto->nombre ?? 'Producto',
+                    'cantidad' => $item->cantidad
+                ];
+            });
 
-// 5️⃣ Ventas últimos 7 días (para gráfico de barras)
-$ventasSemana = collect();
-for ($i = 6; $i >= 0; $i--) {
-    $fecha = now()->subDays($i)->toDateString();
-    $total = Venta::whereDate('fechaPago', $fecha)->sum('montoTotal');
-    $ventasSemana->push([
-        'fecha' => $fecha,
-        'total' => $total
-    ]);
-}
+        // ✅ 2. Gráfico de ventas últimos 7 días
+        $ventasSemana = collect();
+        for ($i = 6; $i >= 0; $i--) {
+            $fecha = now()->subDays($i)->toDateString();
+            $total = Venta::whereDate('fechaPago', $fecha)->sum('montoTotal');
+            $ventasSemana->push(['fecha' => $fecha, 'total' => $total]);
+        }
 
-// 6️⃣ Stock crítico (ejemplo: stock <= 5)
-$stockCritico = Producto::where('stock', '<=', 5)->get();
+        // ✅ 3. Stock crítico
+        $stockCritico = Producto::where('stock', '<=', 5)->get();
 
-return view('admin.reportes.index', [
-    'totalVentasDia'      => $totalVentasDia,
-    'pedidosAtendidosDia' => $pedidosAtendidosDia,
-    'productoMasVendido'  => $productoMasVendido ? (object)[
-        'nombre'   => $productoMasVendido->producto->nombre ?? '-',
-        'cantidad' => $productoMasVendido->cantidad
-    ] : null,
-    'top5Productos'       => $top5Productos,
-    'ventasSemana'        => $ventasSemana,
-    'stockCritico'        => $stockCritico,
-]);
+        // ✅ 4. Tendencias de ventas
+        $ventasActuales = DetallePedido::selectRaw('idProducto, SUM(cantidad) as cantidad')
+            ->whereHas('pedido', fn($q) => $q->whereBetween('fechaCreacion', [now()->subDays(6), now()]))
+            ->groupBy('idProducto')
+            ->with('producto')
+            ->get()
+            ->keyBy('idProducto');
 
+        $ventasPrevias = DetallePedido::selectRaw('idProducto, SUM(cantidad) as cantidad')
+            ->whereHas('pedido', fn($q) => $q->whereBetween('fechaCreacion', [now()->subDays(13), now()->subDays(7)]))
+            ->groupBy('idProducto')
+            ->get()
+            ->keyBy('idProducto');
+
+        $tendencias = [];
+        foreach ($ventasActuales as $id => $actual) {
+            $previa = $ventasPrevias[$id]->cantidad ?? 0;
+            $cambio = $previa > 0 ? (($actual->cantidad - $previa) / $previa) * 100 : 100;
+
+            if ($cambio >= 20) {
+                $tendencias[] = [
+                    'producto' => $actual->producto->nombre ?? 'Producto',
+                    'tipo' => 'subiendo',
+                    'cambio' => round($cambio)
+                ];
+            } elseif ($cambio <= -20) {
+                $tendencias[] = [
+                    'producto' => $actual->producto->nombre ?? 'Producto',
+                    'tipo' => 'bajando',
+                    'cambio' => round(abs($cambio))
+                ];
+            }
+        }
+
+        // ✅ 5. Reportes históricos (lo que te faltaba y causa el error)
+        $query = Reporte::query();
+
+        if ($request->filled('categoria')) {
+            $query->where('tipo', $request->categoria);
+        }
+        if ($request->filled('desde')) {
+            $query->whereDate('fechaGeneracion', '>=', $request->desde);
+        }
+        if ($request->filled('hasta')) {
+            $query->whereDate('fechaGeneracion', '<=', $request->hasta);
+        }
+
+        $reportes = $query->orderBy('fechaGeneracion', 'desc')->get();
+
+        // ✅ 6. Retornamos TODO JUNTO
+        return view('admin.reportes.index', [
+            'totalVentasDia'      => $totalVentasDia,
+            'pedidosAtendidosDia' => $pedidosAtendidosDia,
+            'productoMasVendido'  => $productoMasVendido ? (object)[
+                'nombre'   => $productoMasVendido->producto->nombre ?? '-',
+                'cantidad' => $productoMasVendido->cantidad
+            ] : null,
+            'top5Productos'       => $top5Productos,
+            'ventasSemana'        => $ventasSemana,
+            'stockCritico'        => $stockCritico,
+            'tendencias'          => $tendencias,
+            'reportes'            => $reportes, // ✅ Esto evita tu error
+        ]);
     }
 
- // Ventas del día - PDF
-    public function ventasPDF()
+    public function show($id)
     {
-        $ventas = Venta::whereDate('fechaPago', now()->toDateString())
-            ->with('pedido.detalles.producto', 'pedido.usuario')
-            ->get();
-
-        $pdf = Pdf::loadView('reportes.ventasPDF', compact('ventas'));
-        return $pdf->download('ventas_dia.pdf');
+        $reporte = Reporte::findOrFail($id);
+        return view('admin.reportes.show', compact('reporte'));
     }
+
+    public function generarVentasDiaPDF()
+    {
+        // Obtener las ventas del día
+        $ventas = Venta::whereDate('fechaPago', now()->toDateString())->get();
+        $total = $ventas->sum('montoTotal');
+        $fecha = now()->toDateString();
+
+        // Generar PDF usando una vista
+        $pdf = Pdf::loadView('admin.reportes.pdf.ventasDia', compact('ventas', 'total', 'fecha'));
+
+        // Definir nombre del archivo
+        $nombreArchivo = 'ventas_dia_' . $fecha . '.pdf';
+        $ruta = 'reportes/' . $nombreArchivo;
+
+        // Guardar en storage/app/public/reportes
+        Storage::disk('public')->put($ruta, $pdf->output());
+
+        // Registrar en la tabla Reporte
+        Reporte::create([
+            'tipo' => 'ventas_dia',
+            'periodo' => $fecha,
+            'generadoPor' => auth()->user()->name ?? 'Sistema',
+            'archivo' => $ruta,
+        ]);
+
+        // Devolver descarga
+        return response()->download(storage_path('app/public/' . $ruta));
+    }
+
 
     // Ventas del día - Excel
     public function ventasDiaExcel()
@@ -149,16 +219,27 @@ return view('admin.reportes.index', [
 
     // ===== Stock =====
 
- 
+
     // Stock
-    public function stockExcel() {
+    public function stockExcel()
+    {
         return Excel::download(new StockExport, 'stock.xlsx');
     }
 
-    // PDF opcional
-    public function stockPDF() {
+    public function stockPDF()
+    {
         $productos = Producto::all();
+
+        // Crear PDF desde la vista
         $pdf = Pdf::loadView('reportes.stockPDF', compact('productos'));
-        return $pdf->download('stock.pdf');
+
+        // Nombre del archivo con fecha
+        $filename = 'reportes/ventas/stock_' . now()->toDateString() . '.pdf';
+
+        // Guardar en storage/public/reportes/ventas
+        $pdf->save(storage_path('app/public/' . $filename));
+
+        // Retornar para descargar
+        return response()->download(storage_path('app/public/' . $filename));
     }
 }

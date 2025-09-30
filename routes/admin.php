@@ -106,10 +106,15 @@ Route::middleware(['auth', 'verificarRol:Gestión de Reportes'])->group(function
 
     // -------- Página principal de reportes --------
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+    Route::get('/reportes/{id}', [ReporteController::class, 'show'])->name('reportes.show');
+
 
     // -------- Ventas --------
-    Route::get('/reportes/ventas/dia/pdf', [ReporteController::class, 'ventasPDF'])->name('reportes.ventasPDF');
+   
     Route::get('/reportes/ventas/dia/excel', [ReporteController::class, 'ventasDiaExcel'])->name('reportes.ventasDiaExcel');
+Route::get('/reportes/ventas-dia/pdf', [ReporteController::class, 'generarVentasDiaPDF'])
+    ->name('reportes.ventasDiaPDF');
+
 
     Route::get('/reportes/ventas/semana/pdf', [ReporteController::class, 'ventasSemanalPDF'])->name('reportes.ventasSemanalPDF');
     Route::get('/reportes/ventas/semana/excel', [ReporteController::class, 'ventasSemanaExcel'])->name('reportes.ventasSemanaExcel');
@@ -118,7 +123,9 @@ Route::middleware(['auth', 'verificarRol:Gestión de Reportes'])->group(function
     Route::get('/reportes/ventas/mes/excel', [ReporteController::class, 'ventasMesExcel'])->name('reportes.ventasMesExcel');
 
     // -------- Stock --------
-    Route::get('/reportes/stock/pdf', [ReporteController::class, 'stockPDF'])->name('reportes.stockPDF');
+    // web.php
+Route::get('/reportes/stock/pdf', [ReporteController::class, 'stockPDF'])->name('reportes.stockPDF');
+
     Route::get('/reportes/stock/excel', [ReporteController::class, 'stockExcel'])->name('reportes.stockExcel');
 });
 

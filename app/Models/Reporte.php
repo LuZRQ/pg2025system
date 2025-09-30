@@ -8,7 +8,7 @@ class Reporte extends Model
 {
    protected $table = 'Reporte';
     protected $primaryKey = 'idReporte';
-
+public $timestamps = false;
     protected $fillable = [
         'tipo',
         'periodo',
