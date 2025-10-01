@@ -101,31 +101,49 @@ Route::middleware(['auth', 'verificarRol:Pedidos de Cocina,Gestión de Productos
 
 
 // =============== REPORTES (Módulo: Ventas, Stock) ===============
-// Reportes
+
 Route::middleware(['auth', 'verificarRol:Gestión de Reportes'])->group(function () {
 
     // -------- Página principal de reportes --------
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
-    Route::get('/reportes/{id}', [ReporteController::class, 'show'])->name('reportes.show');
 
-
-    // -------- Ventas --------
-   
+    // -------- REPORTES RÁPIDOS --------
+    // Ventas del día
+    Route::get('/reportes/ventas/dia/pdf', [ReporteController::class, 'ventasDiaPDF'])->name('reportes.ventasDiaPDF');
     Route::get('/reportes/ventas/dia/excel', [ReporteController::class, 'ventasDiaExcel'])->name('reportes.ventasDiaExcel');
-Route::get('/reportes/ventas-dia/pdf', [ReporteController::class, 'generarVentasDiaPDF'])
-    ->name('reportes.ventasDiaPDF');
 
-
-    Route::get('/reportes/ventas/semana/pdf', [ReporteController::class, 'ventasSemanalPDF'])->name('reportes.ventasSemanalPDF');
-    Route::get('/reportes/ventas/semana/excel', [ReporteController::class, 'ventasSemanaExcel'])->name('reportes.ventasSemanaExcel');
-
-    Route::get('/reportes/ventas/mes/pdf', [ReporteController::class, 'ventasMesPDF'])->name('reportes.ventasMesPDF');
-    Route::get('/reportes/ventas/mes/excel', [ReporteController::class, 'ventasMesExcel'])->name('reportes.ventasMesExcel');
-
-    // -------- Stock --------
-    // web.php
-Route::get('/reportes/stock/pdf', [ReporteController::class, 'stockPDF'])->name('reportes.stockPDF');
-
+    // Stock general
+    Route::get('/reportes/stock/pdf', [ReporteController::class, 'stockPDF'])->name('reportes.stockPDF');
     Route::get('/reportes/stock/excel', [ReporteController::class, 'stockExcel'])->name('reportes.stockExcel');
+
+    // -------- REPORTES AVANZADOS --------
+    // Productos más vendidos del mes
+    Route::get('/reportes/productos-mes/pdf', [ReporteController::class, 'productosMesPDF'])->name('reportes.productosMesPDF');
+    Route::get('/reportes/productos-mes/excel', [ReporteController::class, 'productosMesExcel'])->name('reportes.productosMesExcel');
+
+    // Ganancia total del mes
+    Route::get('/reportes/ganancia-mes/pdf', [ReporteController::class, 'gananciaMesPDF'])->name('reportes.gananciaMesPDF');
+    Route::get('/reportes/ganancia-mes/excel', [ReporteController::class, 'gananciaMesExcel'])->name('reportes.gananciaMesExcel');
+
+    // Insumos / Productos con alta rotación
+    Route::get('/reportes/alta-rotacion/pdf', [ReporteController::class, 'altaRotacionPDF'])->name('reportes.altaRotacionPDF');
+    Route::get('/reportes/alta-rotacion/excel', [ReporteController::class, 'altaRotacionExcel'])->name('reportes.altaRotacionExcel');
+
+    // Productos con baja venta
+    Route::get('/reportes/baja-venta/pdf', [ReporteController::class, 'bajaVentaPDF'])->name('reportes.bajaVentaPDF');
+    Route::get('/reportes/baja-venta/excel', [ReporteController::class, 'bajaVentaExcel'])->name('reportes.bajaVentaExcel');
+
+Route::get('/reportes/avanzado/{tipo}', [ReporteController::class, 'showAvanzadoPDF'])->name('reportes.showAvanzado');
+
+Route::get('/reportes/descargar/pdf/{tipo}', [ReporteController::class, 'downloadPDF'])->name('reportes.downloadPDF');
+
+Route::get('/reportes/descargar/excel/{tipo}', [ReporteController::class, 'downloadExcel'])->name('reportes.downloadExcel');
+
+
+
+    // -------- SHOW y Descarga histórica --------
+    Route::get('/reportes/{reporte}/show', [ReporteController::class, 'show'])->name('reportes.show');
+    Route::get('/reportes/{reporte}/download/pdf', [ReporteController::class, 'downloadPDF'])->name('reportes.downloadPDF');
+    Route::get('/reportes/{reporte}/download/excel', [ReporteController::class, 'downloadExcel'])->name('reportes.downloadExcel');
 });
 

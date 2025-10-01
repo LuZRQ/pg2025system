@@ -5,9 +5,11 @@ namespace App\Exports;
 use App\Models\Venta;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-class VentasExport implements FromCollection
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+class VentasExport implements FromCollection, WithHeadings, WithStyles
 {
-protected $ventas;
+    protected $ventas;
 
     public function __construct($ventas)
     {
@@ -38,5 +40,21 @@ protected $ventas;
             'Método Pago',
             'Fecha Pago',
         ];
+    }
+
+    public function styles(Worksheet $sheet)
+    {
+        // Encabezado: negrita, centrado y tamaño de fuente
+        $sheet->getStyle('A1:F1')->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle('A1:F1')->getAlignment()->setHorizontal('center');
+
+        // Auto ancho de columnas
+        foreach(range('A','F') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Filas de datos centradas verticalmente
+        $sheet->getStyle('A2:F' . ($this->ventas->count() + 1))
+              ->getAlignment()->setVertical('center');
     }
 }

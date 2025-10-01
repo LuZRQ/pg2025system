@@ -1,65 +1,39 @@
-@extends('layouts.crud') {{-- Ajusta si tu layout tiene otro nombre --}}
+@extends('layouts.crud')
 
 @section('content')
-<div class="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-8 mt-6">
+<div class="container mx-auto p-4">
 
-    {{-- Encabezado --}}
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-brown-800 flex items-center gap-2">
-            <i class="fa-solid fa-file-lines text-brown-600"></i>
-            Detalles del Reporte
-        </h2>
+    <!-- Cabecera -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <i class="fa-solid fa-file-pdf text-red-600"></i>
+            {{ ucfirst(str_replace('_',' ',$reporte->tipo)) }}
+        </h1>
+        <p class="text-gray-600 mt-1">Periodo: {{ $reporte->periodo }}</p>
+        <p class="text-gray-600">Generado por: {{ $reporte->generadoPor }}</p>
+    </div>
 
-        <a href="{{ route('reportes.index') }}"
-           class="text-sm px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg shadow">
-            ← Volver
+   <!-- Botones de descarga -->
+<div class="flex flex-wrap gap-4 mb-6">
+    <a href="{{ route('reportes.downloadPDF', ['reporte' => $reporte->id]) }}" 
+       class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
+        <i class="fas fa-file-pdf"></i> Descargar PDF
+    </a>
+
+    @if(in_array($reporte->tipo, ['ventas_dia','stock','productos_mes','ganancia_mes','alta_rotacion','baja_venta']))
+        <a href="{{ route('reportes.downloadExcel', ['reporte' => $reporte->id]) }}" 
+           class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
+            <i class="fas fa-file-excel"></i> Descargar Excel
         </a>
-    </div>
-
-    {{-- Información del reporte --}}
-    <div class="space-y-4 text-gray-700">
-
-        <div>
-            <span class="font-semibold text-brown-700">Tipo de Reporte:</span>
-            <p>{{ $reporte->tipo }}</p>
-        </div>
-
-        <div>
-            <span class="font-semibold text-brown-700">Periodo:</span>
-            <p>{{ $reporte->periodo ?? '-' }}</p>
-        </div>
-
-        <div>
-            <span class="font-semibold text-brown-700">Generado Por:</span>
-            <p>{{ $reporte->generadoPor }}</p>
-        </div>
-
-        <div>
-            <span class="font-semibold text-brown-700">Fecha de Generación:</span>
-            <p>{{ $reporte->fechaGeneracion }}</p>
-        </div>
-    </div>
-
-    {{-- Botones de descarga --}}
-    @if($reporte->archivo)
-        <div class="mt-8 flex gap-4">
-            {{-- Descargar PDF --}}
-            <a href="{{ asset('storage/reportes/' . $reporte->archivo) }}"
-               class="px-5 py-2 bg-amber-800 hover:bg-amber-600 text-white font-semibold rounded-lg shadow flex items-center gap-2">
-                <i class="fa-solid fa-download"></i>
-                Descargar PDF
-            </a>
-
-            {{-- Si más adelante quieres Excel, duplicas este botón con otro archivo --}}
-        </div>
-    @else
-        <div class="mt-8">
-            <p class="text-gray-500 flex items-center gap-2">
-                <i class="fa-regular fa-circle-xmark text-red-500"></i>
-                No se adjuntó archivo a este reporte.
-            </p>
-        </div>
     @endif
+</div>
+
+
+    <!-- PDF Viewer -->
+    <div class="w-full h-[80vh] border rounded-xl shadow overflow-hidden">
+        <iframe src="{{ asset('storage/' . $reporte->archivo) }}" 
+                class="w-full h-full" frameborder="0"></iframe>
+    </div>
 
 </div>
 @endsection

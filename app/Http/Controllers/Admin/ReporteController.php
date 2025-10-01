@@ -14,6 +14,12 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\StockExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ProductosMesExport;
+use App\Exports\GananciaMesExport;
+use App\Exports\AltaRotacionExport;
+use App\Exports\BajaVentaExport;
+use Illuminate\Support\Facades\Auth;
+
 
 class ReporteController extends Controller
 {
@@ -128,42 +134,143 @@ class ReporteController extends Controller
             'reportes'            => $reportes, // ✅ Esto evita tu error
         ]);
     }
+public function show(Reporte $reporte)
+{
+    $path = storage_path('app/public/' . $reporte->archivo);
+    return view('admin.reportes.show', compact('reporte', 'path'));
+}
+public function showAvanzadoPDF($tipo)
+{
+    $fecha = now()->toDateString();
 
-    public function show($id)
-    {
-        $reporte = Reporte::findOrFail($id);
-        return view('admin.reportes.show', compact('reporte'));
+    switch ($tipo) {
+        case 'productos_mes':
+            $productos = Producto::with('categoria', 'detallePedidos.pedido.venta')
+                ->get()
+                ->map(function ($producto) {
+                    $cantidadVendida = 0;
+
+                    foreach ($producto->detallePedidos as $detalle) {
+                        $venta = $detalle->pedido->venta ?? null;
+
+                        if ($venta && \Carbon\Carbon::parse($venta->fechaPago)->month == now()->month) {
+                            $cantidadVendida += $detalle->cantidad;
+                        }
+                    }
+
+                    $producto->cantidad_vendida = $cantidadVendida;
+                    return $producto;
+                });
+
+            $pdf = Pdf::loadView('admin.reportes.pdf.productosMes', compact('productos'));
+            break;
+
+        case 'ganancia_mes':
+            $productos = Producto::with('detallePedidos.pedido.venta')
+                ->get()
+                ->map(function ($producto) {
+                    $ganancia = 0;
+
+                    foreach ($producto->detallePedidos as $detalle) {
+                        $venta = $detalle->pedido->venta ?? null;
+
+                        if ($venta && \Carbon\Carbon::parse($venta->fechaPago)->month == now()->month) {
+                            $ganancia += $detalle->cantidad * $producto->precio;
+                        }
+                    }
+
+                    $producto->ganancia = $ganancia;
+                    return $producto;
+                });
+
+            $pdf = Pdf::loadView('admin.reportes.pdf.gananciaMes', compact('productos'));
+            break;
+
+        case 'alta_rotacion':
+            $productos = Producto::with('detallePedidos.pedido.venta')
+                ->get()
+                ->map(function ($producto) {
+                    $cantidadVendida = 0;
+
+                    foreach ($producto->detallePedidos as $detalle) {
+                        $venta = $detalle->pedido->venta ?? null;
+
+                        if ($venta && \Carbon\Carbon::parse($venta->fechaPago)->month == now()->month) {
+                            $cantidadVendida += $detalle->cantidad;
+                        }
+                    }
+
+                    $producto->cantidad_vendida = $cantidadVendida;
+                    return $producto;
+                })
+                ->sortByDesc('cantidad_vendida');
+
+            $pdf = Pdf::loadView('admin.reportes.pdf.altaRotacion', compact('productos'));
+            break;
+
+        case 'baja_venta':
+            $productos = Producto::with('detallePedidos.pedido.venta')
+                ->get()
+                ->map(function ($producto) {
+                    $cantidadVendida = 0;
+
+                    foreach ($producto->detallePedidos as $detalle) {
+                        $venta = $detalle->pedido->venta ?? null;
+
+                        if ($venta && \Carbon\Carbon::parse($venta->fechaPago)->month == now()->month) {
+                            $cantidadVendida += $detalle->cantidad;
+                        }
+                    }
+
+                    $producto->cantidad_vendida = $cantidadVendida;
+                    return $producto;
+                })
+                ->sortBy('cantidad_vendida');
+
+            $pdf = Pdf::loadView('admin.reportes.pdf.bajaVenta', compact('productos'));
+            break;
+
+        default:
+            abort(404);
     }
 
-    public function generarVentasDiaPDF()
+    $filename = $tipo . '_' . $fecha . '.pdf';
+    $ruta = 'reportes/' . $filename;
+
+    Storage::disk('public')->put($ruta, $pdf->output());
+
+    $pdfUrl = asset('storage/' . $ruta);
+
+    return view('admin.reportes.showAvanzado', compact('pdfUrl', 'tipo'));
+}
+
+   
+
+   // ===== SECCIÓN 1: REPORTES RÁPIDOS =====
+
+    // Ventas del día - PDF
+    public function ventasDiaPDF()
     {
-        // Obtener las ventas del día
         $ventas = Venta::whereDate('fechaPago', now()->toDateString())->get();
         $total = $ventas->sum('montoTotal');
         $fecha = now()->toDateString();
 
-        // Generar PDF usando una vista
         $pdf = Pdf::loadView('admin.reportes.pdf.ventasDia', compact('ventas', 'total', 'fecha'));
 
-        // Definir nombre del archivo
         $nombreArchivo = 'ventas_dia_' . $fecha . '.pdf';
         $ruta = 'reportes/' . $nombreArchivo;
 
-        // Guardar en storage/app/public/reportes
         Storage::disk('public')->put($ruta, $pdf->output());
 
-        // Registrar en la tabla Reporte
         Reporte::create([
             'tipo' => 'ventas_dia',
             'periodo' => $fecha,
-            'generadoPor' => auth()->user()->name ?? 'Sistema',
+            'generadoPor' => Auth::user()->name ?? 'Sistema',
             'archivo' => $ruta,
         ]);
 
-        // Devolver descarga
         return response()->download(storage_path('app/public/' . $ruta));
     }
-
 
     // Ventas del día - Excel
     public function ventasDiaExcel()
@@ -175,71 +282,255 @@ class ReporteController extends Controller
         return Excel::download(new VentasExport($ventas), 'ventas_dia.xlsx');
     }
 
-    // Ventas semana - PDF
-    public function ventasSemanalPDF()
+    // Stock general - PDF
+    public function stockPDF()
     {
-        $ventas = Venta::whereBetween('fechaPago', [now()->subWeek(), now()])
-            ->with('pedido.detalles.producto', 'pedido.usuario')
-            ->get();
+        $productos = Producto::all();
+        $fecha = now()->toDateString();
 
-        $pdf = Pdf::loadView('reportes.ventasPDF', compact('ventas'));
-        return $pdf->download('ventas_semana.pdf');
+        $pdf = Pdf::loadView('admin.reportes.pdf.stockPDF', compact('productos', 'fecha'));
+
+        $nombreArchivo = 'stock_' . $fecha . '.pdf';
+        $ruta = 'reportes/' . $nombreArchivo;
+
+        Storage::disk('public')->put($ruta, $pdf->output());
+
+        Reporte::create([
+            'tipo' => 'stock',
+            'periodo' => $fecha,
+            'generadoPor' => Auth::user()->name ?? 'Sistema',
+            'archivo' => $ruta,
+        ]);
+
+        return response()->download(storage_path('app/public/' . $ruta));
     }
 
-    // Ventas semana - Excel
-    public function ventasSemanaExcel()
-    {
-        $ventas = Venta::whereBetween('fechaPago', [now()->subWeek(), now()])
-            ->with('pedido.usuario')
-            ->get();
-
-        return Excel::download(new VentasExport($ventas), 'ventas_semana.xlsx');
-    }
-
-    // Ventas mes - PDF
-    public function ventasMesPDF()
-    {
-        $ventas = Venta::whereMonth('fechaPago', now()->month)
-            ->with('pedido.detalles.producto', 'pedido.usuario')
-            ->get();
-
-        $pdf = Pdf::loadView('reportes.ventasPDF', compact('ventas'));
-        return $pdf->download('ventas_mes.pdf');
-    }
-
-    // Ventas mes - Excel
-    public function ventasMesExcel()
-    {
-        $ventas = Venta::whereMonth('fechaPago', now()->month)
-            ->with('pedido.usuario')
-            ->get();
-
-        return Excel::download(new VentasExport($ventas), 'ventas_mes.xlsx');
-    }
-
-    // ===== Stock =====
-
-
-    // Stock
+    // Stock general - Excel
     public function stockExcel()
     {
         return Excel::download(new StockExport, 'stock.xlsx');
     }
 
-    public function stockPDF()
+// ===== SECCIÓN 2: REPORTES AVANZADOS =====
+
+// Productos más vendidos del mes
+public function productosMesPDF()
+{
+    $productos = Producto::with('categoria', 'detallePedidos.pedido.venta')
+        ->get()
+        ->map(function ($producto) {
+            $cantidadVendida = 0;
+            foreach ($producto->detallePedidos as $detalle) {
+                $venta = $detalle->pedido->venta ?? null;
+                if ($venta && \Carbon\Carbon::parse($venta->fechaPago)->month == now()->month) {
+                    $cantidadVendida += $detalle->cantidad;
+                }
+            }
+            $producto->cantidad_vendida = $cantidadVendida;
+            return $producto;
+        });
+
+    $pdf = Pdf::loadView('admin.reportes.pdf.productosMes', compact('productos'));
+    $fecha = now()->toDateString();
+    $nombreArchivo = 'productos_mes_' . $fecha . '.pdf';
+    $ruta = 'reportes/' . $nombreArchivo;
+
+    Storage::disk('public')->put($ruta, $pdf->output());
+
+    Reporte::create([
+        'tipo' => 'productos_mes',
+        'periodo' => $fecha,
+        'generadoPor' => Auth::user()->name ?? 'Sistema',
+        'archivo' => $ruta,
+    ]);
+
+    return response()->download(storage_path('app/public/' . $ruta));
+}
+
+// Ganancia total del mes
+public function gananciaMesPDF()
+{
+    $productos = Producto::with('detallePedidos.pedido.venta')
+        ->get()
+        ->map(function ($producto) {
+            $ganancia = 0;
+            foreach ($producto->detallePedidos as $detalle) {
+                $venta = $detalle->pedido->venta ?? null;
+                if ($venta && \Carbon\Carbon::parse($venta->fechaPago)->month == now()->month) {
+                    $ganancia += $detalle->cantidad * $producto->precio;
+                }
+            }
+            $producto->ganancia = $ganancia;
+            return $producto;
+        });
+
+    $pdf = Pdf::loadView('admin.reportes.pdf.gananciaMes', compact('productos'));
+    $fecha = now()->toDateString();
+    $nombreArchivo = 'ganancia_mes_' . $fecha . '.pdf';
+    $ruta = 'reportes/' . $nombreArchivo;
+
+    Storage::disk('public')->put($ruta, $pdf->output());
+
+    Reporte::create([
+        'tipo' => 'ganancia_mes',
+        'periodo' => $fecha,
+        'generadoPor' => Auth::user()->name ?? 'Sistema',
+        'archivo' => $ruta,
+    ]);
+
+    return response()->download(storage_path('app/public/' . $ruta));
+}
+
+// Productos con alta rotación
+public function altaRotacionPDF()
+{
+    $productos = Producto::with('detallePedidos.pedido.venta')
+        ->get()
+        ->map(function ($producto) {
+            $cantidadVendida = 0;
+            foreach ($producto->detallePedidos as $detalle) {
+                $venta = $detalle->pedido->venta ?? null;
+                if ($venta && \Carbon\Carbon::parse($venta->fechaPago)->month == now()->month) {
+                    $cantidadVendida += $detalle->cantidad;
+                }
+            }
+            $producto->cantidad_vendida = $cantidadVendida;
+            return $producto;
+        })
+        ->sortByDesc('cantidad_vendida');
+
+    $pdf = Pdf::loadView('admin.reportes.pdf.altaRotacion', compact('productos'));
+    $fecha = now()->toDateString();
+    $nombreArchivo = 'alta_rotacion_' . $fecha . '.pdf';
+    $ruta = 'reportes/' . $nombreArchivo;
+
+    Storage::disk('public')->put($ruta, $pdf->output());
+
+    Reporte::create([
+        'tipo' => 'alta_rotacion',
+        'periodo' => $fecha,
+        'generadoPor' => Auth::user()->name ?? 'Sistema',
+        'archivo' => $ruta,
+    ]);
+
+    return response()->download(storage_path('app/public/' . $ruta));
+}
+
+// Productos con baja venta
+public function bajaVentaPDF()
+{
+    $productos = Producto::with('detallePedidos.pedido.venta')
+        ->get()
+        ->map(function ($producto) {
+            $cantidadVendida = 0;
+            foreach ($producto->detallePedidos as $detalle) {
+                $venta = $detalle->pedido->venta ?? null;
+                if ($venta && \Carbon\Carbon::parse($venta->fechaPago)->month == now()->month) {
+                    $cantidadVendida += $detalle->cantidad;
+                }
+            }
+            $producto->cantidad_vendida = $cantidadVendida;
+            return $producto;
+        })
+        ->sortBy('cantidad_vendida');
+
+    $pdf = Pdf::loadView('admin.reportes.pdf.bajaVenta', compact('productos'));
+    $fecha = now()->toDateString();
+    $nombreArchivo = 'baja_venta_' . $fecha . '.pdf';
+    $ruta = 'reportes/' . $nombreArchivo;
+
+    Storage::disk('public')->put($ruta, $pdf->output());
+
+    Reporte::create([
+        'tipo' => 'baja_venta',
+        'periodo' => $fecha,
+        'generadoPor' => Auth::user()->name ?? 'Sistema',
+        'archivo' => $ruta,
+    ]);
+
+    return response()->download(storage_path('app/public/' . $ruta));
+}
+
+
+    // ===== SECCIÓN 2: REPORTES AVANZADOS =====
+
+    // Productos más vendidos del mes
+    public function productosMesExcel()
     {
-        $productos = Producto::all();
-
-        // Crear PDF desde la vista
-        $pdf = Pdf::loadView('reportes.stockPDF', compact('productos'));
-
-        // Nombre del archivo con fecha
-        $filename = 'reportes/ventas/stock_' . now()->toDateString() . '.pdf';
-
-        // Guardar en storage/public/reportes/ventas
-        $pdf->save(storage_path('app/public/' . $filename));
-
-        // Retornar para descargar
-        return response()->download(storage_path('app/public/' . $filename));
+        return Excel::download(new ProductosMesExport, 'productos_mes.xlsx');
     }
+
+    // Ganancia total del mes
+
+    public function gananciaMesExcel()
+    {
+        return Excel::download(new GananciaMesExport, 'ganancia_mes.xlsx');
+    }
+
+    // Insumos / Productos con alta rotación
+
+    public function altaRotacionExcel()
+    {
+        return Excel::download(new AltaRotacionExport, 'alta_rotacion.xlsx');
+    }
+
+    // Productos con baja venta
+
+    public function bajaVentaExcel()
+    {
+        return Excel::download(new BajaVentaExport, 'baja_venta.xlsx');
+    }
+
+    // ===== SHOW de reportes históricos =====
+  
+public function downloadPDF($tipo)
+{
+    $fecha = now()->toDateString();
+    $filename = $tipo . '_' . $fecha . '.pdf';
+    $ruta = 'reportes/' . $filename;
+
+    if (!Storage::disk('public')->exists($ruta)) {
+        return back()->with('error', 'El archivo no existe.');
+    }
+// Guardar registro en la tabla Reporte
+Reporte::firstOrCreate(
+    [
+        'tipo' => $tipo,
+        'periodo' => $fecha,
+        'archivo' => $ruta,
+    ],
+    [
+        'generadoPor' => Auth::user()->name ?? 'Sistema',
+    ]
+);
+
+    return response()->download(storage_path('app/public/' . $ruta));
+}
+
+   public function downloadExcel($tipo)
+{
+    switch ($tipo) {
+        case 'productos_mes':
+            $exportClass = \App\Exports\ProductosMesExport::class;
+            break;
+
+        case 'ganancia_mes':
+            $exportClass = \App\Exports\GananciaMesExport::class;
+            break;
+
+        case 'alta_rotacion':
+            $exportClass = \App\Exports\AltaRotacionExport::class;
+            break;
+
+        case 'baja_venta':
+            $exportClass = \App\Exports\BajaVentaExport::class;
+            break;
+
+        default:
+            abort(404);
+    }
+
+    $nombreArchivo = $tipo . '_' . now()->toDateString() . '.xlsx';
+    return Excel::download(new $exportClass, $nombreArchivo);
+}
 }
