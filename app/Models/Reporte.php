@@ -16,4 +16,10 @@ public $timestamps = false;
         'fechaGeneracion',
         'archivo'
     ];
+
+
+    protected $casts = [
+    'fechaGeneracion' => 'datetime',
+];
+
 }

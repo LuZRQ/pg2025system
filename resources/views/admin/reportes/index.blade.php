@@ -113,147 +113,149 @@
         </div>
     </div>
 
-{{-- SECCIÓN 1: REPORTES RÁPIDOS --}}
-<div class="bg-white shadow-lg rounded-2xl p-6 mb-6">
-    <h2 class="text-xl font-semibold mb-4"><i class="fas fa-bolt mr-2"></i> Reportes Rápidos</h2>
-    <div class="flex flex-wrap gap-4">
-        {{-- Ventas del Día --}}
-        <a href="{{ route('reportes.ventasDiaPDF') }}"
-           class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
-           <i class="fas fa-download"></i> Ventas del Día (PDF)
-        </a>
-        <a href="{{ route('reportes.ventasDiaExcel') }}"
-           class="px-6 py-2 bg-amber-700 hover:bg-amber-500 text-white font-medium rounded-lg shadow flex items-center gap-2">
-           <i class="fas fa-file-excel"></i> Ventas del Día (Excel)
-        </a>
+    {{-- SECCIÓN 1: REPORTES RÁPIDOS --}}
+    <div class="bg-white shadow-lg rounded-2xl p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4"><i class="fas fa-bolt mr-2"></i> Reportes Rápidos</h2>
+        <div class="flex flex-wrap gap-4">
+            {{-- Ventas del Día --}}
+            <a href="{{ route('reportes.ventasDiaPDF') }}"
+                class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
+                <i class="fas fa-download"></i> Ventas del Día (PDF)
+            </a>
+            <a href="{{ route('reportes.ventasDiaExcel') }}"
+                class="px-6 py-2 bg-amber-700 hover:bg-amber-500 text-white font-medium rounded-lg shadow flex items-center gap-2">
+                <i class="fas fa-file-excel"></i> Ventas del Día (Excel)
+            </a>
 
-        {{-- Stock General --}}
-        <a href="{{ route('reportes.stockPDF') }}"
-           class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
-           <i class="fas fa-download"></i> Stock (PDF)
-        </a>
-        <a href="{{ route('reportes.stockExcel') }}"
-           class="px-6 py-2 bg-amber-700 hover:bg-amber-500 text-white font-medium rounded-lg shadow flex items-center gap-2">
-           <i class="fas fa-file-excel"></i> Stock (Excel)
-        </a>
-    </div>
-</div>
-
-{{-- SECCIÓN 2: REPORTES AVANZADOS --}}
-<div class="bg-white shadow-lg rounded-2xl p-6">
-    <h2 class="text-xl font-semibold mb-4"><i class="fas fa-chart-bar mr-2"></i> Reportes Avanzados</h2>
-    <div class="flex flex-wrap gap-4">
-        {{-- Productos más vendidos del mes --}}
-        <a href="{{ route('reportes.showAvanzado', ['tipo' => 'productos_mes']) }}"
-           class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
-           <i class="fas fa-eye"></i> Productos más vendidos
-        </a>
-
-        {{-- Ganancia total del mes --}}
-        <a href="{{ route('reportes.showAvanzado', ['tipo' => 'ganancia_mes']) }}"
-           class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
-           <i class="fas fa-eye"></i> Ganancia total
-        </a>
-
-        {{-- Insumos con alta rotación --}}
-        <a href="{{ route('reportes.showAvanzado', ['tipo' => 'alta_rotacion']) }}"
-           class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
-           <i class="fas fa-eye"></i> Alta rotación
-        </a>
-
-        {{-- Productos con baja venta --}}
-        <a href="{{ route('reportes.showAvanzado', ['tipo' => 'baja_venta']) }}"
-           class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
-           <i class="fas fa-eye"></i> Baja venta
-        </a>
-    </div>
-</div>
-
-{{-- REPORTES HISTÓRICOS --}}
-<div class="max-w-7xl mx-auto px-6 py-10">
-
-    <!-- Título -->
-    <h2 class="text-2xl font-bold text-brown-800 mb-4 flex items-center gap-2">
-        <i class="fa-solid fa-file-lines text-brown-600"></i>
-        Reportes Históricos
-    </h2>
-
-    <!-- Filtros -->
-    <form method="GET" action="{{ route('reportes.index') }}" class="bg-brown-50 rounded-xl p-6 shadow-md mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-
-            <!-- Categoría -->
-            <div>
-                <label class="block text-sm font-medium text-brown-700 mb-1">Categoría</label>
-                <select name="categoria"
-                        class="w-full rounded-lg border-gray-300 focus:ring focus:ring-brown-300 text-sm">
-                    <option value="">Todas las categorías</option>
-                    <option value="productos_mes" {{ request('categoria')=='productos_mes' ? 'selected' : '' }}>Productos más vendidos</option>
-                    <option value="ganancia_mes" {{ request('categoria')=='ganancia_mes' ? 'selected' : '' }}>Ganancia total</option>
-                    <option value="alta_rotacion" {{ request('categoria')=='alta_rotacion' ? 'selected' : '' }}>Alta rotación</option>
-                    <option value="baja_venta" {{ request('categoria')=='baja_venta' ? 'selected' : '' }}>Baja venta</option>
-                </select>
-            </div>
-
-            <!-- Fecha desde -->
-            <div>
-                <label class="block text-sm font-medium text-brown-700 mb-1">Desde</label>
-                <input type="date" name="desde" value="{{ request('desde') }}"
-                       class="w-full rounded-lg border-gray-300 focus:ring focus:ring-brown-300 text-sm">
-            </div>
-
-            <!-- Fecha hasta -->
-            <div>
-                <label class="block text-sm font-medium text-brown-700 mb-1">Hasta</label>
-                <input type="date" name="hasta" value="{{ request('hasta') }}"
-                       class="w-full rounded-lg border-gray-300 focus:ring focus:ring-brown-300 text-sm">
-            </div>
-
-            <!-- Botón -->
-            <div>
-                <button type="submit"
-                        class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brown-600 to-brown-500 hover:from-brown-700 hover:to-brown-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    Buscar
-                </button>
-            </div>
+            {{-- Stock General --}}
+            <a href="{{ route('reportes.stockPDF') }}"
+                class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
+                <i class="fas fa-download"></i> Stock (PDF)
+            </a>
+            <a href="{{ route('reportes.stockExcel') }}"
+                class="px-6 py-2 bg-amber-700 hover:bg-amber-500 text-white font-medium rounded-lg shadow flex items-center gap-2">
+                <i class="fas fa-file-excel"></i> Stock (Excel)
+            </a>
         </div>
-    </form>
-
-    <!-- Tabla -->
-    <div class="overflow-x-auto bg-white rounded-xl shadow-md">
-        <table class="w-full text-sm text-left border-collapse">
-            <thead class="bg-gradient-to-r from-brown-700 to-brown-600 text-white">
-                <tr>
-                    <th class="px-4 py-3 font-semibold">Fecha del Reporte</th>
-                    <th class="px-4 py-3 font-semibold">Tipo de Reporte</th>
-                    <th class="px-4 py-3 font-semibold text-center">Acción</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                @forelse($reportes as $reporte)
-                    <tr class="hover:bg-brown-50 transition">
-                        <td class="px-4 py-3 text-gray-700">{{ $reporte->fechaGeneracion }}</td>
-                        <td class="px-4 py-3 text-gray-700 capitalize">{{ str_replace('_',' ', $reporte->tipo) }}</td>
-                        <td class="px-4 py-3 text-center">
-                            <a href="{{ route('reportes.show', $reporte->idReporte) }}"
-                               class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-brown-500 hover:bg-brown-600 rounded-md shadow-sm transition">
-                                <i class="fa-solid fa-eye"></i> Ver
-                            </a>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="3" class="px-4 py-6 text-center text-gray-500">
-                            <i class="fa-regular fa-circle-xmark text-gray-400 mr-2"></i>
-                            No se encontraron reportes en el rango seleccionado.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
     </div>
-</div>
 
+    {{-- SECCIÓN 2: REPORTES AVANZADOS --}}
+    <div class="bg-white shadow-lg rounded-2xl p-6">
+        <h2 class="text-xl font-semibold mb-4"><i class="fas fa-chart-bar mr-2"></i> Reportes Avanzados</h2>
+        <div class="flex flex-wrap gap-4">
+            {{-- Productos más vendidos del mes --}}
+            <a href="{{ route('reportes.showAvanzado', ['tipo' => 'productos_mes']) }}"
+                class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
+                <i class="fas fa-eye"></i> Productos más vendidos
+            </a>
 
+            {{-- Ganancia total del mes --}}
+            <a href="{{ route('reportes.showAvanzado', ['tipo' => 'ganancia_mes']) }}"
+                class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
+                <i class="fas fa-eye"></i> Ganancia total
+            </a>
+
+            {{-- Insumos con alta rotación --}}
+            <a href="{{ route('reportes.showAvanzado', ['tipo' => 'alta_rotacion']) }}"
+                class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
+                <i class="fas fa-eye"></i> Alta rotación
+            </a>
+
+            {{-- Productos con baja venta --}}
+            <a href="{{ route('reportes.showAvanzado', ['tipo' => 'baja_venta']) }}"
+                class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
+                <i class="fas fa-eye"></i> Baja venta
+            </a>
+        </div>
+    </div>
+
+    {{-- REPORTES HISTÓRICOS --}}
+    <div class="max-w-7xl mx-auto px-6 py-10">
+
+        <!-- Título -->
+        <h2 class="text-3xl font-bold text-brown-800 mb-8 flex items-center gap-3">
+            <i class="fa-solid fa-file-lines text-brown-700"></i>
+            Reportes Históricos
+        </h2>
+
+        <!-- Barra de búsqueda -->
+        <form method="GET" action="{{ route('reportes.index') }}"
+            class="flex flex-wrap items-center gap-4 mb-8 p-4 rounded-lg shadow-md bg-brown-50 border border-brown-200">
+
+            <select name="categoria"
+                class="border border-brown-400 bg-white text-brown-800 p-2 rounded-lg focus:ring-2 focus:ring-brown-500">
+                <option value="">-- Tipo de Reporte --</option>
+                <option value="ventas_dia" {{ request('categoria') == 'ventas_dia' ? 'selected' : '' }}>Ventas del Día
+                </option>
+                <option value="stock" {{ request('categoria') == 'stock' ? 'selected' : '' }}>Stock</option>
+                <option value="productos_mes" {{ request('categoria') == 'productos_mes' ? 'selected' : '' }}>Productos del
+                    Mes</option>
+                <option value="ganancia_mes" {{ request('categoria') == 'ganancia_mes' ? 'selected' : '' }}>Ganancia del
+                    Mes</option>
+                <option value="alta_rotacion" {{ request('categoria') == 'alta_rotacion' ? 'selected' : '' }}>Alta Rotación
+                </option>
+                <option value="baja_venta" {{ request('categoria') == 'baja_venta' ? 'selected' : '' }}>Baja Venta</option>
+            </select>
+
+            <input type="date" name="desde" value="{{ request('desde') }}"
+                class="border border-brown-400 bg-white text-brown-800 p-2 rounded-lg focus:ring-2 focus:ring-brown-500">
+
+            <input type="date" name="hasta" value="{{ request('hasta') }}"
+                class="border border-brown-400 bg-white text-brown-800 p-2 rounded-lg focus:ring-2 focus:ring-brown-500">
+
+            <button type="submit"
+                class="px-6 py-2 bg-brown-700 hover:bg-brown-800 text-white rounded-lg shadow font-semibold flex items-center gap-2 transition">
+                <i class="fa-solid fa-magnifying-glass"></i> Buscar
+            </button>
+        </form>
+
+        <!-- Tabla -->
+        <div class="overflow-x-auto bg-white rounded-xl shadow-md border border-brown-200">
+            <table class="w-full text-sm text-left border-collapse">
+                <thead class="bg-brown-700 text-white">
+                    <tr>
+                        <th class="px-6 py-3 font-bold text-white"><i class="fa-solid fa-calendar-day mr-2"></i>Fecha del
+                            Reporte</th>
+                        <th class="px-6 py-3 font-bold text-white"><i class="fa-solid fa-file-alt mr-2"></i>Tipo de
+                            Reporte</th>
+                        <th class="px-6 py-3 font-bold text-white text-center"><i class="fa-solid fa-gear mr-2"></i>Acción
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @forelse($reportes as $reporte)
+                        <tr class="hover:bg-brown-50 transition">
+                            <td class="px-6 py-3 text-gray-800">
+                                <i class="fa-regular fa-calendar text-brown-500 mr-2"></i>
+                                {{ \Carbon\Carbon::parse($reporte->fechaGeneracion)->format('d/m/Y H:i') }}
+                            </td>
+                            <td class="px-6 py-3 text-gray-800 capitalize">
+                                <i class="fa-solid fa-tag text-brown-500 mr-2"></i>
+                                {{ str_replace('_', ' ', $reporte->tipo) }}
+                            </td>
+                            <td class="px-6 py-3 text-center">
+                                <a href="{{ route('reportes.show', $reporte->idReporte) }}"
+                                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-brown-700 hover:bg-brown-800 rounded-lg shadow transition">
+                                    <i class="fa-solid fa-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="px-6 py-6 text-center text-gray-500">
+                                <i class="fa-regular fa-circle-xmark text-gray-400 mr-2"></i>
+                                No se encontraron reportes en el rango seleccionado.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        <div class="mt-6">
+            {{ $reportes->links('pagination::tailwind') }}
+        </div>
+
+    </div>
 @endsection

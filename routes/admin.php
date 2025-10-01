@@ -133,17 +133,21 @@ Route::middleware(['auth', 'verificarRol:Gestión de Reportes'])->group(function
     Route::get('/reportes/baja-venta/pdf', [ReporteController::class, 'bajaVentaPDF'])->name('reportes.bajaVentaPDF');
     Route::get('/reportes/baja-venta/excel', [ReporteController::class, 'bajaVentaExcel'])->name('reportes.bajaVentaExcel');
 
+
+
+// -------- AVANZADOS (por tipo, genera al vuelo)
 Route::get('/reportes/avanzado/{tipo}', [ReporteController::class, 'showAvanzadoPDF'])->name('reportes.showAvanzado');
-
-Route::get('/reportes/descargar/pdf/{tipo}', [ReporteController::class, 'downloadPDF'])->name('reportes.downloadPDF');
-
-Route::get('/reportes/descargar/excel/{tipo}', [ReporteController::class, 'downloadExcel'])->name('reportes.downloadExcel');
-
-
+Route::get('/reportes/descargar/pdf/{tipo}', [ReporteController::class, 'downloadPDF'])->name('reportes.downloadPDFByTipo');
+Route::get('/reportes/descargar/excel/{tipo}', [ReporteController::class, 'downloadExcel'])->name('reportes.downloadExcelByTipo');
 
     // -------- SHOW y Descarga histórica --------
-    Route::get('/reportes/{reporte}/show', [ReporteController::class, 'show'])->name('reportes.show');
-    Route::get('/reportes/{reporte}/download/pdf', [ReporteController::class, 'downloadPDF'])->name('reportes.downloadPDF');
-    Route::get('/reportes/{reporte}/download/excel', [ReporteController::class, 'downloadExcel'])->name('reportes.downloadExcel');
-});
 
+    // -------- HISTÓRICOS (por ID de la tabla reportes)
+Route::get('/reportes/{reporte}/ver', [ReporteController::class, 'verPDF'])->name('reportes.verPDF');
+
+    Route::get('/reportes/{reporte}/show', [ReporteController::class, 'show'])->name('reportes.show');
+    // -------- HISTÓRICOS (por ID de la tabla reportes)
+Route::get('/reportes/{reporte}/download/pdf', [ReporteController::class, 'downloadPDFById'])->name('reportes.downloadPDFById');
+Route::get('/reportes/{reporte}/download/excel', [ReporteController::class, 'downloadExcelById'])->name('reportes.downloadExcelById');
+
+});

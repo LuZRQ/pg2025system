@@ -13,15 +13,18 @@
 
     {{-- Botones de descarga --}}
     <div class="flex gap-4">
-        <a href="{{ route('reportes.downloadPDF', $tipo) }}"
-           class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white rounded-lg shadow">
-           Descargar PDF
-        </a>
+      
 
-        <a href="{{ route('reportes.downloadExcel', $tipo) }}"
-           class="px-6 py-2 bg-green-700 hover:bg-green-500 text-white rounded-lg shadow">
-           Descargar Excel
-        </a>
+        <a href="{{ route('reportes.downloadPDFByTipo', $tipo) }}"
+   class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white rounded-lg shadow">
+   Descargar PDF
+</a>
+
+<a href="{{ route('reportes.downloadExcelByTipo', $tipo) }}"
+   class="px-6 py-2 bg-green-700 hover:bg-green-500 text-white rounded-lg shadow">
+   Descargar Excel
+</a>
+
     </div>
 </div>
 @endsection

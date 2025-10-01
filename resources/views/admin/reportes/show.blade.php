@@ -15,25 +15,24 @@
 
    <!-- Botones de descarga -->
 <div class="flex flex-wrap gap-4 mb-6">
-    <a href="{{ route('reportes.downloadPDF', ['reporte' => $reporte->id]) }}" 
-       class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
-        <i class="fas fa-file-pdf"></i> Descargar PDF
-    </a>
+   <!-- Botón PDF -->
 
-    @if(in_array($reporte->tipo, ['ventas_dia','stock','productos_mes','ganancia_mes','alta_rotacion','baja_venta']))
-        <a href="{{ route('reportes.downloadExcel', ['reporte' => $reporte->id]) }}" 
-           class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
-            <i class="fas fa-file-excel"></i> Descargar Excel
-        </a>
-    @endif
+<a href="{{ route('reportes.downloadPDFById', $reporte) }}">Descargar PDF</a>
+<a href="{{ route('reportes.downloadExcelById', $reporte) }}">Descargar Excel</a>
+
 </div>
 
 
     <!-- PDF Viewer -->
-    <div class="w-full h-[80vh] border rounded-xl shadow overflow-hidden">
-        <iframe src="{{ asset('storage/' . $reporte->archivo) }}" 
-                class="w-full h-full" frameborder="0"></iframe>
-    </div>
+   <div class="w-full h-[80vh] border rounded-xl shadow overflow-hidden">
+  <iframe src="{{ route('reportes.verPDF', $reporte) }}" class="w-full h-[80vh]"></iframe>
+
+
+
+
+
+</div>
+
 
 </div>
 @endsection
