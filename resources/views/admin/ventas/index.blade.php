@@ -4,15 +4,6 @@
 @section('content')
     <div class="p-4 sm:p-6 bg-gradient-to-br from-amber-100 via-orange-100 to-amber-200 min-h-screen">
 
-        {{-- Header --}}
-        <div class="flex flex-col sm:flex-row justify-center items-center text-center mb-6 border-b pb-4">
-            <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-mug-hot text-amber-700 text-2xl"></i>
-                <span class="font-bold text-xl sm:text-2xl text-amber-900">Gestión de Ventas</span>
-                <i class="fa-solid fa-money-bill-wave text-green-600 text-2xl"></i>
-            </div>
-        </div>
-
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
             {{-- Productos --}}

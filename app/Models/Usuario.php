@@ -1,13 +1,5 @@
 <?php
 
-/**
- * @property string $ciUsuario
- * @property string $nombre
- * @property string $apellido
- * @property string $correo
- * @property string $telefono
- */
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -15,10 +7,22 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Rol;
 
+/**
+ * @property string $ciUsuario
+ * @property string $nombre
+ * @property string $apellido
+ * @property string $correo
+ * @property string $telefono
+ * @method bool save(array $options = [])
+ * @method static \Illuminate\Database\Eloquent\Builder query()
+ */
+
 class Usuario extends Authenticatable
 {
-    use Notifiable;
 
+
+    use Notifiable;
+    // ...
     public $timestamps = false;
 
     protected $table = 'Usuario';

@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Producto;
 use Illuminate\Http\Request;
 use App\Models\CategoriaProducto;
+use App\Traits\Auditable;
 
 class ProductoController extends Controller
 {
 
+    use Auditable;
     public function index(Request $request)
     {
         $categorias = CategoriaProducto::all();
@@ -27,7 +29,8 @@ class ProductoController extends Controller
             })
             ->get();
 
-        return view('admin.productos.index', compact('productos', 'categorias'));
+        return view('admin.productos.index', compact('productos', 'categorias'))
+        ->with('title', 'Gestión de Productos');
     }
 
     public function crear()
@@ -55,7 +58,13 @@ class ProductoController extends Controller
             $request->merge(['imagen' => $nombreArchivo]);
         }
 
-        Producto::create($request->all());
+        $producto = Producto::create($request->all());
+
+        $this->logAction(
+            "Se creó el producto '{$producto->nombre}' (ID: {$producto->idProducto})",
+            'Productos',
+            'Exitoso'
+        );
 
         return redirect()->route('productos.index')->with('exito', 'Producto creado correctamente.');
     }
@@ -89,15 +98,25 @@ class ProductoController extends Controller
         }
 
         $producto->update($request->all());
-
+        $this->logAction(
+            "Se actualizó el producto '{$producto->nombre}' (ID: {$producto->idProducto})",
+            'Productos',
+            'Exitoso'
+        );
         return redirect()->route('productos.index')->with('exito', 'Producto actualizado correctamente.');
     }
     // Eliminar producto
     public function eliminar($idProducto)
     {
         $producto = Producto::findOrFail($idProducto);
+        $productoNombre = $producto->nombre;
+        $productoId = $producto->idProducto;
         $producto->delete();
-
+        $this->logAction(
+            "Se eliminó el producto '{$productoNombre}' (ID: {$productoId})",
+            'Productos',
+            'Exitoso'
+        );
         return redirect()->route('productos.index')->with('exito', 'Producto eliminado correctamente.');
     }
 

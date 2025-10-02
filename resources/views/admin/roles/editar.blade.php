@@ -1,11 +1,12 @@
+@php
+    $backRoute = route('roles.index'); 
+    $title = 'Editar rol'; 
+@endphp
 @extends('layouts.crud')
 
 @section('content')
 <div class="max-w-3xl mx-auto bg-white shadow rounded-lg p-6">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-semibold text-stone-800">Editar Rol</h2>
-    </div>
-
+   
     @if ($errors->any())
         <div class="mb-4 p-4 bg-rose-100 text-rose-800 rounded">
             <ul class="list-disc pl-5">

@@ -1,8 +1,11 @@
+@php
+    $backRoute = route('usuarios.index'); 
+    $title = 'Datos de usuario'; 
+@endphp
 @extends('layouts.crud')
 
 @section('content')
     <div class="max-w-3xl mx-auto bg-white shadow rounded-lg p-6">
-        <h2 class="text-2xl font-semibold text-stone-800 mb-6">Datos del Usuario</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

@@ -8,9 +8,11 @@ use App\Models\Rol;
 use App\Models\Modulo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Traits\Auditable;
 
 class UsuarioController extends Controller
 {
+    use Auditable;
     public function index(Request $request)
     {
         $usuarios = Usuario::with('rol')
@@ -28,7 +30,8 @@ class UsuarioController extends Controller
         $roles = Rol::all();
         $modulos = Modulo::with('roles')->get();
 
-        return view('admin.usuarios.index', compact('usuarios', 'roles', 'modulos'));
+        return view('admin.usuarios.index', compact('usuarios', 'roles', 'modulos'))
+        ->with('title', 'Gestión de Usuarios');
     }
 
     public function crear()
@@ -51,7 +54,7 @@ class UsuarioController extends Controller
             'estado'      => 'required|boolean',
         ]);
 
-        Usuario::create([
+        $usuario = Usuario::create([
             'ciUsuario'   => $request->ciUsuario,
             'nombre'      => $request->nombre,
             'apellido'    => $request->apellido,
@@ -62,7 +65,11 @@ class UsuarioController extends Controller
             'rolId'       => $request->rolId,
             'estado'      => $request->estado ?? 1,
         ]);
-
+        $this->logAction(
+            "Se creó el usuario '{$usuario->usuario}' (CI: {$usuario->ciUsuario})",
+            'Usuarios',
+            'Exitoso'
+        );
         return redirect()->route('usuarios.index')->with('exito', 'Usuario creado correctamente.');
     }
 
@@ -101,7 +108,11 @@ class UsuarioController extends Controller
             unset($datos['contrasena']);
         }
         $usuario->update($datos);
-
+        $this->logAction(
+            "Se actualizó el usuario '{$usuario->usuario}' (CI: {$usuario->ciUsuario})",
+            'Usuarios',
+            'Exitoso'
+        );
         return redirect()->route('usuarios.index')->with('exito', 'Usuario actualizado correctamente.');
     }
 
@@ -109,7 +120,11 @@ class UsuarioController extends Controller
     {
         $usuario = Usuario::findOrFail($ciUsuario);
         $usuario->delete();
-
+        $this->logAction(
+            "Se eliminó el usuario '{$usuario->usuario}' (CI: {$usuario->ciUsuario})",
+            'Usuarios',
+            'Exitoso'
+        );
         return redirect()->route('usuarios.index')->with('exito', 'Usuario eliminado correctamente.');
     }
 }

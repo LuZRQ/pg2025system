@@ -1,3 +1,7 @@
+@php
+    $backRoute = route('ventas.caja'); 
+    $title = 'Recibo de Pedido'; 
+@endphp
 @extends('layouts.recibo')
 
 

@@ -19,12 +19,11 @@ use App\Models\Producto;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Auth;
 
+use App\Traits\Auditable;
 
 class VentaController extends Controller
 {
-    /**
-     * Listado de ventas
-     */
+    use Auditable;
     public function index()
     {
         // Categorías con sus productos activos
@@ -44,8 +43,10 @@ class VentaController extends Controller
             ->with('detalles.producto')
             ->get();
 
-        return view('admin.ventas.index', compact('categorias', 'productos', 'ventas', 'pedidos'));
+        return view('admin.ventas.index', compact('categorias', 'productos', 'ventas', 'pedidos'))
+        ->with('title', 'Gestión de Ventas');
     }
+
     public function enviarACocina(Request $request)
     {
         $request->validate([
@@ -68,12 +69,13 @@ class VentaController extends Controller
 
         // Crear pedido con total calculado
         $pedido = Pedido::create([
-            'ciUsuario'   => $usuario->ciUsuario,  // 👈 ahora sí seguro
-            'mesa'        => $request->mesa,
+            'ciUsuario'   => $usuario->ciUsuario,
             'estado'      => 'pendiente',
             'comentarios' => $request->comentarios ?? null,
             'fechaCreacion' => now(),
             'total'       => $total,
+            'mesa' => $request->mesa,
+
         ]);
 
         // Crear detalle del pedido
@@ -84,37 +86,45 @@ class VentaController extends Controller
                 'subtotal'   => $producto['cantidad'] * $producto['precio'],
             ]);
         }
+        $this->logAction(
+            "Se creó el pedido #{$pedido->idPedido} para la mesa {$pedido->mesa} por {$usuario->usuario}",
+            'Pedidos',
+            'Exitoso'
+        );
 
         return redirect()->route('ventas.index')
-            ->with('success', 'Pedido enviado a Cocina ✅');
+            ->with('exito', 'Pedido enviado a Cocina ✅');
     }
-
 
     public function historial(Request $request)
     {
-        // Puedes agregar filtros si quieres
-        $ventas = Venta::with('cliente')->paginate(10); // o get() si no quieres paginar
-
-        $query = Venta::with('pedido.cliente'); // Trae cliente relacionado al pedido
+        $query = Venta::with('pedido');
 
         if ($request->filled('fecha_desde')) {
-            $query->whereDate('fecha', '>=', $request->fecha_desde);
+            $query->whereDate('fechaPago', '>=', $request->fecha_desde);
         }
+
         if ($request->filled('fecha_hasta')) {
-            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+            $query->whereDate('fechaPago', '<=', $request->fecha_hasta);
         }
+
         if ($request->filled('mesa')) {
-            $mesa = $request->mesa;
-            $query->whereHas('pedido', function ($q) use ($mesa) {
-                $q->where('mesa', 'like', "%$mesa%");
+            $busqueda = $request->mesa;
+            $query->whereHas('pedido', function ($q) use ($busqueda) {
+                $q->where('mesa', $busqueda);
             });
         }
 
-        $ventas = $query->orderBy('fecha', 'desc')->paginate(10);
+        $ventas = $query->orderBy('fechaPago', 'desc')->paginate(10);
 
-        return view('admin.ventas.historial', compact('ventas'));
+        // 👇 Obtener todas las mesas que tienen ventas registradas
+        $mesas = Pedido::select('mesa')->distinct()->get();
+
+        return view('admin.ventas.historial', compact('ventas', 'mesas'));
     }
-    
+
+
+
 
 
 
@@ -151,25 +161,30 @@ class VentaController extends Controller
             return $detalle->subtotal;
         });
 
-        Venta::create([
+        $venta = Venta::create([
             'idPedido'   => $pedido->idPedido,
             'montoTotal' => $montoTotal,
             'fechaPago'  => now(),
         ]);
-
+        $this->logAction(
+            "Se registró la venta #{$venta->idVenta} del pedido #{$pedido->idPedido}, monto total: {$montoTotal}",
+            'Ventas',
+            'Exitoso'
+        );
         return redirect()->route('ventas.index')
-            ->with('success', 'Venta registrada correctamente.');
+            ->with('exito', 'Venta registrada correctamente.');
     }
 
 
     /**
      * Mostrar detalle de una venta
      */
-    public function show($id)
+    public function show($idVenta)
     {
-        $venta = Venta::with('pedido')->findOrFail($id);
+        $venta = Venta::with('pedido.detalles.producto')->findOrFail($idVenta);
         return view('admin.ventas.show', compact('venta'));
     }
+
 
     /**
      * Formulario para editar venta
@@ -181,28 +196,35 @@ class VentaController extends Controller
         return view('admin.ventas.edit', compact('venta', 'pedidos'));
     }
 
+    
     /**
-     * Actualizar venta
-     */
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'idPedido' => 'required|exists:Pedido,idPedido',
-        ]);
+ * Actualizar venta
+ */
+public function update(Request $request, $id)
+{
+    $request->validate([
+        'montoTotal'  => 'required|numeric|min:0',
+        'metodo_pago' => 'required|string',
+        'fechaPago'   => 'required|date',
+    ]);
 
-        $pedido = Pedido::with('detalles')->findOrFail($request->idPedido);
-        $montoTotal = $pedido->detallePedidos->sum(fn($d) => $d->subtotal);
+    $venta = Venta::findOrFail($id);
+    $venta->update([
+        'montoTotal'  => $request->montoTotal,
+        'metodo_pago' => $request->metodo_pago,
+        'fechaPago'   => $request->fechaPago,
+    ]);
 
-        $venta = Venta::findOrFail($id);
-        $venta->update([
-            'idPedido'   => $pedido->idPedido,
-            'montoTotal' => $montoTotal,
-            'fechaPago'  => now(),
-        ]);
+    $this->logAction(
+        "Se actualizó la venta #{$venta->idVenta} con monto total {$venta->montoTotal}",
+        'Ventas',
+        'Exitoso'
+    );
 
-        return redirect()->route('ventas.index')
-            ->with('success', 'Venta actualizada correctamente.');
-    }
+    return redirect()->route('ventas.historial')
+        ->with('exito', 'Venta actualizada correctamente.');
+}
+
 
 
     /**
@@ -212,7 +234,12 @@ class VentaController extends Controller
     {
         $venta = Venta::findOrFail($id);
         $venta->delete();
+        $this->logAction(
+            "Se eliminó la venta #{$venta->idVenta} (pedido #{$venta->idPedido})",
+            'Ventas',
+            'Exitoso'
+        );
 
-        return redirect()->route('ventas.index')->with('success', 'Venta eliminada correctamente.');
+        return redirect()->route('ventas.index')->with('exito', 'Venta eliminada correctamente.');
     }
 }

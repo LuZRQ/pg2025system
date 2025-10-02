@@ -1,8 +1,12 @@
+@php
+    $backRoute = route('productos.index'); 
+    $title = 'Nuevo Producto'; 
+@endphp
 @extends('layouts.crud')
 
 @section('content')
+
     <div class="bg-gradient-to-b from-amber-50 to-orange-50 min-h-screen p-6 rounded-lg shadow">
-        <h1 class="text-2xl font-bold text-stone-800 mb-6">Nuevo Producto</h1>
 
         <form action="{{ route('productos.guardar') }}" method="POST">
             @csrf

@@ -6,13 +6,16 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Rol;
 use App\Models\Modulo;
+use App\Traits\Auditable;
 
 class RolController extends Controller
 {
+    use Auditable;
     public function index()
     {
         $roles = Rol::all();
-        return view('admin.roles.index', compact('roles'));
+        return view('admin.roles.index', compact('roles'))
+        ->with('title', 'Control de roles');
     }
 
     public function crear()
@@ -38,7 +41,11 @@ class RolController extends Controller
         if ($request->has('modulos')) {
             $rol->modulos()->sync($request->modulos);
         }
-
+ $this->logAction(
+        "Se creó el rol '{$rol->nombre}' (ID: {$rol->id})",
+        'Roles',
+        'Exitoso'
+    );
         return redirect()->route('roles.index')->with('exito', 'Rol creado correctamente.');
     }
 
@@ -71,7 +78,11 @@ class RolController extends Controller
         } else {
             $rol->modulos()->sync([]); // Si no se envía nada, desasigna todos
         }
-
+$this->logAction(
+    "Se actualizó el rol '{$rol->nombre}' (ID: {$rol->id})",
+    'Roles',
+    'Exitoso'
+);
         return redirect()->route('roles.index')->with('exito', 'Rol actualizado correctamente.');
     }
 
@@ -80,7 +91,11 @@ class RolController extends Controller
     {
         $rol = Rol::findOrFail($idRol);
         $rol->delete();
-
+$this->logAction(
+    "Se eliminó el rol '{$rol->nombre}' (ID: {$rol->id})",
+    'Roles',
+    'Exitoso'
+);
         return redirect()->route('roles.index')->with('exito', 'Rol eliminado correctamente.');
     }
 }

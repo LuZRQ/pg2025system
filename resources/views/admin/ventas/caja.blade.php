@@ -1,13 +1,11 @@
 {{-- resources/views/caja.blade.php --}}
+@php
+    $backRoute = route('ventas.index'); 
+@endphp
 @extends('layouts.crud')
 
 @section('content')
 <div class="p-4 md:p-6 bg-gradient-to-br from-amber-50 via-orange-100 to-amber-200 min-h-screen">
-
-    {{-- Título --}}
-    <div class="flex justify-center mb-6 border-b pb-4">
-        <h1 class="font-bold text-2xl md:text-3xl text-amber-900">💰 Control de Caja</h1>
-    </div>
 
     {{-- Grid principal --}}
     <div class="grid grid-cols-12 gap-6">

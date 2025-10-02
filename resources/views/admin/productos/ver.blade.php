@@ -1,8 +1,12 @@
+@php
+    $backRoute = route('productos.index'); 
+    $title = 'Detalles del Producto'; 
+@endphp
 @extends('layouts.crud')
 
 @section('content')
     <div class="bg-gradient-to-b from-amber-50 to-orange-50 min-h-screen p-6 rounded-lg shadow">
-        <h1 class="text-2xl font-bold text-stone-800 mb-6">Detalles del Producto</h1>
+       
 
         <div class="bg-white p-6 rounded-lg shadow grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

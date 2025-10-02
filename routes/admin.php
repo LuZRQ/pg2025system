@@ -37,24 +37,30 @@ Route::middleware(['auth', 'verificarRol:Usuarios y Roles'])->group(function () 
     Route::put('roles/{idRol}', [RolController::class, 'actualizar'])->name('roles.actualizar');
     Route::delete('roles/{idRol}', [RolController::class, 'eliminar'])->name('roles.eliminar');
 
-    // -------- Reportes --------
-    Route::get('reportes', [ReporteController::class, 'index'])->name('reportes.index');
-    Route::get('reportes/{id}', [ReporteController::class, 'show'])->name('reportes.show');
-
-    // -------- Auditoría --------
-    Route::get('auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
-    Route::get('auditoria/{id}', [AuditoriaController::class, 'show'])->name('auditoria.show');
+    
 });
 
 // =============== VENTAS (módulo: Gestión de Ventas) ===============
 Route::middleware(['auth', 'verificarRol:Gestión de Ventas'])->group(function () {
     Route::prefix('ventas')->name('ventas.')->group(function () {
+        
+        // CRUD principal
         Route::get('/', [VentaController::class, 'index'])->name('index');
         Route::get('/crear', [VentaController::class, 'create'])->name('crear');
         Route::post('/', [VentaController::class, 'store'])->name('guardar');
 
         // Historial de ventas
         Route::get('/historial', [VentaController::class, 'historial'])->name('historial');
+
+        // Mostrar detalle de venta
+        Route::get('/detalle/{idVenta}', [VentaController::class, 'show'])->name('show');
+
+        // Editar / Actualizar venta
+        Route::get('/editar/{idVenta}', [VentaController::class, 'edit'])->name('edit');
+        Route::put('/actualizar/{idVenta}', [VentaController::class, 'update'])->name('update');
+
+        // Eliminar venta
+        Route::delete('/eliminar/{idVenta}', [VentaController::class, 'destroy'])->name('destroy');
 
         // Enviar pedidos a cocina
         Route::post('/enviarACocina', [VentaController::class, 'enviarACocina'])->name('enviarACocina');
@@ -69,10 +75,11 @@ Route::middleware(['auth', 'verificarRol:Gestión de Ventas'])->group(function (
         Route::get('/caja/export/excel', [CajaController::class, 'exportExcel'])->name('caja.export.excel');
         Route::get('/caja/export/pdf', [CajaController::class, 'exportPDF'])->name('caja.export.pdf');
 
-        // Recibo en PDF con PdfController (si lo mantienes)
+        // Recibo en PDF con PdfController
         Route::get('/recibo/pdf/{idVenta}', [PdfController::class, 'reciboVenta'])->name('recibo.pdf');
     });
 });
+
 
 
 // =============== COCINA (modulos: Pedidos de Cocina, Gestión de Productos, Control de Stock) ===============
@@ -133,21 +140,27 @@ Route::middleware(['auth', 'verificarRol:Gestión de Reportes'])->group(function
     Route::get('/reportes/baja-venta/pdf', [ReporteController::class, 'bajaVentaPDF'])->name('reportes.bajaVentaPDF');
     Route::get('/reportes/baja-venta/excel', [ReporteController::class, 'bajaVentaExcel'])->name('reportes.bajaVentaExcel');
 
-
-
-// -------- AVANZADOS (por tipo, genera al vuelo)
-Route::get('/reportes/avanzado/{tipo}', [ReporteController::class, 'showAvanzadoPDF'])->name('reportes.showAvanzado');
-Route::get('/reportes/descargar/pdf/{tipo}', [ReporteController::class, 'downloadPDF'])->name('reportes.downloadPDFByTipo');
-Route::get('/reportes/descargar/excel/{tipo}', [ReporteController::class, 'downloadExcel'])->name('reportes.downloadExcelByTipo');
+    // -------- AVANZADOS (por tipo, genera al vuelo)
+    Route::get('/reportes/avanzado/{tipo}', [ReporteController::class, 'showAvanzadoPDF'])->name('reportes.showAvanzado');
+    Route::get('/reportes/descargar/pdf/{tipo}', [ReporteController::class, 'downloadPDF'])->name('reportes.downloadPDFByTipo');
+    Route::get('/reportes/descargar/excel/{tipo}', [ReporteController::class, 'downloadExcel'])->name('reportes.downloadExcelByTipo');
 
     // -------- SHOW y Descarga histórica --------
 
     // -------- HISTÓRICOS (por ID de la tabla reportes)
-Route::get('/reportes/{reporte}/ver', [ReporteController::class, 'verPDF'])->name('reportes.verPDF');
-
+    Route::get('/reportes/{reporte}/ver', [ReporteController::class, 'verPDF'])->name('reportes.verPDF');
     Route::get('/reportes/{reporte}/show', [ReporteController::class, 'show'])->name('reportes.show');
-    // -------- HISTÓRICOS (por ID de la tabla reportes)
-Route::get('/reportes/{reporte}/download/pdf', [ReporteController::class, 'downloadPDFById'])->name('reportes.downloadPDFById');
-Route::get('/reportes/{reporte}/download/excel', [ReporteController::class, 'downloadExcelById'])->name('reportes.downloadExcelById');
+    Route::get('/reportes/{reporte}/download/pdf', [ReporteController::class, 'downloadPDFById'])->name('reportes.downloadPDFById');
+    Route::get('/reportes/{reporte}/download/excel', [ReporteController::class, 'downloadExcelById'])->name('reportes.downloadExcelById');
+});
 
+Route::middleware(['auth', 'verificarRol:Gestión de Auditoría'])->group(function () {
+    // Mostrar tabla de auditoría
+    Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
+
+    // Exportar logs a PDF
+    Route::get('/auditoria/pdf', [AuditoriaController::class, 'exportPDF'])->name('auditoria.pdf');
+
+    // Cambiar contraseña
+    Route::post('/auditoria/cambiar-contrasena', [AuditoriaController::class, 'cambiarContrasena'])->name('auditoria.cambiarContrasena');
 });

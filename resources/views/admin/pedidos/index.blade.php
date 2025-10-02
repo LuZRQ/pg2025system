@@ -56,24 +56,44 @@
 
                     <p class="text-xs italic text-gray-600 mb-3">{{ $pedido->comentarios ?? '' }}</p>
 
+                    {{-- Botones de cambio de estado --}}
                     <div class="flex justify-between items-center">
+                        {{-- Estado actual --}}
                         <span
                             class="text-sm font-semibold
-                            {{ $pedido->estado == 'pendiente' ? 'text-red-600' : ($pedido->estado == 'en preparación' ? 'text-yellow-600' : 'text-green-700') }}">
+        {{ $pedido->estado == 'pendiente' ? 'text-red-600' : ($pedido->estado == 'en preparación' ? 'text-yellow-600' : ($pedido->estado == 'listo' ? 'text-green-700' : 'text-gray-500')) }}">
                             {{ ucfirst($pedido->estado) }}
                         </span>
 
-                        @if ($pedido->estado != 'listo')
+                        {{-- Botón acción principal --}}
+                        @if ($pedido->estado == 'pendiente' || $pedido->estado == 'en preparación')
                             <form action="{{ route('pedidos.cambiarEstado', $pedido->idPedido) }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="estado"
                                     value="{{ $pedido->estado == 'pendiente' ? 'en preparación' : 'listo' }}">
-                                <button class="px-4 py-1 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700">
-                                    {{ $pedido->estado == 'pendiente' ? 'En Preparación' : 'Listo' }}
+                                <button
+                                    class="px-4 py-1 rounded-lg
+                {{ $pedido->estado == 'pendiente' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-600 hover:bg-green-700' }}
+                text-white text-sm">
+                                    {{ $pedido->estado == 'pendiente' ? 'Marcar En Preparación' : 'Marcar Listo ✅' }}
+                                </button>
+                            </form>
+                        @endif
+
+                        {{-- Botón cancelar --}}
+                        @if ($pedido->estado === 'listo')
+                            <form action="{{ route('pedidos.cambiarEstado', $pedido->idPedido) }}" method="POST"
+                                class="mt-1">
+                                @csrf
+                                <input type="hidden" name="estado" value="cancelado">
+                                <button class="px-4 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">
+                                    Cancelar
                                 </button>
                             </form>
                         @endif
                     </div>
+
+
 
                 </div>
             @empty

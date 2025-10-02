@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Producto;
 use Carbon\Carbon;
+use App\Traits\Auditable;
 
 class StockController extends Controller
-{ // Mostrar estado general del stock
+{
+    use Auditable;
     public function index(Request $request)
     {
         $query = Producto::with('categoria'); // traemos productos con categoría
@@ -46,15 +48,24 @@ class StockController extends Controller
             return $producto;
         });
 
-        return view('admin.stock.index', compact('productos'));
+        return view('admin.stock.index', compact('productos'))
+        ->with('title', 'Control de stock');
     }
-public function update(Request $request, Producto $producto)
-{
-    // validar y guardar como ya lo tienes...
+    public function update(Request $request, Producto $producto)
+    {
+        $oldStock = $producto->stock;
 
-    $redirect = $request->input('redirect', 'productos.index');
-    return redirect()->route($redirect)->with('exito', 'Producto actualizado correctamente.');
-}
+        $producto->update($request->all());
+        if ($oldStock != $producto->stock) {
+            $this->logAction(
+                "Stock del producto '{$producto->nombre}' actualizado manualmente de {$oldStock} a {$producto->stock}",
+                'Stock',
+                'Exitoso'
+            );
+        }
+        $redirect = $request->input('redirect', 'productos.index');
+        return redirect()->route($redirect)->with('exito', 'Producto actualizado correctamente.');
+    }
 
     // Registrar entrada de stock
     public function entrada(Request $request, $idProducto)
@@ -72,6 +83,11 @@ public function update(Request $request, Producto $producto)
         }
 
         $producto->save();
+        $this->logAction(
+            "Se registró entrada de {$request->cantidad} unidades en {$producto->nombre}",
+            'Stock',
+            'Exitoso'
+        );
 
         return redirect()->route('stock.index')->with('exito', 'Stock actualizado con entrada.');
     }
@@ -91,7 +107,11 @@ public function update(Request $request, Producto $producto)
 
         $producto->stock -= $request->cantidad;
         $producto->save();
-
+        $this->logAction(
+            "Salida de stock: -{$request->cantidad} unidades del producto '{$producto->nombre}'. Stock actual: {$producto->stock}",
+            'Stock',
+            'Exitoso'
+        );
         return redirect()->route('stock.index')->with('exito', 'Stock actualizado con salida.');
     }
 

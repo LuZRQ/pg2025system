@@ -14,9 +14,13 @@ use App\Models\Pedido;
 use App\Models\CategoriaProducto;
 use App\Models\Producto;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Traits\Auditable;
+
+
+
 class CajaController extends Controller
 {
-  
+    use Auditable;
     public function index()
     {
         $usuario = Auth::user();
@@ -55,7 +59,7 @@ class CajaController extends Controller
         $fondoInicial = $ultimoCierre ? $ultimoCierre->total_caja : 0; // 👈 lo puse en 0 como pediste
 
         // ⚠️ Usa el campo correcto de tu BD: "fecha" o "fechaPago"
-       $ventasHoy = Venta::whereDate('fechaPago', now()->toDateString())->get();
+        $ventasHoy = Venta::whereDate('fechaPago', now()->toDateString())->get();
 
 
         $totalEfectivo = $ventasHoy->where('metodo_pago', 'Efectivo')->sum('montoTotal');
@@ -75,11 +79,11 @@ class CajaController extends Controller
             'totalEfectivo' => $totalEfectivo,
             'totalTarjeta'  => $totalTarjeta,
             'totalQR'       => $totalQR,
-        ]);
+        ])->with('title', 'Control de caja');
     }
 
 
-    
+
 
     public function cobrar(Request $request)
     {
@@ -113,7 +117,6 @@ class CajaController extends Controller
 
         // Redirigir al recibo
         return redirect()->route('ventas.recibo', $venta->idVenta);
-
     }
 
     public function recibo($idVenta)
@@ -129,17 +132,17 @@ class CajaController extends Controller
     {
         $usuario = Auth::user();
 
-$ultimoCierre = CierreCaja::latest()->first();
-$fondoInicial = $ultimoCierre ? $ultimoCierre->total_caja : 0;
+        $ultimoCierre = CierreCaja::latest()->first();
+        $fondoInicial = $ultimoCierre ? $ultimoCierre->total_caja : 0;
 
-// 👇 Usar la columna correcta
-$ventasHoy = Venta::whereDate('fechaPago', now()->toDateString())->get();
+        // 👇 Usar la columna correcta
+        $ventasHoy = Venta::whereDate('fechaPago', now()->toDateString())->get();
 
-$totalEfectivo = $ventasHoy->where('metodo_pago', 'Efectivo')->sum('montoTotal');
-$totalTarjeta  = $ventasHoy->where('metodo_pago', 'Tarjeta')->sum('montoTotal');
-$totalQR       = $ventasHoy->where('metodo_pago', 'QR')->sum('montoTotal');
+        $totalEfectivo = $ventasHoy->where('metodo_pago', 'Efectivo')->sum('montoTotal');
+        $totalTarjeta  = $ventasHoy->where('metodo_pago', 'Tarjeta')->sum('montoTotal');
+        $totalQR       = $ventasHoy->where('metodo_pago', 'QR')->sum('montoTotal');
 
-$totalEnCaja = $fondoInicial + $totalEfectivo + $totalTarjeta + $totalQR;
+        $totalEnCaja = $fondoInicial + $totalEfectivo + $totalTarjeta + $totalQR;
 
 
         CierreCaja::create([
@@ -151,8 +154,13 @@ $totalEnCaja = $fondoInicial + $totalEfectivo + $totalTarjeta + $totalQR;
             'total_caja'     => $totalEnCaja,
             'fecha_cierre'   => now(),
         ]);
-
-        return redirect()->route('ventas.caja')->with('success', '✅ Caja cerrada correctamente');
+        // 🔒 Log de auditoría
+        $this->logAction(
+            "Se cerró la caja con total {$totalEnCaja}",
+            'Caja',
+            'Exitoso'
+        );
+        return redirect()->route('ventas.caja')->with('exito', '✅ Caja cerrada correctamente');
     }
 
 
@@ -161,21 +169,23 @@ $totalEnCaja = $fondoInicial + $totalEfectivo + $totalTarjeta + $totalQR;
 
 
     // Exportar Excel (ejemplo simple)
-public function exportExcel()
-{
-    $ventasHoy = Venta::whereDate('fechaPago', now()->toDateString())->with('pedido.usuario')->get();
-    return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\VentasExport($ventasHoy), 'ventas_hoy.xlsx');
-}
+    public function exportExcel()
+    {
+        $ventasHoy = Venta::whereDate('fechaPago', now()->toDateString())->with('pedido.usuario')->get();
+        $this->logAction("Se exportó Excel de ventas del día", 'Caja', 'Exitoso');
+
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\VentasExport($ventasHoy), 'ventas_hoy.xlsx');
+    }
 
 
 
     // Exportar PDF (ejemplo simple)
- public function exportPDF()
-{
-  $ventasHoy = Venta::whereDate('fechaPago', now()->toDateString())->get();
-$pdf = Pdf::loadView('admin.ventas.reportePDF', compact('ventasHoy'));
-return $pdf->download('ventas_hoy.pdf');
-
-
-}
+    public function exportPDF()
+    {
+        $ventasHoy = Venta::whereDate('fechaPago', now()->toDateString())->get();
+        $pdf = Pdf::loadView('admin.ventas.reportePDF', compact('ventasHoy'));
+        $this->logAction("Se exportó PDF de ventas del día", 'Caja', 'Exitoso');
+        return $pdf->download('ventas_hoy.pdf');
+    }
 }
