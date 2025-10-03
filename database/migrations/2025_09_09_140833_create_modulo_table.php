@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('Modulo', function (Blueprint $table) {
-           $table->id('idModulo');
-    $table->string('nombre', 50);
-    $table->string('descripcion')->nullable();
-    $table->timestamps();
-    $table->engine = 'InnoDB';
+            $table->id('idModulo');
+            $table->string('nombre', 50);
+            $table->string('descripcion')->nullable();
+            $table->timestamps();
+            $table->engine = 'InnoDB';
         });
     }
 

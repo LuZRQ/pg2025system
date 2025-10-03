@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::table('Producto', function (Blueprint $table) {
             if (!Schema::hasColumn('Producto', 'imagen')) {
-            $table->string('imagen')->nullable()->after('categoriaId');
-        }
+                $table->string('imagen')->nullable()->after('categoriaId');
+            }
         });
     }
 
@@ -24,10 +24,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('Producto', function (Blueprint $table) {
-             // Solo eliminar la columna si existe
-        if (Schema::hasColumn('Producto', 'imagen')) {
-            $table->dropColumn('imagen');
-        }
+            // Solo eliminar la columna si existe
+            if (Schema::hasColumn('Producto', 'imagen')) {
+                $table->dropColumn('imagen');
+            }
         });
     }
 };
