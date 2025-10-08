@@ -17,19 +17,28 @@
 
 <body class="bg-gradient-to-b from-stone-100 to-white text-orange-800 font-sans" x-data="{ open: false }">
 
-    <!-- Navbar -->
-    <header class="bg-stone-800 text-white shadow-md flex-1 p-2 w-full">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+  <!-- Navbar -->
+<header class="bg-stone-800 text-white shadow-md w-full">
+    <div class="container mx-auto px-6 py-3 flex items-center justify-between">
+        
+        <!-- Botón Volver elegante -->
+        <a href="{{ $backRoute ?? url()->previous() }}"
+            class="flex items-center gap-2 px-4 py-2 rounded-full border border-stone-500 text-stone-300 
+                   hover:text-amber-300 hover:border-amber-400 hover:bg-stone-700 transition-all duration-200 shadow-sm">
+            <i class="fas fa-arrow-left text-sm"></i>
+            <span class="text-sm font-medium">Volver</span>
+        </a>
 
-            <!-- Botón Volver dinámico -->
-            <a href="{{ $backRoute ?? url()->previous() }}"
-                class="px-4 py-2 bg-stone-600 hover:bg-stone-500 text-white rounded-lg shadow">
-                ← Volver
-            </a>
+        <!-- Título centrado -->
+        <h1 class="text-xl font-semibold text-center flex-1 text-amber-200 tracking-wide">
+            {{ $title ?? 'Panel de Administración' }}
+        </h1>
 
-            <h1 class="text-lg font-bold">{{ $title ?? 'Panel de Administración' }}</h1>
-        </div>
-    </header>
+        <!-- Espaciador invisible para balancear el botón -->
+        <div class="w-[90px]"></div>
+    </div>
+</header>
+
 
 
     <!-- Contenido principal -->

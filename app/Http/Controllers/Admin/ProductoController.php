@@ -30,7 +30,7 @@ class ProductoController extends Controller
             ->get();
 
         return view('admin.productos.index', compact('productos', 'categorias'))
-        ->with('title', 'Gestión de Productos');
+            ->with('title', 'Gestión de Productos');
     }
 
     public function crear()
@@ -47,18 +47,28 @@ class ProductoController extends Controller
             'precio' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'categoriaId' => 'required|exists:CategoriaProducto,idCategoria',
-            'estado' => 'required|boolean', // <-- agregamos validación
-            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048', // valida imagen
+            'estado' => 'required|boolean',
+            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
         ]);
 
+        // ✅ Manejo correcto de imagen
+        $nombreArchivo = null;
         if ($request->hasFile('imagen')) {
             $archivo = $request->file('imagen');
             $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
             $archivo->move(public_path('images'), $nombreArchivo);
-            $request->merge(['imagen' => $nombreArchivo]);
         }
 
-        $producto = Producto::create($request->all());
+        // ✅ Guardamos el producto manualmente para evitar ruta temporal
+        $producto = Producto::create([
+            'nombre' => $request->nombre,
+            'descripcion' => $request->descripcion,
+            'precio' => $request->precio,
+            'stock' => $request->stock,
+            'categoriaId' => $request->categoriaId,
+            'estado' => $request->estado,
+            'imagen' => $nombreArchivo,
+        ]);
 
         $this->logAction(
             "Se creó el producto '{$producto->nombre}' (ID: {$producto->idProducto})",
@@ -86,25 +96,37 @@ class ProductoController extends Controller
             'precio' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'categoriaId' => 'required|exists:CategoriaProducto,idCategoria',
-            'estado' => 'required|boolean', // <-- agregamos validación
+            'estado' => 'required|boolean',
             'imagen' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
         ]);
 
+        $nombreArchivo = $producto->imagen; // mantener imagen anterior si no se sube nueva
         if ($request->hasFile('imagen')) {
             $archivo = $request->file('imagen');
             $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
             $archivo->move(public_path('images'), $nombreArchivo);
-            $request->merge(['imagen' => $nombreArchivo]);
         }
 
-        $producto->update($request->all());
+        // ✅ Actualizamos correctamente sin perder la imagen
+        $producto->update([
+            'nombre' => $request->nombre,
+            'descripcion' => $request->descripcion,
+            'precio' => $request->precio,
+            'stock' => $request->stock,
+            'categoriaId' => $request->categoriaId,
+            'estado' => $request->estado,
+            'imagen' => $nombreArchivo,
+        ]);
+
         $this->logAction(
             "Se actualizó el producto '{$producto->nombre}' (ID: {$producto->idProducto})",
             'Productos',
             'Exitoso'
         );
+
         return redirect()->route('productos.index')->with('exito', 'Producto actualizado correctamente.');
     }
+
     // Eliminar producto
     public function eliminar($idProducto)
     {

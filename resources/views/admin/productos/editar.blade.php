@@ -7,7 +7,7 @@
 @section('content')
     <div class="bg-gradient-to-b from-amber-50 to-orange-50 min-h-screen p-6 rounded-lg shadow">
 
-        <form action="{{ route('productos.actualizar', $producto->idProducto) }}" method="POST">
+        <form action="{{ route('productos.actualizar', $producto->idProducto) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
