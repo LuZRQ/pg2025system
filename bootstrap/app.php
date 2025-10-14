@@ -7,12 +7,12 @@ use App\Http\Middleware\VerificarRolMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        commands: __DIR__.'/../routes/console.php',
+        web: __DIR__ . '/../routes/web.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-         // Alias para tu middleware personalizado
+        // Alias para tu middleware personalizado
         $middleware->alias([
             'verificarRol' => VerificarRolMiddleware::class,
         ]);
@@ -32,6 +32,14 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
     })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        // 🕐 Ejecutar todos los días a las 00:00
+        $schedule->command('stock:reset-diario')->dailyAt('00:00');
+    })
+
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
+
+
+       
