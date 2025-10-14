@@ -1,14 +1,13 @@
 @php
-    $backRoute = route('productos.index'); 
-    $title = 'Nuevo Producto'; 
+    $backRoute = route('productos.index');
+    $title = 'Nuevo Producto';
 @endphp
 @extends('layouts.crud')
 
 @section('content')
-
     <div class="bg-gradient-to-b from-amber-50 to-orange-50 min-h-screen p-6 rounded-lg shadow">
 
-        <form action="{{ route('productos.guardar') }}" method="POST">
+        <form action="{{ route('productos.guardar') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 

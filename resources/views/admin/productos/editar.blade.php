@@ -1,6 +1,6 @@
 @php
-    $backRoute = route('productos.index'); 
-    $title = 'Editar Producto'; 
+    $backRoute = route('productos.index');
+    $title = 'Editar Producto';
 @endphp
 @extends('layouts.crud')
 
@@ -77,14 +77,20 @@
                     <label class="block mb-2 font-medium text-stone-700">Imagen</label>
                     <input type="file" name="imagen"
                         class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-400 focus:outline-none">
+
                     @if ($producto->imagen)
-                        <img src="{{ asset('images/' . $producto->imagen) }}" alt="{{ $producto->nombre }}"
-                            class="w-20 h-20 mt-2 rounded">
+                        <div class="mt-3">
+                            <img src="{{ asset('storage/' . $producto->imagen) }}" alt="{{ $producto->nombre }}"
+                                class="w-24 h-24 rounded shadow border border-stone-300">
+                            <p class="text-xs text-stone-500 mt-1">Imagen actual</p>
+                        </div>
                     @endif
+
                     @error('imagen')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
+
 
                 <!-- Descripción -->
                 <div class="md:col-span-2">

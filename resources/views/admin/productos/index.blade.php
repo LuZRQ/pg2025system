@@ -56,18 +56,19 @@
                 <tbody class="text-stone-700">
                     @foreach ($productos as $producto)
                         <tr class="border-t hover:bg-stone-50">
-                                  <!-- Imagen -->
-            <td class="px-4 py-2">
-                @if($producto->imagen)
-                    <img src="{{ asset('images/' . $producto->imagen) }}" 
-                         alt="{{ $producto->nombre }}" 
-                         class="w-12 h-12 object-cover rounded">
-                @else
-                    <div class="w-12 h-12 bg-stone-200 rounded flex items-center justify-center text-xs text-stone-500">
-                        Sin imagen
-                    </div>
-                @endif
-            </td>
+                            <td class="px-4 py-2 text-center">
+                                @if ($producto->imagen)
+                                    <img src="{{ $producto->imagen ? asset('storage/' . $producto->imagen) : asset('images/default.png') }}"
+                                        alt="{{ $producto->nombre }}"
+                                        class="w-12 h-12 object-cover rounded border border-stone-300 shadow-sm">
+                                @else
+                                    <div
+                                        class="w-12 h-12 bg-stone-200 rounded flex items-center justify-center text-xs text-stone-500 border">
+                                        Sin imagen
+                                    </div>
+                                @endif
+                            </td>
+
                             <td class="px-4 py-2 font-medium">{{ $producto->nombre }}</td>
                             <td class="px-4 py-2">Bs. {{ number_format($producto->precio, 2) }}</td>
                             <td class="px-4 py-2">

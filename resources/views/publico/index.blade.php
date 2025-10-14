@@ -313,16 +313,16 @@
                     <div class="col-12 col-md-6 col-lg-4 menu-item" data-category="{{ $p->categoriaId }}">
                         <div class="menu-card garabato-card rounded-4 p-3 h-100 shadow-sm">
                             {{-- Imagen --}}
-                            <div class="ratio ratio-16x9 mb-3 rounded-3 overflow-hidden border garabato-img">
-                                @if ($p->imagen)
-                                    <img src="{{ asset('storage/' . $p->imagen) }}" class="w-100 h-100 object-fit-cover"
-                                        alt="{{ $p->nombre }}">
-                                @else
-                                    {{-- Imagen por defecto --}}
-                                    <img src="{{ asset('storage/default.jpg') }}" class="w-100 h-100 object-fit-cover"
-                                        alt="Imagen no disponible">
-                                @endif
+                            <div
+                                class="ratio ratio-16x9 mb-3 rounded-3 overflow-hidden border garabato-img position-relative">
+                                <div
+                                    class="absolute top-0 start-0 w-100 h-100 bg-gradient-to-tr from-amber-200 to-amber-400">
+                                </div>
+                                <img src="{{ $p->imagen ? asset('storage/' . $p->imagen) : asset('images/default.png') }}"
+                                    alt="{{ $p->nombre }}"
+                                    class="w-100 h-100 object-fit-cover position-absolute top-0 start-0 mix-blend-multiply">
                             </div>
+
 
                             {{-- Texto --}}
                             <h5 class="mb-1 fw-bold">{{ $p->nombre }}</h5>

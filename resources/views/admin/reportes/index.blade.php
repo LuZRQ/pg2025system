@@ -136,6 +136,19 @@
                 class="px-6 py-2 bg-amber-700 hover:bg-amber-500 text-white font-medium rounded-lg shadow flex items-center gap-2">
                 <i class="fas fa-file-excel"></i> Stock (Excel)
             </a>
+
+          {{-- Cierre de Caja --}}
+<a href="{{ route('reportes.cierreCajaPDF', ['anio' => now()->year, 'mes' => now()->month]) }}"
+   class="px-6 py-2 bg-green-800 hover:bg-green-600 text-white font-medium rounded-lg shadow flex items-center gap-2">
+   <i class="fas fa-download"></i> Cierre de Caja (PDF)
+</a>
+
+<a href="{{ route('reportes.cierreCajaExcel', ['anio' => now()->year, 'mes' => now()->month]) }}"
+   class="px-6 py-2 bg-green-600 hover:bg-green-400 text-white font-medium rounded-lg shadow flex items-center gap-2">
+   <i class="fas fa-file-excel"></i> Cierre de Caja (Excel)
+</a>
+
+
         </div>
     </div>
 
@@ -188,13 +201,16 @@
                 <option value="ventas_dia" {{ request('categoria') == 'ventas_dia' ? 'selected' : '' }}>Ventas del Día
                 </option>
                 <option value="stock" {{ request('categoria') == 'stock' ? 'selected' : '' }}>Stock</option>
-                <option value="productos_mes" {{ request('categoria') == 'productos_mes' ? 'selected' : '' }}>Productos del
+                <option value="productos_mes" {{ request('categoria') == 'productos_mes' ? 'selected' : '' }}>Productos
+                    del
                     Mes</option>
                 <option value="ganancia_mes" {{ request('categoria') == 'ganancia_mes' ? 'selected' : '' }}>Ganancia del
                     Mes</option>
-                <option value="alta_rotacion" {{ request('categoria') == 'alta_rotacion' ? 'selected' : '' }}>Alta Rotación
+                <option value="alta_rotacion" {{ request('categoria') == 'alta_rotacion' ? 'selected' : '' }}>Alta
+                    Rotación
                 </option>
-                <option value="baja_venta" {{ request('categoria') == 'baja_venta' ? 'selected' : '' }}>Baja Venta</option>
+                <option value="baja_venta" {{ request('categoria') == 'baja_venta' ? 'selected' : '' }}>Baja Venta
+                </option>
             </select>
 
             <input type="date" name="desde" value="{{ request('desde') }}"

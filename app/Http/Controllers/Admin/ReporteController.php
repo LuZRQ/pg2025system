@@ -18,8 +18,12 @@ use App\Exports\ProductosMesExport;
 use App\Exports\GananciaMesExport;
 use App\Exports\AltaRotacionExport;
 use App\Exports\BajaVentaExport;
+use App\Exports\CierreCajaExport;
+use App\Exports\HistoricoCajaMensualExport;
+use App\Models\CierreCaja;
 use Illuminate\Support\Facades\Auth;
 use App\Traits\Auditable;
+use Carbon\Carbon;
 
 class ReporteController extends Controller
 {
@@ -128,6 +132,8 @@ class ReporteController extends Controller
             ->paginate(10)
             ->appends($request->all());
 
+        $ultimoCierre = CierreCaja::latest('fecha_cierre')->first();
+
 
         // ✅ 6. Retornamos TODO JUNTO
         return view('admin.reportes.index', [
@@ -141,7 +147,8 @@ class ReporteController extends Controller
             'ventasSemana'        => $ventasSemana,
             'stockCritico'        => $stockCritico,
             'tendencias'          => $tendencias,
-            'reportes'            => $reportes, 
+            'reportes'            => $reportes,
+            'ultimoCierre'        => $ultimoCierre,
         ])->with('title', 'Gestión de Reportes');
     }
 
@@ -256,13 +263,20 @@ class ReporteController extends Controller
     // ===== SECCIÓN 1: REPORTES RÁPIDOS =====
 
     // Ventas del día - PDF
+    // Ventas del día - PDF
     public function ventasDiaPDF()
     {
-        $ventas = Venta::whereDate('fechaPago', now()->toDateString())->get();
-        $total = $ventas->sum('montoTotal');
         $fecha = now()->toDateString();
+        $ventas = Venta::whereDate('fechaPago', $fecha)->get();
 
-        $pdf = Pdf::loadView('admin.reportes.pdf.ventasDia', compact('ventas', 'total', 'fecha'));
+        $totales = [
+            'efectivo' => $ventas->where('metodo_pago', 'Efectivo')->sum('montoTotal'),
+            'tarjeta'  => $ventas->where('metodo_pago', 'Tarjeta')->sum('montoTotal'),
+            'qr'       => $ventas->where('metodo_pago', 'QR')->sum('montoTotal'),
+        ];
+        $totalGeneral = array_sum($totales);
+
+        $pdf = Pdf::loadView('admin.reportes.pdf.ventasDia', compact('ventas', 'totales', 'totalGeneral', 'fecha'));
 
         $nombreArchivo = 'ventas_dia_' . $fecha . '.pdf';
         $ruta = 'reportes/' . $nombreArchivo;
@@ -275,11 +289,8 @@ class ReporteController extends Controller
             'generadoPor' => Auth::user()->name ?? 'Sistema',
             'archivo' => $ruta,
         ]);
-        $this->logAction(
-            "Se generó PDF de ventas del día ({$fecha})",
-            'Reportes',
-            'Exitoso'
-        );
+
+        $this->logAction("Se generó PDF de ventas del día ({$fecha})", 'Reportes', 'Exitoso');
         return response()->download(storage_path('app/public/' . $ruta));
     }
 
@@ -287,16 +298,87 @@ class ReporteController extends Controller
     public function ventasDiaExcel()
     {
         $fecha = now()->toDateString();
-        $ventas = Venta::whereDate('fechaPago', now()->toDateString())
+        $ventas = Venta::whereDate('fechaPago', $fecha)
             ->with('pedido.usuario')
             ->get();
-        $this->logAction(
-            "Se generó Excel de ventas del día ({$fecha})",
-            'Reportes',
-            'Exitoso'
-        );
-        return Excel::download(new VentasExport($ventas), 'ventas_dia.xlsx');
+
+        $totales = [
+            'efectivo' => $ventas->where('metodo_pago', 'Efectivo')->sum('montoTotal'),
+            'tarjeta'  => $ventas->where('metodo_pago', 'Tarjeta')->sum('montoTotal'),
+            'qr'       => $ventas->where('metodo_pago', 'QR')->sum('montoTotal'),
+        ];
+        $totalGeneral = array_sum($totales);
+
+        $this->logAction("Se generó Excel de ventas del día ({$fecha})", 'Reportes', 'Exitoso');
+
+        return Excel::download(new VentasExport($ventas, $totales, $totalGeneral), 'ventas_dia.xlsx');
     }
+
+
+
+// Cierre de caja mensual - PDF
+public function cierreCajaPDF($anio, $mes)
+{
+    // Primer y último día del mes
+    $primerDia = Carbon::create($anio, $mes, 1);
+    $ultimoDia = $primerDia->copy()->endOfMonth();
+
+    $semanas = [];
+    $start = $primerDia->copy();
+
+    // Recorre semana por semana
+    while ($start <= $ultimoDia) {
+        $end = $start->copy()->endOfWeek();
+        if ($end > $ultimoDia) $end = $ultimoDia->copy();
+
+        // Suma los cierres dentro de esa semana incluyendo fondo inicial
+        $cierresSemana = CierreCaja::whereBetween('fecha_cierre', [$start, $end])->get();
+
+        $efectivo = $cierresSemana->sum('total_efectivo') + $cierresSemana->sum('fondo_inicial');
+        $tarjeta  = $cierresSemana->sum('total_tarjeta');
+        $qr       = $cierresSemana->sum('total_qr');
+
+        $semanas[] = [
+            'inicio'   => $start->copy(),
+            'fin'      => $end->copy(),
+            'efectivo' => $efectivo,
+            'tarjeta'  => $tarjeta,
+            'qr'       => $qr,
+            'total'    => $efectivo + $tarjeta + $qr,
+        ];
+
+        $start = $end->addDay();
+    }
+
+    // Totales del mes
+    $totalMes = [
+        'efectivo' => array_sum(array_column($semanas, 'efectivo')),
+        'tarjeta'  => array_sum(array_column($semanas, 'tarjeta')),
+        'qr'       => array_sum(array_column($semanas, 'qr')),
+        'general'  => array_sum(array_column($semanas, 'total')),
+    ];
+
+    // Genera PDF usando la vista
+    $pdf = Pdf::loadView('admin.reportes.pdf.cierreCaja', compact('anio', 'mes', 'semanas', 'totalMes'));
+
+    return $pdf->download("cierre_caja_{$anio}_{$mes}.pdf");
+}
+
+
+
+    // Cierre de caja - Excel
+    public function cierreCajaExcel($idCierre)
+    {
+        $cierre = CierreCaja::with('usuario')->findOrFail($idCierre);
+
+        $this->logAction("Se generó Excel de cierre de caja ({$cierre->fecha_cierre})", 'Reportes', 'Exitoso');
+
+        return Excel::download(new CierreCajaExport($cierre), 'cierre_caja.xlsx');
+    }
+ 
+
+
+
 
     // Stock general - PDF
     public function stockPDF()

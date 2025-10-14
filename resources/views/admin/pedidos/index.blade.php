@@ -32,74 +32,136 @@
 
 
         {{-- Pedidos --}}
-        <div class="grid grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             @forelse($pedidos as $pedido)
-                <div class="bg-white border border-amber-200 rounded-xl shadow-lg p-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <p class="font-semibold text-amber-900">#{{ $pedido->idPedido }}</p>
-                        <div class="text-right text-sm text-gray-600">
-                            <p>{{ $pedido->fechaCreacion->format('H:i') }}</p>
+                @php
+                    $estado = $pedido->estado;
+                    $bgColor = match ($estado) {
+                        'pendiente' => 'bg-red-50 border-red-200',
+                        'en preparación' => 'bg-blue-50 border-blue-200',
+                        'listo' => 'bg-green-50 border-green-200',
+                        default => 'bg-gray-100 border-gray-300',
+                    };
+
+                    $estadoColor = match ($estado) {
+                        'pendiente' => 'text-red-600 bg-yellow-100',
+                        'en preparación' => 'text-blue-600 bg-blue-100',
+                        'listo' => 'text-green-600 bg-green-100',
+                        default => 'text-gray-600 bg-gray-200',
+                    };
+
+                    $botonColor = match ($estado) {
+                        'pendiente' => 'bg-blue-600 hover:bg-blue-700',
+                        'en preparación' => 'bg-green-600 hover:bg-green-700',
+                        default => 'bg-gray-400 cursor-not-allowed',
+                    };
+
+                    $siguienteEstado =
+                        $estado === 'pendiente' ? 'en preparación' : ($estado === 'en preparación' ? 'listo' : null);
+                    $accionTexto = $estado === 'pendiente' ? 'Iniciar' : ($estado === 'en preparación' ? 'Listo' : '');
+                @endphp
+
+                <div class="border rounded-xl p-4 shadow-sm {{ $bgColor }}">
+                    {{-- Encabezado --}}
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="font-bold text-lg text-gray-800">#{{ $pedido->idPedido }}</p>
+                            <p class="text-sm text-gray-600">{{ $pedido->direccion ?? 'Mesa ' . ($pedido->mesa ?? 'N/A') }}
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">{{ $pedido->fechaCreacion->format('H:i') }}</p>
+                            {{-- Tiempo transcurrido --}}
+                            <p class="text-xs text-red-500 mt-1">
+                                @php
+                                    $diferenciaMinutos = now()->diffInMinutes($pedido->fechaCreacion);
+                                    echo $diferenciaMinutos > 0 ? $diferenciaMinutos . ' min' : 'Recién';
+                                @endphp
+                            </p>
                         </div>
                     </div>
-                    <p class="text-sm text-gray-700 mb-2">
-                        {{ $pedido->direccion ?? 'Mesa ' . ($pedido->mesa ?? 'N/A') }}
-                    </p>
-                    <p class="text-xs text-gray-500 mb-2">Mesero: {{ $pedido->usuario->nombre ?? 'Desconocido' }}</p>
 
-                    <ul class="text-sm text-amber-900 space-y-1 mb-2">
+                    {{-- Mesero --}}
+                    <p class="text-xs text-gray-500 mb-2">👤 Mesero: {{ $pedido->usuario->nombre ?? 'Desconocido' }}</p>
+
+                    {{-- Detalles del pedido --}}
+                    <ul class="text-sm text-gray-800 mb-2 space-y-1">
                         @foreach ($pedido->detalles as $detalle)
-                            <li>{{ $detalle->cantidad }}x {{ $detalle->producto->nombre }} <span class="float-right">Bs.
-                                    {{ number_format($detalle->subtotal, 2) }}</span></li>
+                            <li>
+                                {{ $detalle->cantidad }}x {{ $detalle->producto->nombre }}
+                                <span class="float-right">Bs. {{ number_format($detalle->subtotal, 2) }}</span>
+                            </li>
                         @endforeach
-
                     </ul>
 
-                    <p class="text-xs italic text-gray-600 mb-3">{{ $pedido->comentarios ?? '' }}</p>
 
-                    {{-- Botones de cambio de estado --}}
+
+                    {{-- Comentarios --}}
+                    @if ($pedido->comentarios)
+                        <div
+                            class="text-xs text-gray-800 bg-amber-100 rounded-md p-2 mb-3 shadow-inner flex items-center space-x-2">
+                            <i class="fas fa-comment-dots text-amber-700"></i>
+                            <span class="font-semibold">{{ $pedido->comentarios }}</span>
+                        </div>
+                    @endif
+
+
+                    {{-- Estado y acciones --}}
                     <div class="flex justify-between items-center">
-                        {{-- Estado actual --}}
                         <span
-                            class="text-sm font-semibold
-        {{ $pedido->estado == 'pendiente' ? 'text-red-600' : ($pedido->estado == 'en preparación' ? 'text-yellow-600' : ($pedido->estado == 'listo' ? 'text-green-700' : 'text-gray-500')) }}">
-                            {{ ucfirst($pedido->estado) }}
+                            class="px-3 py-1 rounded-full text-xs font-semibold
+                            {{ match ($estado) {
+                                'pendiente' => 'bg-red-100 text-red-800',
+                                'en preparación' => 'bg-yellow-100 text-yellow-800',
+                                'listo' => 'bg-green-100 text-green-800',
+                                default => 'bg-gray-200 text-gray-700',
+                            } }}">
+                            {{ ucfirst($estado) }}
                         </span>
 
-                        {{-- Botón acción principal --}}
-                        @if ($pedido->estado == 'pendiente' || $pedido->estado == 'en preparación')
-                            <form action="{{ route('pedidos.cambiarEstado', $pedido->idPedido) }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="estado"
-                                    value="{{ $pedido->estado == 'pendiente' ? 'en preparación' : 'listo' }}">
-                                <button
-                                    class="px-4 py-1 rounded-lg
-                {{ $pedido->estado == 'pendiente' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-600 hover:bg-green-700' }}
-                text-white text-sm">
-                                    {{ $pedido->estado == 'pendiente' ? 'Marcar En Preparación' : 'Marcar Listo ✅' }}
-                                </button>
-                            </form>
-                        @endif
+                        <div class="flex space-x-2">
+                            {{-- Botón de cambio de estado --}}
+                            @if ($siguienteEstado)
+                                <form action="{{ route('pedidos.cambiarEstado', $pedido->idPedido) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="estado" value="{{ $siguienteEstado }}">
+                                    <button
+                                        class="px-3 py-1 text-xs text-white rounded-lg
+                                        {{ match ($estado) {
+                                        'pendiente' => 'bg-yellow-400 hover:bg-yellow-500',
+                                        'en preparación' => 'bg-green-400 hover:bg-green-500',
+                                        default => 'bg-gray-300 cursor-not-allowed',
+                                        } }}">
+                                        {{ $accionTexto }}
+                                    </button>
+                                </form>
+                            @endif
 
-                        {{-- Botón cancelar --}}
-                        @if ($pedido->estado === 'listo')
-                            <form action="{{ route('pedidos.cambiarEstado', $pedido->idPedido) }}" method="POST"
-                                class="mt-1">
-                                @csrf
-                                <input type="hidden" name="estado" value="cancelado">
-                                <button class="px-4 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">
-                                    Cancelar
-                                </button>
-                            </form>
-                        @endif
+                            {{-- Botón imprimir con Font Awesome y color marrón --}}
+                            <a href="{{ route('pedidos.recibo', $pedido->idPedido) }}" target="_blank"
+                                class="px-3 py-1 text-xs rounded-lg bg-amber-700 hover:bg-amber-800 text-white flex items-center space-x-1">
+                                <i class="fas fa-print"></i>
+                                <span>Imprimir</span>
+                            </a>
+
+                            {{-- Botón cancelar --}}
+                            @if ($pedido->estado === 'listo')
+                                <form action="{{ route('pedidos.cambiarEstado', $pedido->idPedido) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="estado" value="cancelado">
+                                    <button class="px-3 py-1 text-xs rounded-lg bg-red-500 hover:bg-red-600 text-white">
+                                        Cancelar
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
                     </div>
-
-
-
                 </div>
             @empty
                 <p class="text-gray-500">No hay pedidos en curso.</p>
             @endforelse
         </div>
+
 
     </div>
 @endsection

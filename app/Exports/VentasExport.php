@@ -10,15 +10,19 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class VentasExport implements FromCollection, WithHeadings, WithStyles
 {
     protected $ventas;
+    protected $totales;
+    protected $totalGeneral;
 
-    public function __construct($ventas)
+    public function __construct($ventas, $totales, $totalGeneral)
     {
         $this->ventas = $ventas;
+        $this->totales = $totales;
+        $this->totalGeneral = $totalGeneral;
     }
 
     public function collection()
     {
-        return $this->ventas->map(function($venta) {
+        $rows = $this->ventas->map(function($venta) {
             return [
                 'ID Venta'      => $venta->idVenta,
                 'ID Pedido'     => $venta->idPedido,
@@ -28,6 +32,18 @@ class VentasExport implements FromCollection, WithHeadings, WithStyles
                 'Fecha Pago'    => $venta->fechaPago,
             ];
         });
+
+        // Agregar fila de totales al final
+        $rows->push([
+            'ID Venta'      => '',
+            'ID Pedido'     => '',
+            'Usuario'       => 'Totales',
+            'Monto Total'   => $this->totalGeneral,
+            'Método Pago'   => 'Efectivo: '.$this->totales['efectivo'] . ' | Tarjeta: '.$this->totales['tarjeta'] . ' | QR: '.$this->totales['qr'],
+            'Fecha Pago'    => '',
+        ]);
+
+        return $rows;
     }
 
     public function headings(): array
@@ -44,17 +60,14 @@ class VentasExport implements FromCollection, WithHeadings, WithStyles
 
     public function styles(Worksheet $sheet)
     {
-        // Encabezado: negrita, centrado y tamaño de fuente
         $sheet->getStyle('A1:F1')->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle('A1:F1')->getAlignment()->setHorizontal('center');
 
-        // Auto ancho de columnas
         foreach(range('A','F') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
-        // Filas de datos centradas verticalmente
-        $sheet->getStyle('A2:F' . ($this->ventas->count() + 1))
+        $sheet->getStyle('A2:F' . ($this->ventas->count() + 2))
               ->getAlignment()->setVertical('center');
     }
 }

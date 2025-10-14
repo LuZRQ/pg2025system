@@ -19,12 +19,9 @@ use App\Models\Rol;
 
 class Usuario extends Authenticatable
 {
-
-
     use Notifiable;
     // ...
     public $timestamps = false;
-
     protected $table = 'Usuario';
     protected $primaryKey = 'ciUsuario';
     public $incrementing = false;
@@ -96,5 +93,9 @@ class Usuario extends Authenticatable
     public function esCliente()
     {
         return $this->rol->nombre === 'Cliente';
+    }
+    public function cajaActual()
+    {
+        return $this->hasOne(CajaActual::class, 'ciUsuario', 'ciUsuario');
     }
 }

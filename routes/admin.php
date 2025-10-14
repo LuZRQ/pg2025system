@@ -36,14 +36,12 @@ Route::middleware(['auth', 'verificarRol:Usuarios y Roles'])->group(function () 
     Route::get('roles/{idRol}/editar', [RolController::class, 'editar'])->name('roles.editar');
     Route::put('roles/{idRol}', [RolController::class, 'actualizar'])->name('roles.actualizar');
     Route::delete('roles/{idRol}', [RolController::class, 'eliminar'])->name('roles.eliminar');
-
-    
 });
 
 // =============== VENTAS (módulo: Gestión de Ventas) ===============
 Route::middleware(['auth', 'verificarRol:Gestión de Ventas'])->group(function () {
     Route::prefix('ventas')->name('ventas.')->group(function () {
-        
+
         // CRUD principal
         Route::get('/', [VentaController::class, 'index'])->name('index');
         Route::get('/crear', [VentaController::class, 'create'])->name('crear');
@@ -67,13 +65,17 @@ Route::middleware(['auth', 'verificarRol:Gestión de Ventas'])->group(function (
 
         // 💰 Caja (parte de ventas, pero usa CajaController)
         Route::get('/caja', [CajaController::class, 'index'])->name('caja');
+        Route::post('/abrirCaja', [CajaController::class, 'abrirCaja'])->name('abrirCaja');
+
         Route::post('/cobrar', [CajaController::class, 'cobrar'])->name('cobrar');
         Route::get('/recibo/{idVenta}', [CajaController::class, 'recibo'])->name('recibo');
         Route::post('/cerrarCaja', [CajaController::class, 'cerrarCaja'])->name('cerrarCaja');
 
-        // Exportaciones
-        Route::get('/caja/export/excel', [CajaController::class, 'exportExcel'])->name('caja.export.excel');
-        Route::get('/caja/export/pdf', [CajaController::class, 'exportPDF'])->name('caja.export.pdf');
+        Route::put('/caja/monto-inicial', [CajaController::class, 'updateMontoInicial'])
+            ->name('caja.updateMontoInicial');
+        // Exportaciones de Caja en Vivo
+        Route::get('/caja/export/excel', [CajaController::class, 'exportCajaExcel'])->name('caja.export.excel');
+        Route::get('/caja/export/pdf',   [CajaController::class, 'exportCajaPDF'])->name('caja.export.pdf');
 
         // Recibo en PDF con PdfController
         Route::get('/recibo/pdf/{idVenta}', [PdfController::class, 'reciboVenta'])->name('recibo.pdf');
@@ -103,6 +105,10 @@ Route::middleware(['auth', 'verificarRol:Pedidos de Cocina,Gestión de Productos
     Route::get('stock', [StockController::class, 'index'])->name('stock.index');
     Route::post('stock/{idProducto}/entrada', [StockController::class, 'entrada'])->name('stock.entrada');
     Route::post('stock/{idProducto}/salida', [StockController::class, 'salida'])->name('stock.salida');
+
+    // Recibo de pedido (tipo ticket para imprimir)
+    Route::get('/cocina/pedidos/{pedido}/recibo', [PedidoController::class, 'imprimirRecibo'])
+        ->name('pedidos.recibo');
 });
 
 
@@ -122,6 +128,12 @@ Route::middleware(['auth', 'verificarRol:Gestión de Reportes'])->group(function
     // Stock general
     Route::get('/reportes/stock/pdf', [ReporteController::class, 'stockPDF'])->name('reportes.stockPDF');
     Route::get('/reportes/stock/excel', [ReporteController::class, 'stockExcel'])->name('reportes.stockExcel');
+   // ✅ Ahora por año y mes
+Route::get('/reportes/cierre-caja/pdf/{anio}/{mes}', [ReporteController::class, 'cierreCajaPDF'])
+    ->name('reportes.cierreCajaPDF');
+
+Route::get('/reportes/cierre-caja/excel/{anio}/{mes}', [ReporteController::class, 'cierreCajaExcel'])
+    ->name('reportes.cierreCajaExcel');
 
     // -------- REPORTES AVANZADOS --------
     // Productos más vendidos del mes

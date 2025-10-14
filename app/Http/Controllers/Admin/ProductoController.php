@@ -10,7 +10,6 @@ use App\Traits\Auditable;
 
 class ProductoController extends Controller
 {
-
     use Auditable;
     public function index(Request $request)
     {
@@ -56,7 +55,7 @@ class ProductoController extends Controller
         if ($request->hasFile('imagen')) {
             $archivo = $request->file('imagen');
             $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
-            $archivo->move(public_path('images'), $nombreArchivo);
+            $archivo->storeAs('productos', $nombreArchivo, 'public');
         }
 
         // ✅ Guardamos el producto manualmente para evitar ruta temporal
@@ -67,7 +66,7 @@ class ProductoController extends Controller
             'stock' => $request->stock,
             'categoriaId' => $request->categoriaId,
             'estado' => $request->estado,
-            'imagen' => $nombreArchivo,
+            'imagen' => $nombreArchivo ? 'productos/' . $nombreArchivo : null,
         ]);
 
         $this->logAction(
@@ -100,11 +99,13 @@ class ProductoController extends Controller
             'imagen' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
         ]);
 
-        $nombreArchivo = $producto->imagen; // mantener imagen anterior si no se sube nueva
+        $nombreArchivo = $producto->imagen;
+
         if ($request->hasFile('imagen')) {
             $archivo = $request->file('imagen');
             $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
-            $archivo->move(public_path('images'), $nombreArchivo);
+            $archivo->storeAs('productos', $nombreArchivo, 'public');
+            $nombreArchivo = 'productos/' . $nombreArchivo;
         }
 
         // ✅ Actualizamos correctamente sin perder la imagen

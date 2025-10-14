@@ -1,12 +1,12 @@
 @php
-    $backRoute = route('productos.index'); 
-    $title = 'Detalles del Producto'; 
+    $backRoute = route('productos.index');
+    $title = 'Detalles del Producto';
 @endphp
 @extends('layouts.crud')
 
 @section('content')
     <div class="bg-gradient-to-b from-amber-50 to-orange-50 min-h-screen p-6 rounded-lg shadow">
-       
+
 
         <div class="bg-white p-6 rounded-lg shadow grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -32,12 +32,13 @@
             <div class="mt-4">
                 <label class="block font-medium text-stone-700 mb-1">Imagen:</label>
                 @if ($producto->imagen)
-                    <img src="{{ asset('images/' . $producto->imagen) }}" alt="{{ $producto->nombre }}"
-                        class="w-32 h-32 rounded">
+                    <img src="{{ $producto->imagen ? asset('storage/' . $producto->imagen) : asset('images/default.png') }}"
+                        alt="{{ $producto->nombre }}" class="w-32 h-32 rounded shadow border border-stone-300">
                 @else
-                    <p>Sin imagen</p>
+                    <p class="text-stone-500 italic">Sin imagen</p>
                 @endif
             </div>
+
 
             <div class="md:col-span-2">
                 <label class="block font-medium text-stone-700 mb-1">Descripción:</label>

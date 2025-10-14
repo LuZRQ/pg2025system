@@ -26,8 +26,11 @@
                         <div class="producto-card bg-white rounded-2xl shadow-lg overflow-hidden border border-amber-200"
                             data-categoria="{{ $producto->categoriaId }}">
                             <div
-                                class="h-24 sm:h-32 bg-gradient-to-tr from-amber-200 to-amber-400 flex items-center justify-center">
+                                class="h-24 sm:h-32 bg-gradient-to-tr from-amber-200 to-amber-400 flex items-center justify-center overflow-hidden">
+                                <img src="{{ $producto->imagen ? asset('storage/' . $producto->imagen) : asset('images/default.png') }}"
+                                    alt="{{ $producto->nombre }}" class="h-full w-full object-cover">
                             </div>
+
                             <div class="p-4">
                                 <h3 class="font-semibold text-base sm:text-lg text-amber-900">{{ $producto->nombre }}</h3>
                                 <p class="text-sm text-amber-700">Bs. {{ number_format($producto->precio, 2) }}</p>
@@ -100,12 +103,17 @@
                         class="block w-full text-center bg-amber-500 text-white py-2 rounded-lg hover:bg-amber-600 shadow">
                         Ver historial
                     </a>
-                    @if (Auth::user()->rol?->nombre === 'Cajero')
+                    @php
+                        $rol = Auth::user()->rol?->nombre;
+                    @endphp
+
+                    @if ($rol === 'Cajero' || $rol === 'Dueno')
                         <a href="{{ route('ventas.caja') }}"
                             class="block w-full text-center bg-amber-800 text-white py-2 rounded-lg hover:bg-amber-900 shadow">
                             Cobrar del pedido
                         </a>
                     @endif
+
 
                 </div>
             </div>
@@ -127,7 +135,7 @@
                                 <li>- {{ $detalle->cantidad }} x {{ $detalle->producto->nombre }}</li>
                             @endforeach
                         </ul>
-                       
+
                     </div>
                 @empty
                     <p class="text-gray-500">No hay pedidos listos todavía.</p>
