@@ -23,37 +23,43 @@ class AuthenticatedSessionController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'ci' => 'required|string|exists:Usuario,ciUsuario',
-            'contrasena' => 'required|string',
-        ]);
-
         $key = Str::lower($request->input('ci')) . '|' . $request->ip();
 
-        // Revisar si ya superó el límite
-        if (RateLimiter::tooManyAttempts($key, 3)) {
-            $seconds = RateLimiter::availableIn($key);
-            throw ValidationException::withMessages([
-                'ci' => "Demasiados intentos fallidos. Intenta en " . gmdate("H:i:s", $seconds),
-            ]);
-        }
+    // Revisar si ya superó el límite
+    if (RateLimiter::tooManyAttempts($key, 3)) {
+        $seconds = RateLimiter::availableIn($key);
+        throw ValidationException::withMessages([
+            'ci' => "Demasiados intentos fallidos. Intenta en " . gmdate("H:i:s", $seconds),
+        ]);
+    }
 
-        $usuario = Usuario::where('ciUsuario', $request->ci)->first();
+    // ✅ Validación base
+    $request->validate([
+        'ci' => 'required|string|exists:Usuario,ciUsuario',
+        'contrasena' => 'required|string',
+        // CAPTCHA condicional
+        'g-recaptcha-response' => RateLimiter::attempts($key) >= 3 ? 'required|captcha' : '',
+    ], [
+        'g-recaptcha-response.required' => 'Debes completar la verificación CAPTCHA',
+        'g-recaptcha-response.captcha' => 'Error en la verificación CAPTCHA',
+    ]);
 
-        // Verificar credenciales
-        if (!$usuario || !Hash::check($request->contrasena, $usuario->contrasena)) {
-            RateLimiter::hit($key, 10800); // cada error suma, bloqueo 3h (10800s)
-            return back()->withErrors(['ci' => 'Credenciales inválidas']);
-        }
+    // Usuario
+    $usuario = Usuario::where('ciUsuario', $request->ci)->first();
 
-        // 🚨 Verificar estado
-        if (!$usuario->estado) {
-            return back()->withErrors(['ci' => 'Tu cuenta está inactiva, no puedes acceder.']);
-        }
+    // Verificar credenciales
+    if (!$usuario || !Hash::check($request->contrasena, $usuario->contrasena)) {
+        RateLimiter::hit($key, 10800); // cada error suma, bloqueo 3h (10800s)
+        return back()->withErrors(['ci' => 'Credenciales inválidas']);
+    }
 
-        RateLimiter::clear($key); // si el login es correcto, reiniciamos contador
+    // Verificar estado
+    if (!$usuario->estado) {
+        return back()->withErrors(['ci' => 'Tu cuenta está inactiva, no puedes acceder.']);
+    }
 
-        Auth::login($usuario);
+    RateLimiter::clear($key); // login correcto reinicia contador
+    Auth::login($usuario);
 
         // Redirección según rol
         switch ($usuario->rol->nombre) {

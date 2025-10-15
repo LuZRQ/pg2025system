@@ -2,30 +2,90 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Ganancia Total del Mes</title>
-    <style>
-        body { font-family: sans-serif; font-size: 12px; }
-        h2, h3 { margin: 0; padding: 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background-color: #f3f3f3; }
+    <title>Ingresos Totales del Mes</title>
+   <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            color: #333;
+            margin: 30px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header img {
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+
+        header h1 {
+            font-size: 18px;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        header p {
+            font-size: 12px;
+            margin: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #bbb;
+            padding: 8px;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            text-align: right;
+            font-size: 10px;
+            color: #555;
+            border-top: 1px solid #bbb;
+            padding-top: 5px;
+        }
     </style>
 </head>
 <body>
-    <h2>Ganancia Total del Mes: {{ now()->format('F Y') }}</h2>
+    <header>
+        <img src="{{ public_path('img/fondo3.png') }}" alt="Logo">
+     
+      <p>Mes: {{ now()->locale('es')->translatedFormat('F Y') }}</p>
+
+    </header>
+    <h2>Ingresos Totales del Mes: {{ now()->format('F Y') }}</h2>
 
     @php
-        $ganancia_total = $productos->sum('ganancia');
+        $ingreso_total = $productos->sum('ingreso');
     @endphp
 
-    <h3>Total: {{ number_format($ganancia_total, 2) }}</h3>
+    <h3>Total: {{ number_format($ingreso_total, 2) }}</h3>
 
     <table>
         <thead>
             <tr>
                 <th>ID Producto</th>
                 <th>Nombre</th>
-                <th>Ganancia</th>
+                <th>Ingreso</th>
             </tr>
         </thead>
         <tbody>
@@ -33,7 +93,7 @@
             <tr>
                 <td>{{ $producto->idProducto }}</td>
                 <td>{{ $producto->nombre }}</td>
-                <td>{{ number_format($producto->ganancia ?? 0, 2) }}</td>
+                <td>{{ number_format($producto->ingreso ?? 0, 2) }}</td>
             </tr>
             @endforeach
         </tbody>

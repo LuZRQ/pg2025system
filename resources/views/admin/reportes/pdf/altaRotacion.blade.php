@@ -4,14 +4,74 @@
     <meta charset="utf-8">
     <title>Productos con Alta Rotación</title>
     <style>
-        body { font-family: sans-serif; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background-color: #f3f3f3; }
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            color: #333;
+            margin: 30px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header img {
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+
+        header h1 {
+            font-size: 18px;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        header p {
+            font-size: 12px;
+            margin: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #bbb;
+            padding: 8px;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            text-align: right;
+            font-size: 10px;
+            color: #555;
+            border-top: 1px solid #bbb;
+            padding-top: 5px;
+        }
     </style>
 </head>
 <body>
-    <h2>Productos con Alta Rotación: {{ now()->format('F Y') }}</h2>
+    <header>
+        <img src="{{ public_path('img/fondo3.png') }}" alt="Logo">
+        <h1>Top 10 Productos más vendidos del Mes</h1>
+        <p>Mes: {{ now()->locale('es')->translatedFormat('F Y') }}</p>
+    </header>
+
     <table>
         <thead>
             <tr>
@@ -32,5 +92,9 @@
             @endforeach
         </tbody>
     </table>
+
+    <footer>
+        Reporte generado el {{ now()->format('d/m/Y H:i') }}
+    </footer>
 </body>
 </html>

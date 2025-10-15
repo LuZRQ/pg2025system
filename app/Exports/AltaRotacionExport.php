@@ -12,27 +12,29 @@ class AltaRotacionExport implements FromCollection, WithHeadings
 {
     public function collection()
     {
-        $productos = Producto::with('detallePedidos.pedido.venta', 'categoria')->get()->map(function ($producto) {
-            $cantidadVendida = 0;
+        $productos = Producto::with('detallePedidos.pedido.venta', 'categoria')
+            ->get()
+            ->map(function ($producto) {
+                $cantidadVendida = 0;
 
-            foreach ($producto->detallePedidos as $detalle) {
-                $venta = $detalle->pedido->venta ?? null;
+                foreach ($producto->detallePedidos as $detalle) {
+                    $venta = $detalle->pedido->venta ?? null;
 
-                // Solo contar ventas pagadas este mes
-                if ($venta && Carbon::parse($venta->fechaPago)->month == now()->month) {
-                    $cantidadVendida += $detalle->cantidad;
+                    // ✅ Solo contar ventas pagadas en el mes actual (rango completo)
+                    if ($venta && $venta->fechaPago->between(now()->startOfMonth(), now()->endOfMonth())) {
+                        $cantidadVendida += $detalle->cantidad;
+                    }
                 }
-            }
 
-            $producto->cantidad_vendida = $cantidadVendida;
-
-            return [
-                'ID Producto'      => $producto->idProducto,
-                'Nombre'           => $producto->nombre,
-                'Categoría'        => $producto->categoria->nombreCategoria ?? '',
-                'Cantidad Vendida' => $cantidadVendida,
-            ];
-        })->sortByDesc('Cantidad Vendida'); // ordenar de mayor a menor
+                return [
+                    'ID Producto'      => $producto->idProducto,
+                    'Nombre'           => $producto->nombre,
+                    'Categoría'        => $producto->categoria->nombreCategoria ?? '',
+                    'Cantidad Vendida' => $cantidadVendida,
+                ];
+            })
+            ->sortByDesc('Cantidad Vendida') // ordenar de mayor a menor
+            ->take(10); // ✅ solo los 10 más vendidos
 
         return collect($productos);
     }

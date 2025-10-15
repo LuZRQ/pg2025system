@@ -12,25 +12,29 @@ class GananciaMesExport implements FromCollection, WithHeadings
 {
     public function collection()
     {
-        $productos = Producto::with('detallePedidos.pedido.venta', 'categoria')->get()->map(function ($producto) {
-            $ganancia = 0;
+        $inicioMes = now()->startOfMonth();
+        $finMes = now()->endOfMonth();
 
-            foreach ($producto->detallePedidos as $detalle) {
-                $venta = $detalle->pedido->venta ?? null;
+        $productos = Producto::with('detallePedidos.pedido.venta', 'categoria')
+            ->get()
+            ->map(function ($producto) use ($inicioMes, $finMes) {
+                $ingreso = 0;
 
-                // Contar solo ventas pagadas en el mes actual
-                if ($venta && Carbon::parse($venta->fechaPago)->month == now()->month) {
-                    $ganancia += $detalle->cantidad * $producto->precio; // Precio del producto
+                foreach ($producto->detallePedidos as $detalle) {
+                    $venta = $detalle->pedido->venta ?? null;
+
+                    if ($venta && $venta->fechaPago->between($inicioMes, $finMes)) {
+                        $ingreso += $detalle->cantidad * $producto->precio;
+                    }
                 }
-            }
 
-            return [
-                'ID Producto' => $producto->idProducto,
-                'Nombre'      => $producto->nombre,
-                'Categoría'   => $producto->categoria->nombreCategoria ?? '',
-                'Ganancia'    => $ganancia,
-            ];
-        });
+                return [
+                    'ID Producto' => $producto->idProducto,
+                    'Nombre'      => $producto->nombre,
+                    'Categoría'   => $producto->categoria->nombreCategoria ?? '',
+                    'Ingreso'     => $ingreso,
+                ];
+            });
 
         return collect($productos);
     }
@@ -41,8 +45,7 @@ class GananciaMesExport implements FromCollection, WithHeadings
             'ID Producto',
             'Nombre',
             'Categoría',
-            'Ganancia',
+            'Ingreso',
         ];
     }
 }
-

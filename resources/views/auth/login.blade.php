@@ -33,27 +33,41 @@
 
         <h4 class="text-center mb-4 fw-bold">Iniciar Sesión</h4>
 
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
+       <form method="POST" action="{{ route('login') }}">
+    @csrf
 
-            <div class="mb-3">
-                <label for="ci" class="form-label fw-bold">Número de CI</label>
-                <input type="text" name="ci" id="ci" class="form-control" value="{{ old('ci') }}" required>
-                @error('ci') <small class="text-warning">{{ $message }}</small> @enderror
-            </div>
+    <div class="mb-3">
+        <label for="ci" class="form-label fw-bold">Número de CI</label>
+        <input type="text" name="ci" id="ci" class="form-control" value="{{ old('ci') }}" required>
+        @error('ci') <small class="text-warning">{{ $message }}</small> @enderror
+    </div>
 
-            <div class="mb-3">
-                <label for="contrasena" class="form-label fw-bold">Contraseña</label>
-                <input type="password" name="contrasena" id="contrasena" class="form-control" required>
-                @error('contrasena') <small class="text-warning">{{ $message }}</small> @enderror
-            </div>
+    <div class="mb-3">
+        <label for="contrasena" class="form-label fw-bold">Contraseña</label>
+        <input type="password" name="contrasena" id="contrasena" class="form-control" required>
+        @error('contrasena') <small class="text-warning">{{ $message }}</small> @enderror
+    </div>
 
-           
+    {{-- CAPTCHA condicional --}}
+    @php
+        $key = Str::lower(old('ci', '')) . '|' . request()->ip();
+    @endphp
 
-            <button type="submit" class="btn w-100 fw-bold text-dark border border-black" style=" background-color: #f0dd97;">
-                Entrar
-            </button>
-        </form>
+    @if(RateLimiter::attempts($key) >= 3)
+        <div class="mb-3">
+            <label class="form-label fw-bold">Verificación</label>
+            {!! NoCaptcha::display() !!}
+            @error('g-recaptcha-response')
+                <small class="text-warning">{{ $message }}</small>
+            @enderror
+        </div>
+    @endif
+
+    <button type="submit" class="btn w-100 fw-bold text-dark border border-black" style="background-color: #f0dd97;">
+        Entrar
+    </button>
+</form>
+
     </div>
 </section>
 @endsection
