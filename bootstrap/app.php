@@ -32,14 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
     })
-    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
-        // 🕐 Ejecutar todos los días a las 00:00
-        $schedule->command('stock:reset-diario')->dailyAt('00:00');
-    })
 
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
-
-
-       

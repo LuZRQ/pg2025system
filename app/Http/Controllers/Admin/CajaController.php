@@ -23,81 +23,95 @@ use Illuminate\Support\Facades\Log;
 class CajaController extends Controller
 {
     use Auditable;
-public function index()
-{
-    $usuario = Auth::user();
-    $rol = $usuario->rol?->nombre;
+    public function index()
+    {
+        $usuario = Auth::user();
+        $rol = $usuario->rol?->nombre;
 
-    if (!in_array($rol, ['Cajero', 'Dueno'])) {
-        abort(403, 'No tienes permisos para acceder a la caja');
+        if (!in_array($rol, ['Cajero', 'Dueno'])) {
+            abort(403, 'No tienes permisos para acceder a la caja');
+        }
+
+        // --- Pedidos listos sin venta ---
+        $pedidos = Pedido::where('estado', 'listo')
+            ->doesntHave('venta')
+            ->with('detalles.producto')
+            ->get();
+
+        $pedidosJS = $pedidos->map(function ($p) {
+            return [
+                'idPedido' => $p->idPedido,
+                'mesa' => $p->mesa,
+                'detalles' => $p->detalles->map(fn($d) => [
+                    'nombre' => $d->producto->nombre,
+                    'cantidad' => $d->cantidad,
+                    'comentarios' => $d->comentarios ?? '',
+                    'precio' => $d->producto->precio,
+                    'subtotal' => $d->subtotal,
+                ]),
+            ];
+        });
+
+        Log::info('Index Caja - Sesión actual:', session()->all());
+
+        // === Traer caja actual desde BD ===
+        $cajaActual = \App\Models\CajaActual::where('estado', 'abierta')->first();
+
+        // === Último cierre (opcional) ===
+        $ultimoCierre = \App\Models\CierreCaja::latest('fecha_cierre')->first();
+
+        // 🟡 Verificar si falta cerrar días anteriores o si ya es hora de cierre y no se ha cerrado
+        $mostrarAlerta = false;
+        $horaActual = now()->format('H:i');
+
+        // Si no hay cierre del día o fue de una fecha anterior
+        if (!$ultimoCierre || \Carbon\Carbon::parse($ultimoCierre->fecha_cierre)->lt(now()->startOfDay())) {
+            // Mostrar alerta solo si ya pasó la hora de cierre (por ejemplo, 20:00)
+            if ($horaActual >= '20:00') {
+                $mostrarAlerta = true;
+            }
+        }
+
+
+        // --- Fondo inicial ---
+        $fondoInicial = $cajaActual?->fondo_inicial ?? 0;
+
+        if ($cajaActual) {
+            $ventasHoy = Venta::whereDate('fechaPago', now()->toDateString())->get();
+
+            // Total efectivo cobrado (para mostrar en resumen)
+            $totalEfectivoCobrado = $ventasHoy->where('metodo_pago', 'Efectivo')->sum('montoTotal');
+
+            // Total efectivo que queda en caja = lo que se cobró
+            $totalEfectivoReal = $totalEfectivoCobrado;
+
+            $totalTarjeta  = $ventasHoy->where('metodo_pago', 'Tarjeta')->sum('montoTotal');
+            $totalQR       = $ventasHoy->where('metodo_pago', 'QR')->sum('montoTotal');
+
+            // Total en caja = fondo inicial + efectivo + tarjeta + QR
+            $totalEnCaja = $fondoInicial + $totalEfectivoReal + $totalTarjeta + $totalQR;
+        } else {
+            $totalEfectivoCobrado = 0;
+            $totalEfectivoReal    = 0;
+            $totalTarjeta         = 0;
+            $totalQR              = 0;
+            $totalEnCaja          = 0;
+        }
+
+        return view('admin.ventas.caja', [
+            'pedidos'              => $pedidos,
+            'pedidosJS'            => $pedidosJS,
+            'cajaActual'           => $cajaActual,
+            'ultimoCierre'         => $ultimoCierre,
+            'fondoInicial'         => $fondoInicial,
+            'totalEnCaja'          => $totalEnCaja,
+            'totalEfectivoCobrado' => $totalEfectivoCobrado, // resumen
+            'totalEfectivo'        => $totalEfectivoCobrado, // mostrar en Blade como "Efectivo"
+            'totalTarjeta'         => $totalTarjeta,
+            'totalQR'              => $totalQR,
+            'mostrarAlerta'        => $mostrarAlerta,
+        ])->with('title', 'Control de caja');
     }
-
-    // --- Pedidos listos sin venta ---
-    $pedidos = Pedido::where('estado', 'listo')
-        ->doesntHave('venta')
-        ->with('detalles.producto')
-        ->get();
-
-    $pedidosJS = $pedidos->map(function ($p) {
-        return [
-            'idPedido' => $p->idPedido,
-            'mesa' => $p->mesa,
-            'detalles' => $p->detalles->map(fn($d) => [
-                'nombre' => $d->producto->nombre,
-                'cantidad' => $d->cantidad,
-                'comentarios' => $d->comentarios ?? '',
-                'precio' => $d->producto->precio,
-                'subtotal' => $d->subtotal,
-            ]),
-        ];
-    });
-
-    Log::info('Index Caja - Sesión actual:', session()->all());
-
-    // === Traer caja actual desde BD ===
-    $cajaActual = \App\Models\CajaActual::where('estado', 'abierta')->first();
-
-    // === Último cierre (opcional) ===
-    $ultimoCierre = \App\Models\CierreCaja::latest('fecha_cierre')->first();
-
-    // --- Fondo inicial ---
-    $fondoInicial = $cajaActual?->fondo_inicial ?? 0;
-
-    if ($cajaActual) {
-        $ventasHoy = Venta::whereDate('fechaPago', now()->toDateString())->get();
-
-        // Total efectivo cobrado (para mostrar en resumen)
-        $totalEfectivoCobrado = $ventasHoy->where('metodo_pago', 'Efectivo')->sum('montoTotal');
-
-        // Total efectivo que queda en caja = lo que se cobró
-        $totalEfectivoReal = $totalEfectivoCobrado;
-
-        $totalTarjeta  = $ventasHoy->where('metodo_pago', 'Tarjeta')->sum('montoTotal');
-        $totalQR       = $ventasHoy->where('metodo_pago', 'QR')->sum('montoTotal');
-
-        // Total en caja = fondo inicial + efectivo + tarjeta + QR
-        $totalEnCaja = $fondoInicial + $totalEfectivoReal + $totalTarjeta + $totalQR;
-    } else {
-        $totalEfectivoCobrado = 0;
-        $totalEfectivoReal    = 0;
-        $totalTarjeta         = 0;
-        $totalQR              = 0;
-        $totalEnCaja          = 0;
-    }
-
-    return view('admin.ventas.caja', [
-        'pedidos'              => $pedidos,
-        'pedidosJS'            => $pedidosJS,
-        'cajaActual'           => $cajaActual,
-        'ultimoCierre'         => $ultimoCierre,
-        'fondoInicial'         => $fondoInicial,
-        'totalEnCaja'          => $totalEnCaja,
-        'totalEfectivoCobrado' => $totalEfectivoCobrado, // resumen
-        'totalEfectivo'        => $totalEfectivoCobrado, // mostrar en Blade como "Efectivo"
-        'totalTarjeta'         => $totalTarjeta,
-        'totalQR'              => $totalQR,
-    ])->with('title', 'Control de caja');
-}
 
 
 

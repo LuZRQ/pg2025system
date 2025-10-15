@@ -45,9 +45,9 @@
             <select name="estado"
                 class="px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-400 shadow-sm">
                 <option value="">Todos los estados</option>
-                <option value="rojo" {{ request('estado') == 'rojo' ? 'selected' : '' }}>🔴 ¡Últimos!</option>
-                <option value="amarillo" {{ request('estado') == 'amarillo' ? 'selected' : '' }}>🟡 Quedan pocos</option>
-                <option value="verde" {{ request('estado') == 'verde' ? 'selected' : '' }}>🟢 OK</option>
+                <option value="rojo" {{ request('estado') == 'rojo' ? 'selected' : '' }}>🔴 Agotado</option>
+                <option value="amarillo" {{ request('estado') == 'amarillo' ? 'selected' : '' }}>🟡 Bajo Stock</option>
+                <option value="verde" {{ request('estado') == 'verde' ? 'selected' : '' }}>🟢 Disponible</option>
             </select>
 
             <!-- Botón -->
@@ -87,17 +87,17 @@
                                 @if ($producto->estadoStock === 'rojo')
                                     <span
                                         class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 flex items-center gap-1">
-                                        <i class="fas fa-circle text-red-500 text-[0.6rem]"></i> ¡Últimos!
+                                        <i class="fas fa-circle text-red-500 text-[0.6rem]"></i> ¡Agotado!
                                     </span>
                                 @elseif ($producto->estadoStock === 'amarillo')
                                     <span
                                         class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 flex items-center gap-1">
-                                        <i class="fas fa-circle text-yellow-500 text-[0.6rem]"></i> Quedan pocos
+                                        <i class="fas fa-circle text-yellow-500 text-[0.6rem]"></i> Bajo stock
                                     </span>
                                 @else
                                     <span
                                         class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 flex items-center gap-1">
-                                        <i class="fas fa-circle text-green-500 text-[0.6rem]"></i> OK
+                                        <i class="fas fa-circle text-green-500 text-[0.6rem]"></i> Disponible
                                     </span>
                                 @endif
                             </td>

@@ -44,7 +44,7 @@ class VentaController extends Controller
             ->get();
 
         return view('admin.ventas.index', compact('categorias', 'productos', 'ventas', 'pedidos'))
-        ->with('title', 'Gestión de Ventas');
+            ->with('title', 'Gestión de Ventas');
     }
 
     public function enviarACocina(Request $request)
@@ -93,7 +93,7 @@ class VentaController extends Controller
         );
 
         return redirect()->route('ventas.index')
-            ->with('exito', 'Pedido enviado a Cocina ✅');
+            ->with('exito', 'Pedido enviado a Cocina ');
     }
 
     public function historial(Request $request)
@@ -196,34 +196,34 @@ class VentaController extends Controller
         return view('admin.ventas.edit', compact('venta', 'pedidos'));
     }
 
-    
+
     /**
- * Actualizar venta
- */
-public function update(Request $request, $id)
-{
-    $request->validate([
-        'montoTotal'  => 'required|numeric|min:0',
-        'metodo_pago' => 'required|string',
-        'fechaPago'   => 'required|date',
-    ]);
+     * Actualizar venta
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'montoTotal'  => 'required|numeric|min:0',
+            'metodo_pago' => 'required|string',
+            'fechaPago'   => 'required|date',
+        ]);
 
-    $venta = Venta::findOrFail($id);
-    $venta->update([
-        'montoTotal'  => $request->montoTotal,
-        'metodo_pago' => $request->metodo_pago,
-        'fechaPago'   => $request->fechaPago,
-    ]);
+        $venta = Venta::findOrFail($id);
+        $venta->update([
+            'montoTotal'  => $request->montoTotal,
+            'metodo_pago' => $request->metodo_pago,
+            'fechaPago'   => $request->fechaPago,
+        ]);
 
-    $this->logAction(
-        "Se actualizó la venta #{$venta->idVenta} con monto total {$venta->montoTotal}",
-        'Ventas',
-        'Exitoso'
-    );
+        $this->logAction(
+            "Se actualizó la venta #{$venta->idVenta} con monto total {$venta->montoTotal}",
+            'Ventas',
+            'Exitoso'
+        );
 
-    return redirect()->route('ventas.historial')
-        ->with('exito', 'Venta actualizada correctamente.');
-}
+        return redirect()->route('ventas.historial')
+            ->with('exito', 'Venta actualizada correctamente.');
+    }
 
 
 

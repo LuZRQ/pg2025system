@@ -11,50 +11,68 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class CierreCajaExport implements FromArray, WithHeadings, WithStyles
 {
-    protected $cierre;
+    protected $anio;
+    protected $mes;
+    protected $semanas;
+    protected $totalMes;
 
-    public function __construct($cierre)
+    public function __construct($anio, $mes, $semanas, $totalMes)
     {
-        $this->cierre = $cierre;
+        $this->anio = $anio;
+        $this->mes = $mes;
+        $this->semanas = $semanas;
+        $this->totalMes = $totalMes;
     }
 
     public function array(): array
     {
-        return [
-            [
-                'Usuario'       => $this->cierre->usuario->nombre ?? '',
-                'Fondo Inicial' => $this->cierre->fondo_inicial,
-                'Total Efectivo' => $this->cierre->total_efectivo,
-                'Total Tarjeta' => $this->cierre->total_tarjeta,
-                'Total QR'      => $this->cierre->total_qr,
-                'Total General' => $this->cierre->total_caja,
-                'Fecha Apertura' => $this->cierre->fecha_apertura,
-                'Fecha Cierre'  => $this->cierre->fecha_cierre,
-                'Observaciones' => $this->cierre->observaciones,
-            ]
+        $data = [];
+
+        foreach ($this->semanas as $index => $semana) {
+            $data[] = [
+                "Semana " . ($index + 1) . " (" . $semana['inicio']->format('d/m') . " - " . $semana['fin']->format('d/m') . ")",
+                $semana['efectivo'],
+                $semana['tarjeta'],
+                $semana['qr'],
+                $semana['total'],
+            ];
+        }
+
+        // Totales del mes
+        $data[] = [
+            'TOTAL MES',
+            $this->totalMes['efectivo'],
+            $this->totalMes['tarjeta'],
+            $this->totalMes['qr'],
+            $this->totalMes['general'],
         ];
+
+        return $data;
     }
 
     public function headings(): array
     {
         return [
-            'Usuario',
-            'Fondo Inicial',
-            'Total Efectivo',
-            'Total Tarjeta',
-            'Total QR',
-            'Total General',
-            'Fecha Apertura',
-            'Fecha Cierre',
-            'Observaciones',
+            'Semana',
+            'Efectivo (Incl. Fondo Inicial)',
+            'Tarjeta',
+            'QR',
+            'Total Semana',
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('A1:I1')->getFont()->setBold(true)->setSize(12);
-        $sheet->getStyle('A1:I1')->getAlignment()->setHorizontal('center');
-        foreach (range('A', 'I') as $col) {
+        // Encabezados
+        $sheet->getStyle('A1:E1')->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle('A1:E1')->getAlignment()->setHorizontal('center');
+
+        // Última fila (total mes)
+        $lastRow = count($this->semanas) + 2; // +1 encabezados, +1 total
+        $sheet->getStyle("A{$lastRow}:E{$lastRow}")->getFont()->setBold(true);
+
+        // AutoSize columnas
+        foreach (range('A', 'E') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
     }

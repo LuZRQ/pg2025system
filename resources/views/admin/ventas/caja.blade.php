@@ -6,6 +6,18 @@
 
 @section('content')
     <div class="p-4 md:p-6 bg-gradient-to-br from-amber-50 via-orange-100 to-amber-200 min-h-screen">
+        @if ($mostrarAlerta)
+            <div
+                class="flex items-center bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md mb-4 shadow-md">
+                <i class="fas fa-exclamation-triangle fa-lg mr-2"></i>
+                <div>
+                    <strong>⚠️ Atención:</strong> Parece que hay días sin cierre registrados.
+                    <br>
+                    Te recomendamos revisar y realizar el cierre de caja para mantener los reportes correctos.
+                </div>
+            </div>
+        @endif
+
 
         {{-- Grid principal --}}
         <div class="grid grid-cols-12 gap-6">

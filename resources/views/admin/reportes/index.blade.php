@@ -2,10 +2,7 @@
 @extends('layouts.admin')
 
 @section('content')
-    {{-- Header --}}
-    <div class="flex justify-center mb-6 border-b border-amber-200 pb-4">
-        <h1 class="font-bold text-2xl md:text-3xl text-amber-900">📊 Módulo de Reportes</h1>
-    </div>
+    
 
     {{-- Métricas principales --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -94,7 +91,7 @@
     </div>
     {{-- Tendencias de Productos --}}
     <div class="bg-white p-6 rounded-2xl shadow border border-indigo-200 mb-10">
-        <h3 class="font-semibold text-indigo-900 mb-4">Alertas de Tendencia de Productos</h3>
+        <h3 class="font-semibold text-indigo-900 mb-4">Alertas de Tendencia de Productos de la semana</h3>
         <div class="space-y-3">
             @forelse($tendencias as $t)
                 <div

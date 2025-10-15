@@ -18,7 +18,8 @@ class StockExport implements FromCollection, WithHeadings, WithStyles
                 'Categoría'     => $producto->categoria->nombreCategoria ?? '',
                 'Stock Actual'  => $producto->stock,
                 'Stock Inicial' => $producto->stock_inicial,
-                'Estado'        => $producto->stock <= 5 ? 'Crítico' : ($producto->stock < 20 ? 'Bajo' : 'OK'),
+                'Estado' => $producto->getEstadoStockNombre(),
+
             ];
         });
     }

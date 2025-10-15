@@ -316,69 +316,97 @@ class ReporteController extends Controller
 
 
 
-// Cierre de caja mensual - PDF
-public function cierreCajaPDF($anio, $mes)
-{
-    // Primer y último día del mes
-    $primerDia = Carbon::create($anio, $mes, 1);
-    $ultimoDia = $primerDia->copy()->endOfMonth();
+    // Cierre de caja mensual - PDF
+    public function cierreCajaPDF($anio, $mes)
+    {
+        // Primer y último día del mes
+        $primerDia = Carbon::create($anio, $mes, 1);
+        $ultimoDia = $primerDia->copy()->endOfMonth();
 
-    $semanas = [];
-    $start = $primerDia->copy();
+        $semanas = [];
+        $start = $primerDia->copy();
 
-    // Recorre semana por semana
-    while ($start <= $ultimoDia) {
-        $end = $start->copy()->endOfWeek();
-        if ($end > $ultimoDia) $end = $ultimoDia->copy();
+        // Recorre semana por semana
+        while ($start <= $ultimoDia) {
+            $end = $start->copy()->endOfWeek();
+            if ($end > $ultimoDia) $end = $ultimoDia->copy();
 
-        // Suma los cierres dentro de esa semana incluyendo fondo inicial
-        $cierresSemana = CierreCaja::whereBetween('fecha_cierre', [$start, $end])->get();
+            // Suma los cierres dentro de esa semana incluyendo fondo inicial
+            $cierresSemana = CierreCaja::whereBetween('fecha_cierre', [$start, $end])->get();
 
-        $efectivo = $cierresSemana->sum('total_efectivo') + $cierresSemana->sum('fondo_inicial');
-        $tarjeta  = $cierresSemana->sum('total_tarjeta');
-        $qr       = $cierresSemana->sum('total_qr');
+            $efectivo = $cierresSemana->sum('total_efectivo') + $cierresSemana->sum('fondo_inicial');
+            $tarjeta  = $cierresSemana->sum('total_tarjeta');
+            $qr       = $cierresSemana->sum('total_qr');
 
-        $semanas[] = [
-            'inicio'   => $start->copy(),
-            'fin'      => $end->copy(),
-            'efectivo' => $efectivo,
-            'tarjeta'  => $tarjeta,
-            'qr'       => $qr,
-            'total'    => $efectivo + $tarjeta + $qr,
+            $semanas[] = [
+                'inicio'   => $start->copy(),
+                'fin'      => $end->copy(),
+                'efectivo' => $efectivo,
+                'tarjeta'  => $tarjeta,
+                'qr'       => $qr,
+                'total'    => $efectivo + $tarjeta + $qr,
+            ];
+
+            $start = $end->addDay();
+        }
+
+        // Totales del mes
+        $totalMes = [
+            'efectivo' => array_sum(array_column($semanas, 'efectivo')),
+            'tarjeta'  => array_sum(array_column($semanas, 'tarjeta')),
+            'qr'       => array_sum(array_column($semanas, 'qr')),
+            'general'  => array_sum(array_column($semanas, 'total')),
         ];
 
-        $start = $end->addDay();
+        // Genera PDF usando la vista
+        $pdf = Pdf::loadView('admin.reportes.pdf.cierreCaja', compact('anio', 'mes', 'semanas', 'totalMes'));
+
+        return $pdf->download("cierre_caja_{$anio}_{$mes}.pdf");
     }
-
-    // Totales del mes
-    $totalMes = [
-        'efectivo' => array_sum(array_column($semanas, 'efectivo')),
-        'tarjeta'  => array_sum(array_column($semanas, 'tarjeta')),
-        'qr'       => array_sum(array_column($semanas, 'qr')),
-        'general'  => array_sum(array_column($semanas, 'total')),
-    ];
-
-    // Genera PDF usando la vista
-    $pdf = Pdf::loadView('admin.reportes.pdf.cierreCaja', compact('anio', 'mes', 'semanas', 'totalMes'));
-
-    return $pdf->download("cierre_caja_{$anio}_{$mes}.pdf");
-}
 
 
 
     // Cierre de caja - Excel
-    public function cierreCajaExcel($idCierre)
+    public function cierreCajaExcel($anio, $mes)
     {
-        $cierre = CierreCaja::with('usuario')->findOrFail($idCierre);
+        // Reutilizamos la misma lógica del PDF
+        $primerDia = Carbon::create($anio, $mes, 1);
+        $ultimoDia = $primerDia->copy()->endOfMonth();
 
-        $this->logAction("Se generó Excel de cierre de caja ({$cierre->fecha_cierre})", 'Reportes', 'Exitoso');
+        $semanas = [];
+        $start = $primerDia->copy();
 
-        return Excel::download(new CierreCajaExport($cierre), 'cierre_caja.xlsx');
+        while ($start <= $ultimoDia) {
+            $end = $start->copy()->endOfWeek();
+            if ($end > $ultimoDia) $end = $ultimoDia->copy();
+
+            $cierresSemana = CierreCaja::whereBetween('fecha_cierre', [$start, $end])->get();
+
+            $efectivo = $cierresSemana->sum('total_efectivo') + $cierresSemana->sum('fondo_inicial');
+            $tarjeta  = $cierresSemana->sum('total_tarjeta');
+            $qr       = $cierresSemana->sum('total_qr');
+
+            $semanas[] = [
+                'inicio'   => $start->copy(),
+                'fin'      => $end->copy(),
+                'efectivo' => $efectivo,
+                'tarjeta'  => $tarjeta,
+                'qr'       => $qr,
+                'total'    => $efectivo + $tarjeta + $qr,
+            ];
+
+            $start = $end->addDay();
+        }
+
+        $totalMes = [
+            'efectivo' => array_sum(array_column($semanas, 'efectivo')),
+            'tarjeta'  => array_sum(array_column($semanas, 'tarjeta')),
+            'qr'       => array_sum(array_column($semanas, 'qr')),
+            'general'  => array_sum(array_column($semanas, 'total')),
+        ];
+
+        return Excel::download(new CierreCajaExport($anio, $mes, $semanas, $totalMes), "cierre_caja_{$anio}_{$mes}.xlsx");
     }
- 
-
-
-
 
     // Stock general - PDF
     public function stockPDF()
@@ -419,47 +447,68 @@ public function cierreCajaPDF($anio, $mes)
         );
     }
 
-    // ===== SECCIÓN 2: REPORTES AVANZADOS =====
+public function productosMesPDF()
+{
+    $mesActual = now()->month;
+    $anioActual = now()->year;
 
-    public function productosMesPDF()
-    {
-        $productos = Producto::with('categoria', 'detallePedidos.pedido.venta')
-            ->get()
-            ->map(function ($producto) {
-                $cantidadVendida = 0;
-                foreach ($producto->detallePedidos as $detalle) {
-                    $venta = $detalle->pedido->venta ?? null;
-                    if ($venta && \Carbon\Carbon::parse($venta->fechaPago)->month == now()->month) {
+    $productos = Producto::with(['detallePedidos.pedido.venta', 'categoria'])
+        ->get()
+        ->map(function ($producto) use ($mesActual, $anioActual) {
+            $cantidadVendida = 0;
+
+            foreach ($producto->detallePedidos as $detalle) {
+                $pedido = $detalle->pedido;
+                $venta = $pedido->venta ?? null;
+
+                if ($venta && $venta->fechaPago) {
+                    $fecha = \Carbon\Carbon::parse($venta->fechaPago);
+                    if ($fecha->month == $mesActual && $fecha->year == $anioActual) {
                         $cantidadVendida += $detalle->cantidad;
                     }
                 }
-                $producto->cantidad_vendida = $cantidadVendida;
-                return $producto;
-            });
+            }
 
-        $pdf = Pdf::loadView('admin.reportes.pdf.productosMes', compact('productos'));
+            $producto->cantidad_vendida = $cantidadVendida;
 
-        $timestamp = now()->format('Ymd_His'); // <- nombre único
-        $nombreArchivo = 'productos_mes_' . $timestamp . '.pdf';
-        $ruta = 'reportes/' . $nombreArchivo;
+            return $producto;
+        })
+        ->filter(fn($p) => $p->cantidad_vendida > 0)
+        ->sortByDesc('cantidad_vendida')
+        ->values();
 
-        Storage::disk('public')->makeDirectory('reportes');
-        Storage::disk('public')->put($ruta, $pdf->output());
+    // Definimos $mes aquí
+    $mes = now()->locale('es')->translatedFormat('F Y');
 
-        Reporte::create([
-            'tipo' => 'productos_mes',
-            'periodo' => $timestamp,
-            'generadoPor' => Auth::user()->name ?? 'Sistema',
-            'archivo' => $ruta,
-        ]);
+    $pdf = Pdf::loadView('admin.reportes.pdf.productosMes', [
+        'productos' => $productos,
+        'mes' => $mes, // ✅ pasamos la variable al Blade
+    ]);
 
-        $this->logAction(
-            "Se generó PDF de productos del mes ({$timestamp})",
-            'Reportes',
-            'Exitoso'
-        );
-        return response()->download(storage_path('app/public/' . $ruta));
-    }
+    $timestamp = now()->format('Ymd_His');
+    $nombreArchivo = 'productos_mes_' . $timestamp . '.pdf';
+    $ruta = 'reportes/' . $nombreArchivo;
+
+    Storage::disk('public')->makeDirectory('reportes');
+    Storage::disk('public')->put($ruta, $pdf->output());
+
+    Reporte::create([
+        'tipo' => 'productos_mes',
+        'periodo' => $timestamp,
+        'generadoPor' => Auth::user()->name ?? 'Sistema',
+        'archivo' => $ruta,
+    ]);
+
+    $this->logAction(
+        "Se generó PDF de productos del mes ({$timestamp})",
+        'Reportes',
+        'Exitoso'
+    );
+
+    return response()->download(storage_path('app/public/' . $ruta));
+}
+
+
 
     public function gananciaMesPDF()
     {

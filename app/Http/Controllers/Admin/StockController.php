@@ -11,9 +11,13 @@ use App\Traits\Auditable;
 class StockController extends Controller
 {
     use Auditable;
+
     public function index(Request $request)
     {
-        $query = Producto::with('categoria'); // traemos productos con categoría
+        // Verificamos si se debe reiniciar el stock diario automáticamente
+       $this->verificarResetDiario();
+
+        $query = Producto::with('categoria');
 
         // 🔎 Filtro por categoría
         if ($request->filled('categoria')) {
@@ -22,40 +26,33 @@ class StockController extends Controller
             });
         }
 
+        $productos = $query->get();
+
         // 🔎 Filtro por estado de stock
         if ($request->filled('estado')) {
             $estado = $request->estado;
-
-            $query = $query->get()->filter(function ($producto) use ($estado) {
-                $estadoStock = $this->getEstadoStock($producto);
-                return $estadoStock === $estado;
+            $productos = $productos->filter(function ($producto) use ($estado) {
+                return $producto->getEstadoStock() === $estado;
             });
-        } else {
-            $query = $query->get();
         }
 
         // 🔎 Filtro por búsqueda
         if ($request->filled('buscar')) {
             $buscar = strtolower($request->buscar);
-            $query = $query->filter(function ($producto) use ($buscar) {
+            $productos = $productos->filter(function ($producto) use ($buscar) {
                 return str_contains(strtolower($producto->nombre), $buscar);
             });
         }
 
-        // Asignar estadoStock a cada producto
-        $productos = $query->map(function ($producto) {
-            $producto->estadoStock = $this->getEstadoStock($producto);
-            return $producto;
-        });
-
         return view('admin.stock.index', compact('productos'))
-        ->with('title', 'Control de stock');
+            ->with('title', 'Control de stock');
     }
+
     public function update(Request $request, Producto $producto)
     {
         $oldStock = $producto->stock;
-
         $producto->update($request->all());
+
         if ($oldStock != $producto->stock) {
             $this->logAction(
                 "Stock del producto '{$producto->nombre}' actualizado manualmente de {$oldStock} a {$producto->stock}",
@@ -63,6 +60,7 @@ class StockController extends Controller
                 'Exitoso'
             );
         }
+
         $redirect = $request->input('redirect', 'productos.index');
         return redirect()->route($redirect)->with('exito', 'Producto actualizado correctamente.');
     }
@@ -83,6 +81,7 @@ class StockController extends Controller
         }
 
         $producto->save();
+
         $this->logAction(
             "Se registró entrada de {$request->cantidad} unidades en {$producto->nombre}",
             'Stock',
@@ -107,29 +106,30 @@ class StockController extends Controller
 
         $producto->stock -= $request->cantidad;
         $producto->save();
+
         $this->logAction(
             "Salida de stock: -{$request->cantidad} unidades del producto '{$producto->nombre}'. Stock actual: {$producto->stock}",
             'Stock',
             'Exitoso'
         );
+
         return redirect()->route('stock.index')->with('exito', 'Stock actualizado con salida.');
     }
 
-    // Función privada para calcular el estado
-    private function getEstadoStock(Producto $producto)
-    {
-        if ($producto->stock <= 0) {
-            return 'rojo'; // Agotado
-        }
+  private function verificarResetDiario()
+{
+    $hoy = now()->toDateString();
 
-        if ($producto->stock < 5) {
-            return 'rojo'; // Muy bajo
+    $productos = Producto::all();
+    foreach ($productos as $producto) {
+        if ($producto->fecha_actualizacion_stock !== $hoy) {
+            $producto->update([
+                'vendidos_dia' => 0,
+                'stock' => $producto->stock_inicial,
+                'fecha_actualizacion_stock' => $hoy,
+            ]);
         }
-
-        if ($producto->stock < 20) {
-            return 'amarillo'; // Bajo stock
-        }
-
-        return 'verde'; // OK
     }
+}
+
 }
