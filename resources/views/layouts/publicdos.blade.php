@@ -18,6 +18,8 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    {!! NoCaptcha::renderJs() !!}
+
 </head>
 
 <body class="bg-white" style="background-color: #13339c77;">

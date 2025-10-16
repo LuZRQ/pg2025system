@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('content')
-    <h1 class="text-2xl font-semibold text-stone-800 mb-4">Módulo de Control de Stock</h1>
+
 
     <div class="bg-gradient-to-b from-amber-50 to-orange-50 min-h-screen p-6 rounded-lg shadow">
 

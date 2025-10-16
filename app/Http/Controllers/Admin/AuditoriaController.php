@@ -18,7 +18,7 @@ class AuditoriaController extends Controller
     public function __construct()
     {
         // Limitar a 5 intentos por minuto el cambio de contraseña
-        $this->middleware('throttle:5,1')->only('cambiarContrasena');
+       // $this->middleware('throttle:5,1')->only('cambiarContrasena');
     }
 
     // ====== Mostrar tabla de logs ======

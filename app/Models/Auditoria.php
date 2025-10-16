@@ -8,6 +8,7 @@ class Auditoria extends Model
 {
     protected $table = 'Auditoria';
     protected $primaryKey = 'idAuditoria';
+    public $timestamps = false;
 
     protected $fillable = [
         'accion',

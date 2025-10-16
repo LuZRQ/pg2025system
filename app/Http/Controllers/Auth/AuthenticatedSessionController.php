@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Auditoria;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
 {
-    public function create()
+     public function create()
     {
         return view('auth.login');
     }
@@ -25,41 +26,66 @@ class AuthenticatedSessionController extends Controller
     {
         $key = Str::lower($request->input('ci')) . '|' . $request->ip();
 
-    // Revisar si ya superó el límite
-    if (RateLimiter::tooManyAttempts($key, 3)) {
-        $seconds = RateLimiter::availableIn($key);
-        throw ValidationException::withMessages([
-            'ci' => "Demasiados intentos fallidos. Intenta en " . gmdate("H:i:s", $seconds),
+        // Verificar si está bloqueado
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            throw ValidationException::withMessages([
+                'ci' => "Demasiados intentos fallidos 🙂",
+            ]);
+        }
+
+        // Sanitizar inputs
+        $request->merge([
+            'ci' => strip_tags($request->input('ci')),
+            'contrasena' => strip_tags($request->input('contrasena')),
         ]);
-    }
 
-    // ✅ Validación base
-    $request->validate([
-        'ci' => 'required|string|exists:Usuario,ciUsuario',
-        'contrasena' => 'required|string',
-        // CAPTCHA condicional
-        'g-recaptcha-response' => RateLimiter::attempts($key) >= 3 ? 'required|captcha' : '',
-    ], [
-        'g-recaptcha-response.required' => 'Debes completar la verificación CAPTCHA',
-        'g-recaptcha-response.captcha' => 'Error en la verificación CAPTCHA',
-    ]);
+        // Validación
+        $request->validate([
+            'ci' => 'required|string|max:8|exists:Usuario,ciUsuario',
+            'contrasena' => 'required|string|max:20',
+            'g-recaptcha-response' => RateLimiter::attempts($key) >= 3 ? 'required|captcha' : '',
+        ], [
+            'ci.exists' => 'El CI ingresado no es válido',
+            'g-recaptcha-response.required' => 'Debes completar la verificación CAPTCHA',
+            'g-recaptcha-response.captcha' => 'Error en la verificación CAPTCHA',
+        ]);
 
-    // Usuario
-    $usuario = Usuario::where('ciUsuario', $request->ci)->first();
+        // Buscar usuario
+        $usuario = Usuario::where('ciUsuario', $request->ci)->first();
 
-    // Verificar credenciales
-    if (!$usuario || !Hash::check($request->contrasena, $usuario->contrasena)) {
-        RateLimiter::hit($key, 10800); // cada error suma, bloqueo 3h (10800s)
-        return back()->withErrors(['ci' => 'Credenciales inválidas']);
-    }
+        // Verificar credenciales
+        if (!$usuario || !Hash::check($request->contrasena, $usuario->contrasena)) {
+            RateLimiter::hit($key, 3600); // Bloqueo 1 hora
 
-    // Verificar estado
-    if (!$usuario->estado) {
-        return back()->withErrors(['ci' => 'Tu cuenta está inactiva, no puedes acceder.']);
-    }
+            // Registrar intento fallido en Auditoria
+            Auditoria::create([
+                'ciUsuario' => $request->ci,
+                'accion' => 'Intento de login fallido',
+                'fechaHora' => now(),
+                'ipOrigen' => $request->ip(),
+                'modulo' => 'Login',
+            ]);
 
-    RateLimiter::clear($key); // login correcto reinicia contador
-    Auth::login($usuario);
+            return back()->withErrors(['ci' => 'Credenciales inválidas']);
+        }
+
+        // Verificar estado
+        if (!$usuario->estado) {
+            return back()->withErrors(['ci' => 'Tu cuenta está inactiva, no puedes acceder.']);
+        }
+
+        // Login correcto
+        RateLimiter::clear($key);
+        Auth::login($usuario);
+
+        // Registrar login exitoso en Auditoria
+        Auditoria::create([
+            'ciUsuario' => $usuario->ciUsuario,
+            'accion' => 'Login exitoso',
+            'fechaHora' => now(),
+            'ipOrigen' => $request->ip(),
+            'modulo' => 'Login',
+        ]);
 
         // Redirección según rol
         switch ($usuario->rol->nombre) {

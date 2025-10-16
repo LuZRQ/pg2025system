@@ -2,10 +2,6 @@
 
 @section('content')
     <div class="bg-gradient-to-b from-amber-50 to-orange-50 min-h-screen p-6 rounded-lg shadow">
-        <h1 class="text-2xl font-bold text-stone-800 mb-6">Gestión de productos</h1>
-
-        <!-- Filtros y búsqueda -->
-        <!-- Filtros y búsqueda -->
         <form method="GET" action="{{ route('productos.index') }}" class="flex flex-wrap items-center gap-3 mb-6">
             <input type="text" name="search" placeholder="Buscar producto..." value="{{ request('search') }}"
                 class="flex-1 px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:outline-none">

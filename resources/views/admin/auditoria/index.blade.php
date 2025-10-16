@@ -3,12 +3,6 @@
 
 @section('content')
 <div class="p-6 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 min-h-screen">
-
-    {{-- Header --}}
-    <div class="flex justify-center mb-6 border-b pb-4">
-        <h1 class="font-bold text-2xl text-gray-800">🔒 Módulo de Auditoría y Credenciales</h1>
-    </div>
-
     {{-- Gestión de contraseñas --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
 
