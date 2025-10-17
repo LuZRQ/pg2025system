@@ -27,8 +27,6 @@
             </button>
         </form>
 
-
-        <!-- Botón crear producto -->
         <div class="flex items-center gap-4 mb-6">
             <a href="{{ route('productos.crear') }}"
                 class="flex items-center gap-2 px-4 py-2 bg-amber-200 text-stone-800 font-medium rounded-lg hover:bg-amber-300 shadow">
@@ -36,7 +34,6 @@
             </a>
         </div>
 
-        <!-- Tabla -->
         <div class="overflow-x-auto bg-white rounded-lg shadow">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-stone-100 text-stone-700 text-sm uppercase">
@@ -74,24 +71,20 @@
                             </td>
                             <td class="px-4 py-2">
                                 @if ($producto->estado ?? true)
-                                    <!-- Suponiendo que tienes campo estado -->
                                     <span class="px-3 py-1 text-xs rounded-full bg-green-100 text-green-800">Activo</span>
                                 @else
                                     <span class="px-3 py-1 text-xs rounded-full bg-red-100 text-red-800">Inactivo</span>
                                 @endif
                             </td>
                             <td class="px-4 py-2 flex items-center gap-3">
-                                <!-- Ver -->
                                 <a href="{{ route('productos.ver', $producto->idProducto) }}"
                                     class="text-stone-600 hover:text-stone-800">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <!-- Editar -->
                                 <a href="{{ route('productos.editar', $producto->idProducto) }}"
                                     class="text-blue-600 hover:text-blue-800">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <!-- Eliminar -->
                                 <form action="{{ route('productos.eliminar', $producto->idProducto) }}" method="POST"
                                     onsubmit="return confirm('¿Seguro que quieres eliminar este producto?');">
                                     @csrf

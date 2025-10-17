@@ -25,8 +25,8 @@ class AppServiceProvider extends ServiceProvider
         // Limitar intentos de login
         RateLimiter::for('login', function (Request $request) {
             return [
-                // máximo 3 intentos cada 180 minutos (3 horas)
-                Limit::perMinutes(180, 3)->by($request->ip()),
+               
+                Limit::perMinutes(60, 3)->by($request->ip()),
             ];
         });
     }

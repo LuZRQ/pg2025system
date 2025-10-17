@@ -1,6 +1,7 @@
 {{-- resources/views/auditoria/pdf.blade.php --}}
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Informe de Auditoría</title>
@@ -39,7 +40,8 @@
             margin-top: 20px;
         }
 
-        th, td {
+        th,
+        td {
             border: 1px solid #bbb;
             padding: 8px;
             text-align: left;
@@ -76,6 +78,7 @@
         }
     </style>
 </head>
+
 <body>
     <header>
         <img src="{{ public_path('img/fondo3.png') }}" alt="Logo">
@@ -96,20 +99,21 @@
         </thead>
         <tbody>
             @forelse($logs as $log)
-            <tr>
-                <td>{{ optional($log->causer)->nombre ?? 'N/A' }} {{ optional($log->causer)->apellido ?? '' }}</td>
-                <td>{{ optional($log->causer)->correo ?? 'N/A' }}</td>
-                <td>{{ $log->created_at->format('d/m/Y H:i:s') }}</td>
-                <td>{{ $log->properties['modulo'] ?? 'N/A' }}</td>
-                <td>{{ $log->properties['ip_origen'] ?? 'N/A' }}</td>
-                <td class="{{ ($log->properties['estado'] ?? '') === 'Exitoso' ? 'estado-exitoso' : 'estado-fallido' }}">
-                    {{ $log->properties['estado'] ?? 'Desconocido' }}
-                </td>
-            </tr>
+                <tr>
+                    <td>{{ optional($log->causer)->nombre ?? 'N/A' }} {{ optional($log->causer)->apellido ?? '' }}</td>
+                    <td>{{ optional($log->causer)->correo ?? 'N/A' }}</td>
+                    <td>{{ $log->created_at->format('d/m/Y H:i:s') }}</td>
+                    <td>{{ $log->properties['modulo'] ?? 'N/A' }}</td>
+                    <td>{{ $log->properties['ip_origen'] ?? 'N/A' }}</td>
+                    <td
+                        class="{{ ($log->properties['estado'] ?? '') === 'Exitoso' ? 'estado-exitoso' : 'estado-fallido' }}">
+                        {{ $log->properties['estado'] ?? 'Desconocido' }}
+                    </td>
+                </tr>
             @empty
-            <tr>
-                <td colspan="6" style="text-align:center;">No hay registros disponibles</td>
-            </tr>
+                <tr>
+                    <td colspan="6" style="text-align:center;">No hay registros disponibles</td>
+                </tr>
             @endforelse
         </tbody>
     </table>
@@ -118,4 +122,5 @@
         Generado el {{ now()->format('d/m/Y H:i:s') }}
     </footer>
 </body>
+
 </html>

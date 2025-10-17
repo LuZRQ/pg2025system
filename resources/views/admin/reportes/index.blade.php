@@ -2,9 +2,6 @@
 @extends('layouts.admin')
 
 @section('content')
-    
-
-    {{-- Métricas principales --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {{-- Total Ventas --}}
         <div class="relative bg-white p-6 rounded-2xl shadow-lg border border-amber-200">
@@ -35,8 +32,6 @@
         </div>
     </div>
 
-    {{-- Gráficos --}}
-    {{-- Gráficos --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
 
         {{-- Ventas por Semana --}}
@@ -68,12 +63,8 @@
         </div>
 
     </div>
-
-
-    {{-- Deja este dataset oculto tal cual --}}
     <div id="data-reportes" data-top5='@json($top5Productos)' data-ventas-semana='@json($ventasSemana)'>
     </div>
-
 
     {{-- Alertas de Stock --}}
     <div class="bg-white p-6 rounded-2xl shadow border border-amber-200 mb-10">
@@ -114,7 +105,7 @@
     <div class="bg-white shadow-lg rounded-2xl p-6 mb-6">
         <h2 class="text-xl font-semibold mb-4"><i class="fas fa-bolt mr-2"></i> Reportes Rápidos</h2>
         <div class="flex flex-wrap gap-4">
-            {{-- Ventas del Día --}}
+
             <a href="{{ route('reportes.ventasDiaPDF') }}"
                 class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
                 <i class="fas fa-download"></i> Ventas del Día (PDF)
@@ -124,7 +115,6 @@
                 <i class="fas fa-file-excel"></i> Ventas del Día (Excel)
             </a>
 
-            {{-- Stock General --}}
             <a href="{{ route('reportes.stockPDF') }}"
                 class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
                 <i class="fas fa-download"></i> Stock (PDF)
@@ -133,19 +123,6 @@
                 class="px-6 py-2 bg-amber-700 hover:bg-amber-500 text-white font-medium rounded-lg shadow flex items-center gap-2">
                 <i class="fas fa-file-excel"></i> Stock (Excel)
             </a>
-
-          {{-- Cierre de Caja --}}
-<a href="{{ route('reportes.cierreCajaPDF', ['anio' => now()->year, 'mes' => now()->month]) }}"
-   class="px-6 py-2 bg-green-800 hover:bg-green-600 text-white font-medium rounded-lg shadow flex items-center gap-2">
-   <i class="fas fa-download"></i> Cierre de Caja (PDF)
-</a>
-
-<a href="{{ route('reportes.cierreCajaExcel', ['anio' => now()->year, 'mes' => now()->month]) }}"
-   class="px-6 py-2 bg-green-600 hover:bg-green-400 text-white font-medium rounded-lg shadow flex items-center gap-2">
-   <i class="fas fa-file-excel"></i> Cierre de Caja (Excel)
-</a>
-
-
         </div>
     </div>
 
@@ -153,25 +130,21 @@
     <div class="bg-white shadow-lg rounded-2xl p-6">
         <h2 class="text-xl font-semibold mb-4"><i class="fas fa-chart-bar mr-2"></i> Reportes Avanzados</h2>
         <div class="flex flex-wrap gap-4">
-            {{-- Productos más vendidos del mes --}}
+
             <a href="{{ route('reportes.showAvanzado', ['tipo' => 'productos_mes']) }}"
                 class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
                 <i class="fas fa-eye"></i> Productos más vendidos
             </a>
 
-            {{-- Ganancia total del mes --}}
-            <a href="{{ route('reportes.showAvanzado', ['tipo' => 'ganancia_mes']) }}"
+            <a href="{{ route('reportes.showAvanzado', ['tipo' => 'cierre_caja', 'anio' => now()->year, 'mes' => now()->month]) }}"
                 class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
-                <i class="fas fa-eye"></i> Ganancia total
+                <i class="fas fa-eye"></i> Cierre de Caja (PDF)
             </a>
 
-            {{-- Insumos con alta rotación --}}
             <a href="{{ route('reportes.showAvanzado', ['tipo' => 'alta_rotacion']) }}"
                 class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
                 <i class="fas fa-eye"></i> Alta rotación
             </a>
-
-            {{-- Productos con baja venta --}}
             <a href="{{ route('reportes.showAvanzado', ['tipo' => 'baja_venta']) }}"
                 class="px-6 py-2 bg-amber-900 hover:bg-amber-700 text-white font-medium rounded-lg shadow flex items-center gap-2">
                 <i class="fas fa-eye"></i> Baja venta
@@ -181,14 +154,11 @@
 
     {{-- REPORTES HISTÓRICOS --}}
     <div class="max-w-7xl mx-auto px-6 py-10">
-
-        <!-- Título -->
         <h2 class="text-3xl font-bold text-brown-800 mb-8 flex items-center gap-3">
             <i class="fa-solid fa-file-lines text-brown-700"></i>
             Reportes Históricos
         </h2>
 
-        <!-- Barra de búsqueda -->
         <form method="GET" action="{{ route('reportes.index') }}"
             class="flex flex-wrap items-center gap-4 mb-8 p-4 rounded-lg shadow-md bg-brown-50 border border-brown-200">
 
@@ -201,8 +171,8 @@
                 <option value="productos_mes" {{ request('categoria') == 'productos_mes' ? 'selected' : '' }}>Productos
                     del
                     Mes</option>
-                <option value="ganancia_mes" {{ request('categoria') == 'ganancia_mes' ? 'selected' : '' }}>Ganancia del
-                    Mes</option>
+                <option value="cierre_caja" {{ request('categoria') == 'cierre_caja' ? 'selected' : '' }}>Cierre de caja
+                </option>
                 <option value="alta_rotacion" {{ request('categoria') == 'alta_rotacion' ? 'selected' : '' }}>Alta
                     Rotación
                 </option>
@@ -222,7 +192,7 @@
             </button>
         </form>
 
-        <!-- Tabla -->
+
         <div class="overflow-x-auto bg-white rounded-xl shadow-md border border-brown-200">
             <table class="w-full text-sm text-left border-collapse">
                 <thead class="bg-brown-700 text-white">
@@ -265,7 +235,6 @@
             </table>
         </div>
 
-        <!-- Paginación -->
         <div class="mt-6">
             {{ $reportes->links('pagination::tailwind') }}
         </div>

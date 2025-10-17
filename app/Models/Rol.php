@@ -10,7 +10,6 @@ class Rol extends Model
 {
     protected $table = 'Rol';
     protected $primaryKey = 'idRol';
-
     protected $fillable = [
         'nombre',
         'descripcion'
@@ -21,16 +20,16 @@ class Rol extends Model
         return $this->hasMany(Usuario::class, 'rolId', 'idRol');
     }
 
-
     public function modulos()
     {
         return $this->belongsToMany(
-            Modulo::class,   // modelo relacionado
-            'modulo_rol',    // tabla pivote
-            'rol_id',        // FK de este modelo en la tabla pivote
-            'modulo_id'      // FK del modelo relacionado en la tabla pivote
+            Modulo::class,
+            'modulo_rol',
+            'rol_id',
+            'modulo_id'
         )->withTimestamps();
     }
+
     public function getColorAttribute()
     {
         return match ($this->nombre) {

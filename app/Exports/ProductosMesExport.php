@@ -16,7 +16,6 @@ class ProductosMesExport implements FromCollection, WithHeadings
         $mesActual = now()->month;
         $mesAnterior = now()->subMonth()->month;
 
-        // Ventas del mes anterior por producto (para comparar)
         $ventasMesAnterior = DetallePedido::selectRaw('idProducto, SUM(cantidad) as cantidad')
             ->whereHas('pedido', fn($q) => $q->whereMonth('fechaCreacion', $mesAnterior))
             ->groupBy('idProducto')
@@ -31,7 +30,7 @@ class ProductosMesExport implements FromCollection, WithHeadings
                 if ($venta && Carbon::parse($venta->fechaPago)->month == $mesActual) {
                     $cantidadVendida += $detalle->cantidad;
                     $ingresos += $detalle->cantidad * $producto->precio;
-                    $costoTotal += $detalle->cantidad * $producto->costo; // costo total por cantidad vendida
+                    $costoTotal += $detalle->cantidad * $producto->costo; 
                 }
             }
 

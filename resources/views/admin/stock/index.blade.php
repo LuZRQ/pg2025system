@@ -1,11 +1,8 @@
 @extends('layouts.admin')
 
 @section('content')
-
-
     <div class="bg-gradient-to-b from-amber-50 to-orange-50 min-h-screen p-6 rounded-lg shadow">
 
-        <!-- 🔔 Alertas dinámicas -->
         @foreach ($productos as $producto)
             @if ($producto->stock <= 5)
                 <div class="mb-4">
@@ -21,16 +18,9 @@
             @endif
         @endforeach
 
-
-        <!-- Filtros y búsqueda -->
-        <!-- Filtros y búsqueda -->
         <form method="GET" action="{{ route('stock.index') }}" class="flex flex-wrap items-center gap-3 mb-6">
-
-            <!-- Buscar -->
             <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Buscar producto..."
                 class="flex-1 px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:outline-none shadow-sm">
-
-            <!-- Categoría -->
             <select name="categoria"
                 class="px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-400 shadow-sm">
                 <option value="">Todas las categorías</option>
@@ -41,7 +31,6 @@
                 @endforeach
             </select>
 
-            <!-- Estado -->
             <select name="estado"
                 class="px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-400 shadow-sm">
                 <option value="">Todos los estados</option>
@@ -50,14 +39,12 @@
                 <option value="verde" {{ request('estado') == 'verde' ? 'selected' : '' }}>🟢 Disponible</option>
             </select>
 
-            <!-- Botón -->
             <button type="submit"
                 class="px-5 py-2 bg-stone-700 text-white rounded-lg shadow hover:bg-stone-800 transition duration-200">
                 Buscar
             </button>
         </form>
 
-        <!-- Tabla de Stock -->
         <div class="overflow-x-auto bg-white rounded-lg shadow-lg">
             <table class="w-full text-left border-collapse">
                 <thead class="bg-stone-100 text-stone-700 text-sm uppercase">

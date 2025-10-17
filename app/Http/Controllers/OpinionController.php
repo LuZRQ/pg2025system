@@ -15,9 +15,8 @@ class OpinionController extends Controller
             'comentario' => 'nullable|string|max:500',
         ]);
 
-        // ✅ Sanitizar comentario para evitar XSS
-        $comentarioSeguro = strip_tags($request->input('comentario')); // elimina HTML/JS
-        $comentarioSeguro = substr($comentarioSeguro, 0, 500); // limita a 500 caracteres
+        $comentarioSeguro = strip_tags($request->input('comentario'));
+        $comentarioSeguro = substr($comentarioSeguro, 0, 500);
 
         Calificacion::create([
             'ciUsuario' => Auth::user()->ciUsuario,
@@ -29,7 +28,6 @@ class OpinionController extends Controller
         return redirect()->back()->with('success', '¡Gracias por tu opinión!');
     }
 
-    // Actualizar la opinión existente del cliente
     public function update(Request $request)
     {
         $usuario = Auth::user();
@@ -40,7 +38,6 @@ class OpinionController extends Controller
             'comentario' => 'nullable|string|max:500',
         ]);
 
-        // ✅ Sanitizar comentario para evitar XSS
         $comentarioSeguro = strip_tags($request->input('comentario'));
         $comentarioSeguro = substr($comentarioSeguro, 0, 500);
 

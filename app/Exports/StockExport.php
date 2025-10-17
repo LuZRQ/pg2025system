@@ -38,16 +38,13 @@ class StockExport implements FromCollection, WithHeadings, WithStyles
 
     public function styles(Worksheet $sheet)
     {
-        // Encabezado
         $sheet->getStyle('A1:F1')->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle('A1:F1')->getAlignment()->setHorizontal('center');
 
-        // Auto ancho de columnas
         foreach(range('A','F') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
-        // Datos centrados verticalmente
         $sheet->getStyle('A2:F' . (Producto::count() + 1))
               ->getAlignment()->setVertical('center');
     }

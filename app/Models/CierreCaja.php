@@ -8,7 +8,7 @@ class CierreCaja extends Model
 {
     use HasFactory;
 
-    protected $table = 'CierreCaja'; // tu tabla camelCase
+    protected $table = 'CierreCaja';
     protected $primaryKey = 'idCierre';
     public $incrementing = true;
     protected $keyType = 'int';
@@ -25,7 +25,6 @@ class CierreCaja extends Model
         'observaciones'
     ];
 
-    // Relación con Usuario
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'ciUsuario', 'ciUsuario');

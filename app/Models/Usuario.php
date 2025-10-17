@@ -26,6 +26,10 @@ class Usuario extends Authenticatable
     protected $primaryKey = 'ciUsuario';
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $casts = [
+        'ultimo_acceso' => 'datetime',
+    ];
+
 
     protected $fillable = [
         'ciUsuario',
@@ -37,7 +41,8 @@ class Usuario extends Authenticatable
         'contrasena',
         'estado',
         'fechaRegistro',
-        'rolId'
+        'rolId',
+        'ultimo_acceso',
     ];
 
     protected $hidden = [
@@ -47,12 +52,12 @@ class Usuario extends Authenticatable
 
     public function getAuthPassword()
     {
-        return $this->contrasena; // Laravel usará este campo al hacer login
+        return $this->contrasena;
     }
 
     public function getAuthIdentifierName()
     {
-        return 'ciUsuario'; // en vez de 'email'
+        return 'ciUsuario';
     }
 
     public function rol()

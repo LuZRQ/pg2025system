@@ -18,9 +18,9 @@ class Venta extends Model
         'pago_cliente',
         'cambio',
     ];
- protected $casts = [
-    'fechaPago' => 'datetime',
-];
+    protected $casts = [
+        'fechaPago' => 'datetime',
+    ];
 
 
     public function pedido()

@@ -46,7 +46,7 @@ class PedidoController extends Controller
     {
         $pedidos = Pedido::with('detalles.producto', 'usuario')
             ->where('estado', 'listo')
-            ->whereDate('fechaCreacion', now()->toDateString()) // 🔹 Solo del día
+            ->whereDate('fechaCreacion', now()->toDateString())
             ->orderBy('fechaCreacion', 'desc')
             ->get();
 
@@ -61,19 +61,15 @@ class PedidoController extends Controller
 
         $nuevoEstado = $request->input('estado');
 
-        // 🔒 Validar estado permitido
         if (!in_array($nuevoEstado, ['pendiente', 'en preparación', 'listo', 'cancelado'])) {
             return redirect()->back()->with('error', 'Estado inválido.');
         }
 
-        // ⚠️ Ya está en ese estado
         if ($pedido->estado === $nuevoEstado) {
             return redirect()->back()->with('info', "El pedido ya está en estado '{$nuevoEstado}'.");
         }
 
-        // ✅ Si cambiamos a "listo", descontar stock
         if ($nuevoEstado === 'listo') {
-            // Primero, validar que todos los productos tengan stock suficiente
             foreach ($pedido->detalles as $detalle) {
                 $producto = $detalle->producto;
 
@@ -85,7 +81,6 @@ class PedidoController extends Controller
                 }
             }
 
-            // Ahora sí, descontar stock usando el método del modelo
             foreach ($pedido->detalles as $detalle) {
                 $producto = $detalle->producto;
                 $oldStock = $producto->stock;
@@ -99,7 +94,7 @@ class PedidoController extends Controller
                     );
                 }
 
-                // Log por producto
+
                 $this->logAction(
                     "Descuento de stock por Pedido #{$pedido->idPedido}: {$detalle->cantidad}x {$producto->nombre} (de {$oldStock} a {$producto->stock})",
                     'Stock',
@@ -108,7 +103,6 @@ class PedidoController extends Controller
             }
         }
 
-        // 🛑 Cancelar pedido que ya estaba "listo" → registrar pérdida
         if ($nuevoEstado === 'cancelado' && $pedido->estado === 'listo') {
             foreach ($pedido->detalles as $detalle) {
                 $producto = $detalle->producto;
@@ -121,11 +115,9 @@ class PedidoController extends Controller
             }
         }
 
-        // 💾 Guardar el nuevo estado del pedido
         $pedido->estado = $nuevoEstado;
         $pedido->save();
 
-        // 📋 Log general del cambio
         $this->logAction(
             "Pedido #{$pedido->idPedido} cambiado a '{$nuevoEstado}'" . ($nuevoEstado === 'listo' ? ' con descuento de stock' : ''),
             'Pedidos',

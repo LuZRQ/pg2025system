@@ -6,10 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'Panel de Administración' }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
     @vite('resources/css/app.css')
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <!-- Dentro de <head> -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     @Vite('resources/js/caja.js')
@@ -17,31 +15,23 @@
 
 <body class="bg-gradient-to-b from-stone-100 to-white text-orange-800 font-sans" x-data="{ open: false }">
 
-  <!-- Navbar -->
-<header class="bg-stone-800 text-white shadow-md w-full">
-    <div class="container mx-auto px-6 py-3 flex items-center justify-between">
-        
-        <!-- Botón Volver elegante -->
-        <a href="{{ $backRoute ?? url()->previous() }}"
-            class="flex items-center gap-2 px-4 py-2 rounded-full border border-stone-500 text-stone-300 
+    <header class="bg-stone-800 text-white shadow-md w-full">
+        <div class="container mx-auto px-6 py-3 flex items-center justify-between">
+
+            <a href="{{ $backRoute ?? url()->previous() }}"
+                class="flex items-center gap-2 px-4 py-2 rounded-full border border-stone-500 text-stone-300 
                    hover:text-amber-300 hover:border-amber-400 hover:bg-stone-700 transition-all duration-200 shadow-sm">
-            <i class="fas fa-arrow-left text-sm"></i>
-            <span class="text-sm font-medium">Volver</span>
-        </a>
+                <i class="fas fa-arrow-left text-sm"></i>
+                <span class="text-sm font-medium">Volver</span>
+            </a>
 
-        <!-- Título centrado -->
-        <h1 class="text-xl font-semibold text-center flex-1 text-amber-200 tracking-wide">
-            {{ $title ?? 'Panel de Administración' }}
-        </h1>
+            <h1 class="text-xl font-semibold text-center flex-1 text-amber-200 tracking-wide">
+                {{ $title ?? 'Panel de Administración' }}
+            </h1>
+            <div class="w-[90px]"></div>
+        </div>
+    </header>
 
-        <!-- Espaciador invisible para balancear el botón -->
-        <div class="w-[90px]"></div>
-    </div>
-</header>
-
-
-
-    <!-- Contenido principal -->
     <main class="flex-1 p-6 w-full">
         @foreach (['exito', 'error', 'info'] as $msg)
             @if (session($msg))
@@ -79,7 +69,8 @@
     </main>
 
     @vite('resources/js/app.js')
-@stack('scripts')
+    @stack('scripts')
 </body>
 
 </html>
+

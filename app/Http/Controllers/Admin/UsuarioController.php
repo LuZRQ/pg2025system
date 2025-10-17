@@ -13,6 +13,7 @@ use App\Traits\Auditable;
 class UsuarioController extends Controller
 {
     use Auditable;
+
     public function index(Request $request)
     {
         $usuarios = Usuario::with('rol')
@@ -31,7 +32,7 @@ class UsuarioController extends Controller
         $modulos = Modulo::with('roles')->get();
 
         return view('admin.usuarios.index', compact('usuarios', 'roles', 'modulos'))
-        ->with('title', 'Gestión de Usuarios');
+            ->with('title', 'Gestión de Usuarios');
     }
 
     public function crear()
@@ -43,15 +44,15 @@ class UsuarioController extends Controller
     public function guardar(Request $request)
     {
         $request->validate([
-            'ciUsuario'   => 'required|string|max:8|unique:Usuario,ciUsuario',
+            'ciUsuario'   => 'required|digits_between:6,8|unique:Usuario,ciUsuario',
             'nombre'      => 'required|string|max:50',
             'apellido'    => 'required|string|max:60',
             'correo'      => 'required|email|unique:Usuario,correo',
-            'telefono'    => 'nullable|string|max:8',
+            'telefono'    => 'nullable|digits_between:7,8',
             'usuario'     => 'required|string|max:50|unique:Usuario,usuario',
-            'contrasena'  => 'required|string|min:6',
+            'contrasena'  => 'required|string|min:8',
             'rolId'       => 'required|exists:Rol,idRol',
-            'estado'      => 'required|boolean',
+            'estado'      => 'required|in:0,1',
         ]);
 
         $usuario = Usuario::create([
@@ -94,20 +95,29 @@ class UsuarioController extends Controller
             'nombre'      => 'required|string|max:50',
             'apellido'    => 'required|string|max:60',
             'correo'      => 'required|email|unique:Usuario,correo,' . $ciUsuario . ',ciUsuario',
-            'telefono'    => 'nullable|string|max:8',
+            'telefono'    => 'nullable|digits_between:7,8',
             'usuario'     => 'required|string|max:50|unique:Usuario,usuario,' . $ciUsuario . ',ciUsuario',
             'rolId'       => 'required|exists:Rol,idRol',
-            'estado'      => 'required|boolean',
+            'estado'      => 'required|in:0,1',
+            'contrasena'  => 'nullable|string|min:8',
         ]);
 
-        $datos = $request->all();
+        $datos = $request->only([
+            'nombre',
+            'apellido',
+            'correo',
+            'telefono',
+            'usuario',
+            'rolId',
+            'estado'
+        ]);
 
         if ($request->filled('contrasena')) {
             $datos['contrasena'] = Hash::make($request->contrasena);
-        } else {
-            unset($datos['contrasena']);
         }
+
         $usuario->update($datos);
+
         $this->logAction(
             "Se actualizó el usuario '{$usuario->usuario}' (CI: {$usuario->ciUsuario})",
             'Usuarios',

@@ -1,6 +1,6 @@
 @php
-    $backRoute = route('reportes.index'); 
-    $title = 'Visualizar archivo'; 
+    $backRoute = route('reportes.index');
+    $title = 'Visualizar archivo';
 @endphp
 @extends('layouts.crud')
 
@@ -8,14 +8,12 @@
     <div class="max-w-7xl mx-auto px-6 py-10">
         <h2 class="text-2xl font-bold mb-4">Reporte: {{ ucfirst(str_replace('_', ' ', $tipo)) }}</h2>
 
-        {{-- Mostrar PDF --}}
         @if (isset($pdfUrl))
             <div class="border rounded-lg overflow-hidden mb-4">
                 <iframe src="{{ $pdfUrl }}" width="100%" height="600px"></iframe>
             </div>
         @endif
 
-        {{-- Botones de descarga --}}
         <div class="flex gap-4">
 
             <a href="{{ route('reportes.downloadPDFByTipo', $tipo) }}"

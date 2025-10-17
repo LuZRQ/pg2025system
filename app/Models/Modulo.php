@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Modulo extends Model
 {
- 
     protected $table = 'Modulo';
     protected $primaryKey = 'idModulo';
 
@@ -15,10 +14,10 @@ class Modulo extends Model
     public function roles()
     {
         return $this->belongsToMany(
-            Rol::class,      // modelo relacionado
-            'modulo_rol',    // tabla pivote
-            'modulo_id',     // FK de este modelo en la tabla pivote
-            'rol_id'         // FK del modelo relacionado en la tabla pivote
-        )->withTimestamps(); // para tener created_at y updated_at
+            Rol::class,
+            'modulo_rol',
+            'modulo_id',
+            'rol_id'
+        )->withTimestamps();
     }
 }

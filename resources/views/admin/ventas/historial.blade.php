@@ -8,7 +8,6 @@
 @section('content')
 <div class="p-6 bg-gradient-to-br from-amber-50 via-white to-amber-100 min-h-screen">
    
-    <!-- Filtros -->
     <div class="bg-white rounded-2xl shadow-md p-4 mb-6 border border-amber-200">
         <form method="GET" action="{{ route('ventas.historial') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
@@ -41,8 +40,6 @@
             </div>
         </form>
     </div>
-
-    <!-- Tabla Historial -->
     <div class="bg-white shadow-lg rounded-2xl overflow-hidden border border-amber-200">
         <table class="min-w-full text-sm text-left text-gray-700">
             <thead class="bg-amber-600 text-white">
@@ -61,25 +58,22 @@
                         <td class="px-4 py-3 font-semibold text-gray-900">{{ $venta->idVenta }}</td>
                         <td class="px-4 py-3">{{ $venta->pedido->idPedido }} - {{ $venta->pedido->mesa }}</td>
                         <td class="px-4 py-3">{{ $venta->fechaPago }}</td>
-                        <!-- 🔥 CAMBIO AQUÍ: montoTotal -->
                         <td class="px-4 py-3 font-bold text-amber-700">
                             Bs {{ number_format($venta->montoTotal, 2) }}
                         </td>
                         <td class="px-4 py-3">{{ $venta->metodo_pago }}</td>
                         <td class="px-4 py-3 text-center space-x-2">
-                            <!-- Ver detalle -->
+
                             <a href="{{ route('ventas.show', $venta->idVenta) }}"
                                class="inline-flex items-center px-2 py-1 text-sm text-blue-600 hover:text-blue-800">
                                 <i class="fas fa-eye"></i>
                             </a>
 
-                            <!-- Editar -->
                             <a href="{{ route('ventas.edit', $venta->idVenta) }}"
                                class="inline-flex items-center px-2 py-1 text-sm text-amber-600 hover:text-amber-800">
                                 <i class="fas fa-edit"></i>
                             </a>
 
-                            <!-- Eliminar -->
                             <form action="{{ route('ventas.destroy', $venta->idVenta) }}" method="POST" class="inline">
                                 @csrf @method('DELETE')
                                 <button type="submit" onclick="return confirm('¿Seguro deseas eliminar esta venta?')"
@@ -97,7 +91,6 @@
             </tbody>
         </table>
 
-        <!-- Paginación -->
         <div class="p-4 border-t bg-gray-50">
             {{ $ventas->links() }}
         </div>

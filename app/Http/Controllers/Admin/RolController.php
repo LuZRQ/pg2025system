@@ -15,7 +15,7 @@ class RolController extends Controller
     {
         $roles = Rol::all();
         return view('admin.roles.index', compact('roles'))
-        ->with('title', 'Control de roles');
+            ->with('title', 'Control de roles');
     }
 
     public function crear()
@@ -28,9 +28,15 @@ class RolController extends Controller
     public function guardar(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:50',
+            'nombre' => 'required|string|max:50|unique:roles,nombre',
             'descripcion' => 'nullable|string|max:255',
-            'modulos' => 'array', // ids de módulos
+            'modulos' => 'array',
+            'modulos.*' => 'exists:modulos,id',
+        ], [
+            'nombre.required' => 'El nombre del rol es obligatorio',
+            'nombre.unique' => 'Ya existe un rol con este nombre',
+            'nombre.max' => 'El nombre no puede superar los 50 caracteres',
+            'modulos.*.exists' => 'El módulo seleccionado no es válido',
         ]);
 
         $rol = Rol::create([
@@ -41,11 +47,13 @@ class RolController extends Controller
         if ($request->has('modulos')) {
             $rol->modulos()->sync($request->modulos);
         }
- $this->logAction(
-        "Se creó el rol '{$rol->nombre}' (ID: {$rol->id})",
-        'Roles',
-        'Exitoso'
-    );
+
+        $this->logAction(
+            "Se creó el rol '{$rol->nombre}' (ID: {$rol->id})",
+            'Roles',
+            'Exitoso'
+        );
+
         return redirect()->route('roles.index')->with('exito', 'Rol creado correctamente.');
     }
 
@@ -53,7 +61,7 @@ class RolController extends Controller
     public function editar($idRol)
     {
         $rol = Rol::with('modulos')->findOrFail($idRol);
-        $modulos = Modulo::all(); // Todos los módulos disponibles
+        $modulos = Modulo::all();
         return view('admin.roles.editar', compact('rol', 'modulos'));
     }
 
@@ -62,9 +70,15 @@ class RolController extends Controller
         $rol = Rol::findOrFail($idRol);
 
         $request->validate([
-            'nombre' => 'required|string|max:50',
+            'nombre' => 'required|string|max:50|unique:roles,nombre,' . $rol->id,
             'descripcion' => 'nullable|string|max:255',
-            'modulos' => 'array', // ids de módulos
+            'modulos' => 'array',
+            'modulos.*' => 'exists:modulos,id',
+        ], [
+            'nombre.required' => 'El nombre del rol es obligatorio',
+            'nombre.unique' => 'Ya existe un rol con este nombre',
+            'nombre.max' => 'El nombre no puede superar los 50 caracteres',
+            'modulos.*.exists' => 'El módulo seleccionado no es válido',
         ]);
 
         $rol->update([
@@ -72,17 +86,18 @@ class RolController extends Controller
             'descripcion' => $request->descripcion,
         ]);
 
-        // Actualizamos los módulos asignados al rol
         if ($request->has('modulos')) {
             $rol->modulos()->sync($request->modulos);
         } else {
-            $rol->modulos()->sync([]); // Si no se envía nada, desasigna todos
+            $rol->modulos()->sync([]);
         }
-$this->logAction(
-    "Se actualizó el rol '{$rol->nombre}' (ID: {$rol->id})",
-    'Roles',
-    'Exitoso'
-);
+
+        $this->logAction(
+            "Se actualizó el rol '{$rol->nombre}' (ID: {$rol->id})",
+            'Roles',
+            'Exitoso'
+        );
+
         return redirect()->route('roles.index')->with('exito', 'Rol actualizado correctamente.');
     }
 
@@ -91,11 +106,11 @@ $this->logAction(
     {
         $rol = Rol::findOrFail($idRol);
         $rol->delete();
-$this->logAction(
-    "Se eliminó el rol '{$rol->nombre}' (ID: {$rol->id})",
-    'Roles',
-    'Exitoso'
-);
+        $this->logAction(
+            "Se eliminó el rol '{$rol->nombre}' (ID: {$rol->id})",
+            'Roles',
+            'Exitoso'
+        );
         return redirect()->route('roles.index')->with('exito', 'Rol eliminado correctamente.');
     }
 }

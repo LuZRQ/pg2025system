@@ -1,3 +1,7 @@
+@php
+    $backRoute = route('usuarios.index');
+    $title = 'Control de rol';
+@endphp
 @extends('layouts.crud')
 
 @section('content')
@@ -53,6 +57,4 @@
         </div>
 
     </div>
-
-
 @endsection

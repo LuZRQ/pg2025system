@@ -4,7 +4,6 @@
 
 @section('content')
 
-    {{-- Hero --}}
     <section class="hero-cover d-flex align-items-center"
         style="background-image: url('{{ asset('img/fondo1.jpeg') }}');
            background-size: cover;
@@ -16,7 +15,6 @@
                     <div
                         class="hero-card bg-dark bg-opacity-75 rounded-4 shadow-lg p-5 text-center d-flex flex-column align-items-center">
 
-                        {{-- Mensaje principal --}}
                         <h2 class="display-6 mb-3 text-white text-center" style="font-family: 'Playfair Display', serif;">
                             @guest
                                 <h2 class="display-6 mb-3 text-white text-center" style="font-family: 'Playfair Display', serif;">
@@ -30,7 +28,6 @@
                             @endguest
                         </h2>
 
-                        {{-- GIFs decorativos solo para clientes --}}
                         @auth
                             <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
                                 <img src="{{ asset('img/cafe.gif') }}" alt="Café" style="height: 50px;">
@@ -44,7 +41,6 @@
                             </div>
                         @endauth
 
-                        {{-- Botón de registro solo para visitantes --}}
                         @guest
                             <a href="{{ route('register') }}" class="btn btn-outline-light px-4 py-2">
                                 <i class="bi bi-person-vcard me-1"></i> Registrarse
@@ -62,8 +58,6 @@
     {{-- OPINIONES Y COMENTARIOS --}}
     <section class="py-5">
         <div class="container">
-
-            {{-- FORMULARIO --}}
             @auth
                 @if ($usuario->rol && $usuario->rol->nombre === 'Cliente')
                     <div class="row justify-content-center mb-5">
@@ -72,12 +66,9 @@
                                 <h3 class="section-title mb-4 text-center">¿Cómo fue tu experiencia?</h3>
 
                                 @if (!$yaOpino)
-                                    {{-- Nuevo formulario --}}
                                     <form method="POST" action="{{ route('opiniones.store') }}" class="text-center">
                                         @csrf
                                         <input type="hidden" name="rating" id="ratingInput">
-
-                                        {{-- Emojis PNG circulares --}}
                                         <div class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
                                             @php
                                                 $emojis = [
@@ -113,8 +104,6 @@
                                         @method('PUT')
                                         <input type="hidden" name="rating" id="ratingInput"
                                             value="{{ $yaOpino->calificacion }}">
-
-                                        {{-- Emojis preseleccionados --}}
                                         <div class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
                                             @php
                                                 $emojis = [
@@ -150,10 +139,6 @@
                     </div>
                 @endif
             @endauth
-
-
-
-            {{-- OPINIONES --}}
 
             <div>
                 <h3 class="section-title mb-4">Opiniones de clientes</h3>
@@ -203,7 +188,6 @@
         </div>
     </section>
 
-    {{-- Script para resaltar emoji seleccionado --}}
     <script>
         const emojiBtns = document.querySelectorAll('.emoji-btn');
         const ratingInput = document.getElementById('ratingInput');
@@ -218,7 +202,6 @@
     </script>
 
     <style>
-        /* ==== Caja del formulario ==== */
         .form-box {
             background: linear-gradient(135deg, #fdfaf0, #ffe985cc);
             border-radius: 16px;
@@ -232,7 +215,6 @@
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
         }
 
-        /* ==== Opiniones (burbuja mejorada) ==== */
         .opinion-bubble {
             position: relative;
             background: linear-gradient(135deg, #fffbea, #fdf2d7);
@@ -261,7 +243,6 @@
             filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
         }
 
-        /* ==== Emojis circulares ==== */
         .emoji-btn {
             transition: transform 0.2s, background 0.3s;
         }
@@ -278,15 +259,10 @@
     </style>
 
 
-
-
-
     {{-- =================== MENÚ =================== --}}
     <section id="menu" class="py-5 bg-light">
         <div class="container">
             <h3 class="text-center section-title mb-4">Nuestro Menú</h3>
-
-            {{-- Filtros dinámicos con contador --}}
             <ul class="nav nav-pills justify-content-center gap-2 pill-filter mb-4">
                 @php
                     $totalProductos = count($productos);
@@ -307,12 +283,11 @@
                 @endforeach
             </ul>
 
-            {{-- Grilla de productos --}}
             <div class="row g-4" id="menu-items">
                 @foreach ($productos as $p)
                     <div class="col-12 col-md-6 col-lg-4 menu-item" data-category="{{ $p->categoriaId }}">
                         <div class="menu-card garabato-card rounded-4 p-3 h-100 shadow-sm">
-                            {{-- Imagen --}}
+
                             <div
                                 class="ratio ratio-16x9 mb-3 rounded-3 overflow-hidden border garabato-img position-relative">
                                 <div
@@ -322,9 +297,6 @@
                                     alt="{{ $p->nombre }}"
                                     class="w-100 h-100 object-fit-cover position-absolute top-0 start-0 mix-blend-multiply">
                             </div>
-
-
-                            {{-- Texto --}}
                             <h5 class="mb-1 fw-bold">{{ $p->nombre }}</h5>
                             <p class="text-muted small mb-2">{{ $p->descripcion }}</p>
                             <div class="fw-bold text-coffee">Bs. {{ number_format($p->precio, 2, ',', '.') }}</div>
@@ -335,18 +307,13 @@
         </div>
     </section>
 
-
-    {{-- =================== ESTILOS =================== --}}
     <style>
-        /* Cards */
         .menu-card {
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             background: linear-gradient(135deg, #fffaf0, #fdf3e5);
             border-radius: 16px;
             border: 1px solid #e0cda9;
         }
-
-
 
         .garabato-img img {
             object-fit: cover;
@@ -356,9 +323,6 @@
         .garabato-img img:hover {
             transform: scale(1.05);
         }
-
-        /* Botones de filtro */
-
 
         .nav-link {
             cursor: pointer;
@@ -371,9 +335,7 @@
         }
     </style>
 
-    {{-- =================== SCRIPT =================== --}}
     <script>
-        // Filtro de categorías con conteo
         const filterLinks = document.querySelectorAll('.nav-link[data-category]');
         const menuItems = document.querySelectorAll('.menu-item');
 
@@ -381,13 +343,11 @@
             link.addEventListener('click', function(e) {
                 e.preventDefault();
 
-                // Activar visualmente
                 filterLinks.forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
 
                 const category = this.dataset.category;
 
-                // Mostrar/ocultar productos
                 menuItems.forEach(item => {
                     if (category === 'all' || item.dataset.category.toString() === category
                         .toString()) {
@@ -406,8 +366,6 @@
     <section id="nosotros" class="py-5 bg-light">
         <div class="container">
             <div class="row g-4 align-items-center">
-
-                {{-- Texto --}}
                 <div class="col-12 col-lg-6">
                     <div class="p-4 rounded-4 shadow-sm bg-white">
                         <h3 class="section-title mb-3">Nuestra Historia</h3>
@@ -418,7 +376,6 @@
                             de las mejores bebidas y aperitivos.
                         </p>
 
-                        {{-- Iconos --}}
                         <div class="d-flex flex-wrap gap-4 mt-4 justify-content-center justify-content-lg-start">
                             <div class="text-center">
                                 <div class="fs-3 text-coffee mb-1 icon-box">
@@ -442,7 +399,6 @@
                     </div>
                 </div>
 
-                {{-- Imagen --}}
                 <div class="col-12 col-lg-6">
                     <div class="position-relative ratio ratio-16x9 rounded-4 overflow-hidden shadow-lg">
                         <img src="{{ asset('img/fondo2.jpeg') }}" alt="Nuestra Historia"
@@ -461,8 +417,6 @@
         <div class="container">
             <h3 class="text-center section-title mb-5">Encuéntranos</h3>
             <div class="row g-4 align-items-center">
-
-                {{-- Texto dirección --}}
                 <div class="col-12 col-lg-4">
                     <div class="p-4 bg-white rounded-4 shadow-sm h-100">
                         <h6 class="fw-bold text-coffee mb-1"><i class="bi bi-geo-alt-fill me-2"></i>Dirección
@@ -475,7 +429,6 @@
                     </div>
                 </div>
 
-                {{-- Mapa/imagen --}}
                 <div class="col-12 col-lg-8">
                     <div class="ratio ratio-16x9 rounded-4 shadow-lg overflow-hidden">
 

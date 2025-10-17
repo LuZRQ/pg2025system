@@ -15,9 +15,8 @@ class PdfController extends Controller
     {
         $venta = Venta::with(['pedido.detalles.producto', 'pedido.usuario'])->findOrFail($idVenta);
 
-        // Genera el PDF desde la vista
         $pdf = Pdf::loadView('admin.ventas.recibo_pdf', compact('venta'))
-            ->setPaper([0, 0, 226, 600]); // tamaño aproximado ticket 5 cm ancho
+            ->setPaper([0, 0, 226, 600]); 
 
         $this->logAction(
             "Se generó PDF de recibo para la venta #{$venta->idVenta}",

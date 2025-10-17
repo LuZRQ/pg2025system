@@ -17,17 +17,11 @@
                 </div>
             </div>
         @endif
-
-
-        {{-- Grid principal --}}
+        {{-- Panel Izquierdo: resumen de ventas --}}
         <div class="grid grid-cols-12 gap-6">
-
-            {{-- ================= Panel Izquierdo: Control de Caja ================= --}}
             <div class="col-span-12 md:col-span-5 lg:col-span-4 p-2 md:p-4">
                 <div
                     class="bg-gradient-to-b from-amber-50 via-amber-100 to-emerald-50 rounded-2xl shadow-lg p-6 border border-amber-200">
-
-                    {{-- ===== Estado actual de caja ===== --}}
                     @if ($cajaActual)
                         <div class="mb-3 p-2 text-center bg-green-100 text-green-800 rounded-lg font-semibold shadow">
                             Caja en curso — abierta
@@ -38,13 +32,10 @@
                         </div>
                     @endif
 
-
-
                     <h2 class="font-bold text-xl text-amber-900 mb-5 flex items-center gap-2">
                         <i class="fas fa-cash-register"></i> Control de Caja
                     </h2>
 
-                    {{-- ===== Botón Abrir Caja (si no hay caja abierta) ===== --}}
                     @if (!$cajaActual)
                         <button id="btnAbrirCaja"
                             class="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 font-semibold mb-4 shadow-md">
@@ -52,10 +43,8 @@
                         </button>
                     @endif
 
-
-                    {{-- ===== Totales principales ===== --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-                        {{-- Fondo Inicial --}}
+
                         <div class="bg-amber-100 rounded-lg p-3 shadow flex flex-wrap items-start gap-3">
                             <i class="fas fa-wallet text-amber-700 text-xl shrink-0 mt-1"></i>
 
@@ -70,10 +59,8 @@
                                         Obs: {{ $cajaActual->observaciones }}
                                     </p>
                                 @endif
-
                             </div>
 
-                            {{-- Botón Editar (Dueño) --}}
                             @php $user = Auth::user(); @endphp
                             @if ($user && $user->rol?->nombre === 'Dueno' && $cajaActual)
                                 <div class="w-full sm:w-auto">
@@ -83,22 +70,18 @@
                                     </button>
                                 </div>
                             @endif
-
                         </div>
 
-
-                        {{-- Total en Caja --}}
                         <div class="bg-green-100 rounded-lg p-3 shadow flex items-center gap-3">
                             <i class="fas fa-coins text-green-700 text-xl shrink-0"></i>
                             <div>
                                 <p class="text-sm text-green-800">Total en Caja</p>
-                                <p class="font-semibold text-lg text-green-900">{{-- Total en caja --}}
+                                <p class="font-semibold text-lg text-green-900">
                                     Bs. {{ number_format($totalEnCaja, 2, '.', ',') }}</p>
                             </div>
                         </div>
                     </div>
 
-                    {{-- ===== Resumen de Ventas ===== --}}
                     <div class="bg-white rounded-xl p-4 shadow mb-5">
                         <h3 class="font-semibold text-md sm:text-lg text-amber-900 mb-3 flex items-center gap-2">
                             <i class="fas fa-chart-simple"></i> Resumen de Ventas
@@ -129,9 +112,7 @@
                         </ul>
                     </div>
 
-                    {{-- ===== Botones de acción ===== --}}
                     <div class="flex flex-col gap-2">
-                        {{-- Cerrar Caja --}}
                         @if ($cajaActual)
                             <form action="{{ route('ventas.cerrarCaja') }}" method="POST">
                                 @csrf
@@ -142,8 +123,6 @@
                             </form>
                         @endif
 
-
-                        {{-- Exportar --}}
                         <div class="flex gap-2">
                             <a href="{{ route('ventas.caja.export.excel') }}"
                                 class="flex-1 bg-yellow-100 text-yellow-900 py-2 rounded-md hover:bg-yellow-200 shadow-sm text-center font-semibold">
@@ -155,7 +134,6 @@
                             </a>
                         </div>
 
-                        {{-- Volver --}}
                         <a href="{{ route('ventas.index') }}"
                             class="w-full bg-gray-300 text-gray-800 py-2 rounded-md hover:bg-gray-400 shadow-sm text-center font-semibold mt-2">
                             <i class="fas fa-arrow-left mr-1"></i> Volver
@@ -164,7 +142,6 @@
                 </div>
             </div>
 
-            {{-- ===== Modal Abrir Caja ===== --}}
             <div id="modalAbrirCaja" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-40 z-50">
                 <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm relative">
                     <button type="button" onclick="cerrarModalAbrirCaja()"
@@ -193,8 +170,6 @@
                 </div>
             </div>
 
-
-            {{-- ===== Modal Editar Monto Inicial ===== --}}
             <div id="modalEditarMonto" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-40 z-50">
                 <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm relative">
                     <button type="button" onclick="cerrarModalEditarMonto()"
@@ -238,14 +213,11 @@
                             @endforeach
                         </select>
                     </div>
-
-                    {{-- Total a pagar --}}
                     <div class="bg-amber-50 rounded-lg p-4 mb-6 shadow-inner">
                         <p class="text-sm text-amber-700">Total a pagar</p>
                         <p class="font-bold text-2xl text-amber-900" id="totalPagar">Bs. 0.00</p>
                     </div>
 
-                    {{-- Tipo de pago y pago cliente --}}
                     <div class="bg-white rounded-xl p-4 mb-4 shadow">
                         <div class="mb-4">
                             <label class="block text-sm text-amber-700">Tipo de pago</label>
@@ -263,14 +235,12 @@
                                 id="pagoCliente" name="pago_cliente" placeholder="0.00">
                         </div>
 
-                        {{-- Cambio --}}
                         <div class="bg-gray-100 rounded-lg p-4 mb-0">
                             <p class="text-sm text-gray-600">Cambio</p>
                             <p class="font-semibold text-gray-800" id="cambio">Bs. 0.00</p>
                         </div>
                     </div>
 
-                    {{-- Tabla de Orden --}}
                     <div class="overflow-x-auto mb-6">
                         <table id="tablaOrden" class="w-full border-collapse rounded-lg overflow-hidden">
                             <thead class="bg-amber-700 text-white">
@@ -286,7 +256,6 @@
                         </table>
                     </div>
 
-                    {{-- Botones finales --}}
                     <div class="flex flex-col md:flex-row justify-between mt-4 gap-2">
                         <a href="{{ route('ventas.caja') }}"
                             class="px-6 py-2 rounded-lg bg-yellow-100 text-amber-900 hover:bg-yellow-200 shadow text-center">
@@ -316,7 +285,6 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', () => {
-                // Modal Abrir Caja
                 const modalAbrir = document.getElementById('modalAbrirCaja');
                 const btnAbrir = document.getElementById('btnAbrirCaja');
                 if (btnAbrir && modalAbrir) {
@@ -330,7 +298,6 @@
                     modalAbrir.classList.remove('flex');
                 };
 
-                // Modal Editar Monto
                 const modalEditar = document.getElementById('modalEditarMonto');
                 const btnEditar = document.getElementById('btnOpenEditarMonto');
                 const inputEditar = document.getElementById('inputMontoInicial');
@@ -346,7 +313,6 @@
                     modalEditar.classList.remove('flex');
                 };
 
-                // Escape key
                 document.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') {
                         cerrarModalAbrirCaja();

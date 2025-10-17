@@ -15,30 +15,31 @@ use Illuminate\Support\Facades\Auth;
 
 class RegisteredUserController extends Controller
 {
-   /**
-     * Mostrar el formulario de registro
-     */
+
     public function create()
     {
         return view('auth.register');
     }
 
-    /**
-     * Procesar el registro de un nuevo usuario
-     */
     public function store(Request $request)
     {
-        // Sanitizar inputs
+
         $input = $request->only([
-            'ciUsuario', 'nombre', 'apellido', 'correo', 'telefono', 'usuario', 'contrasena', 'contrasena_confirmation'
+            'ciUsuario',
+            'nombre',
+            'apellido',
+            'correo',
+            'telefono',
+            'usuario',
+            'contrasena',
+            'contrasena_confirmation'
         ]);
 
         foreach ($input as $key => $value) {
             $input[$key] = trim(strip_tags($value));
         }
 
-        // Validación estricta
-        $request->merge($input); // actualiza el request con valores sanitizados
+        $request->merge($input);
         $request->validate([
             'ciUsuario' => 'nullable|digits:8|unique:Usuario,ciUsuario',
             'nombre' => 'required|string|max:50',
@@ -49,7 +50,7 @@ class RegisteredUserController extends Controller
             'contrasena' => 'required|string|confirmed|min:6|max:20',
         ]);
 
-        // Rol por defecto: Cliente
+
         $rolCliente = Rol::where('nombre', 'Cliente')->first();
 
         if (!$rolCliente) {
@@ -67,7 +68,7 @@ class RegisteredUserController extends Controller
             'rolId' => $rolCliente->idRol,
         ]);
 
-        // iniciar sesión automáticamente
+
         Auth::login($usuario);
 
         return redirect()->route('home')

@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class DetallePedido extends Model
 {
-    
     protected $table = 'DetallePedido';
     protected $primaryKey = 'idDetallePedido';
     public $timestamps = false;
@@ -17,8 +16,6 @@ class DetallePedido extends Model
         'cantidad',
         'subtotal'
     ];
-
-
 
     public function producto()
     {

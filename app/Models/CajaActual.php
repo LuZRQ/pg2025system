@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class CajaActual extends Model
 {
-      use HasFactory;
+    use HasFactory;
 
     protected $table = 'caja_actual';
     protected $primaryKey = 'id_caja';
-    public $timestamps = false; 
+    public $timestamps = false;
 
     protected $fillable = [
         'ciUsuario',
@@ -21,7 +21,6 @@ class CajaActual extends Model
         'observaciones',
     ];
 
-    // Relación con Usuario
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'ciUsuario', 'ciUsuario');

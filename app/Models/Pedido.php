@@ -8,7 +8,7 @@ class Pedido extends Model
 {
     protected $table = 'Pedido';
     protected $primaryKey = 'idPedido';
-    public $timestamps = false; // porque usas fechaCreacion
+    public $timestamps = false;
 
     protected $fillable = [
         'ciUsuario',
@@ -18,7 +18,7 @@ class Pedido extends Model
         'total',
         'fechaCreacion'
     ];
-    // 👇 aquí agregamos el cast para que Laravel lo trate como Carbon
+
     protected $casts = [
         'fechaCreacion' => 'datetime',
     ];
@@ -32,7 +32,6 @@ class Pedido extends Model
         return $this->hasOne(Venta::class, 'idPedido', 'idPedido');
     }
 
-    // 👇 renómbralo a "detalles" para usarlo más natural
     public function detalles()
     {
         return $this->hasMany(DetallePedido::class, 'idPedido', 'idPedido');

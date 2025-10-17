@@ -11,6 +11,7 @@ use App\Traits\Auditable;
 class ProductoController extends Controller
 {
     use Auditable;
+    
     public function index(Request $request)
     {
         $categorias = CategoriaProducto::all();
@@ -43,14 +44,13 @@ class ProductoController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:100',
             'descripcion' => 'nullable|string|max:255',
-            'precio' => 'required|numeric|min:0',
+            'precio' => 'required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
             'stock' => 'required|integer|min:0',
             'categoriaId' => 'required|exists:CategoriaProducto,idCategoria',
             'estado' => 'required|boolean',
             'imagen' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
         ]);
 
-        // ✅ Manejo correcto de imagen
         $nombreArchivo = null;
         if ($request->hasFile('imagen')) {
             $archivo = $request->file('imagen');
@@ -58,7 +58,6 @@ class ProductoController extends Controller
             $archivo->storeAs('productos', $nombreArchivo, 'public');
         }
 
-        // ✅ Guardamos el producto manualmente para evitar ruta temporal
         $producto = Producto::create([
             'nombre' => $request->nombre,
             'descripcion' => $request->descripcion,
@@ -90,9 +89,9 @@ class ProductoController extends Controller
         $producto = Producto::findOrFail($idProducto);
 
         $request->validate([
-            'nombre' => 'required|string|max:100',
+            'nombre' => 'required|string|max:100|unique:producto,nombre,' . $idProducto . ',idProducto',
             'descripcion' => 'nullable|string|max:255',
-            'precio' => 'required|numeric|min:0',
+            'precio' => 'required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
             'stock' => 'required|integer|min:0',
             'categoriaId' => 'required|exists:CategoriaProducto,idCategoria',
             'estado' => 'required|boolean',
@@ -108,7 +107,6 @@ class ProductoController extends Controller
             $nombreArchivo = 'productos/' . $nombreArchivo;
         }
 
-        // ✅ Actualizamos correctamente sin perder la imagen
         $producto->update([
             'nombre' => $request->nombre,
             'descripcion' => $request->descripcion,
@@ -128,7 +126,6 @@ class ProductoController extends Controller
         return redirect()->route('productos.index')->with('exito', 'Producto actualizado correctamente.');
     }
 
-    // Eliminar producto
     public function eliminar($idProducto)
     {
         $producto = Producto::findOrFail($idProducto);

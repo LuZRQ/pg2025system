@@ -4,8 +4,6 @@
 @section('content')
     <div class="p-6 bg-gradient-to-br from-amber-50 via-orange-100 to-amber-200 min-h-screen">
 
-
-        {{-- Filtros --}}
         <div class="flex space-x-3 mb-8 justify-center">
             <a href="{{ route('pedidos.index') }}"
                 class="px-4 py-2 rounded-lg {{ request('estado') ? 'bg-gray-100 text-amber-800 hover:bg-amber-200' : 'bg-amber-700 text-white shadow hover:bg-amber-800' }}">
@@ -25,8 +23,6 @@
             </a>
         </div>
 
-
-        {{-- Pedidos --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             @forelse($pedidos as $pedido)
                 @php
@@ -57,7 +53,6 @@
                 @endphp
 
                 <div class="border rounded-xl p-4 shadow-sm {{ $bgColor }}">
-                    {{-- Encabezado --}}
                     <div class="flex justify-between items-start mb-2">
                         <div>
                             <p class="font-bold text-lg text-gray-800">#{{ $pedido->idPedido }}</p>
@@ -66,7 +61,6 @@
                         </div>
                         <div class="text-right">
                             <p class="text-sm text-gray-500">{{ $pedido->fechaCreacion->format('H:i') }}</p>
-                            {{-- Tiempo transcurrido --}}
                             <p class="text-xs text-red-500 mt-1">
                                 @php
                                     $diferenciaMinutos = now()->diffInMinutes($pedido->fechaCreacion);
@@ -76,10 +70,8 @@
                         </div>
                     </div>
 
-                    {{-- Mesero --}}
                     <p class="text-xs text-gray-500 mb-2">👤 Mesero: {{ $pedido->usuario->nombre ?? 'Desconocido' }}</p>
 
-                    {{-- Detalles del pedido --}}
                     <ul class="text-sm text-gray-800 mb-2 space-y-1">
                         @foreach ($pedido->detalles as $detalle)
                             <li>
@@ -89,9 +81,6 @@
                         @endforeach
                     </ul>
 
-
-
-                    {{-- Comentarios --}}
                     @if ($pedido->comentarios)
                         <div
                             class="text-xs text-gray-800 bg-amber-100 rounded-md p-2 mb-3 shadow-inner flex items-center space-x-2">
@@ -100,8 +89,6 @@
                         </div>
                     @endif
 
-
-                    {{-- Estado y acciones --}}
                     <div class="flex justify-between items-center">
                         <span
                             class="px-3 py-1 rounded-full text-xs font-semibold
@@ -115,7 +102,7 @@
                         </span>
 
                         <div class="flex space-x-2">
-                            {{-- Botón de cambio de estado --}}
+
                             @if ($siguienteEstado)
                                 <form action="{{ route('pedidos.cambiarEstado', $pedido->idPedido) }}" method="POST">
                                     @csrf
@@ -123,23 +110,21 @@
                                     <button
                                         class="px-3 py-1 text-xs text-white rounded-lg
                                         {{ match ($estado) {
-                                        'pendiente' => 'bg-yellow-400 hover:bg-yellow-500',
-                                        'en preparación' => 'bg-green-400 hover:bg-green-500',
-                                        default => 'bg-gray-300 cursor-not-allowed',
+                                            'pendiente' => 'bg-yellow-400 hover:bg-yellow-500',
+                                            'en preparación' => 'bg-green-400 hover:bg-green-500',
+                                            default => 'bg-gray-300 cursor-not-allowed',
                                         } }}">
                                         {{ $accionTexto }}
                                     </button>
                                 </form>
                             @endif
 
-                            {{-- Botón imprimir con Font Awesome y color marrón --}}
                             <a href="{{ route('pedidos.recibo', $pedido->idPedido) }}" target="_blank"
                                 class="px-3 py-1 text-xs rounded-lg bg-amber-700 hover:bg-amber-800 text-white flex items-center space-x-1">
                                 <i class="fas fa-print"></i>
                                 <span>Imprimir</span>
                             </a>
 
-                            {{-- Botón cancelar --}}
                             @if ($pedido->estado === 'listo')
                                 <form action="{{ route('pedidos.cambiarEstado', $pedido->idPedido) }}" method="POST">
                                     @csrf

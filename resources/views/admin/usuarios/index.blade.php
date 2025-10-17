@@ -1,16 +1,13 @@
 @extends('layouts.admin')
 
 @section('content')
-    <!-- Barra de búsqueda -->
     <div class="mb-6">
         <form method="GET" action="{{ route('usuarios.index') }}" class="flex flex-col md:flex-row gap-2">
 
-            <!-- Input buscar -->
             <input type="text" name="search" placeholder="Buscar usuario"
                 class="w-full md:flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400"
                 value="{{ request('search') }}">
 
-            <!-- Select estado -->
             <select name="estado"
                 class="w-full md:w-auto px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400">
                 <option value="">Todos los estados</option>
@@ -18,15 +15,12 @@
                 <option value="0" {{ request('estado') == '0' ? 'selected' : '' }}>Inactivo</option>
             </select>
 
-            <!-- Botón buscar -->
             <button type="submit" class="w-full md:w-auto px-4 py-2 bg-stone-700 text-white rounded-lg hover:bg-stone-600">
                 Buscar
             </button>
         </form>
     </div>
 
-
-    <!-- Tabla de usuarios -->
     <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
         <div class="flex justify-between items-center px-4 py-3 border-b">
             <h3 class="text-lg font-semibold">Usuarios del Sistema</h3>
@@ -36,7 +30,6 @@
 
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
-                <!-- Encabezados: ocultos en móvil, visibles en md+ -->
                 <thead class="bg-stone-100 text-stone-700 hidden md:table-header-group">
                     <tr>
                         <th class="px-4 py-2">Usuario</th>
@@ -50,14 +43,12 @@
                 <tbody>
                     @foreach ($usuarios as $usuario)
                         <tr class="border-t block md:table-row">
-                            <!-- Usuario -->
                             <td
                                 class="px-4 py-3 block md:table-cell before:content-['Usuario:'] before:font-semibold before:block md:before:content-none">
                                 <p class="font-semibold">{{ $usuario->nombre }} {{ $usuario->apellido }}</p>
                                 <p class="text-sm text-gray-500">{{ $usuario->correo }}</p>
                             </td>
 
-                            <!-- Rol -->
                             <td
                                 class="px-4 py-3 block md:table-cell before:content-['Rol:'] before:font-semibold before:block md:before:content-none">
                                 <span class="px-3 py-1 text-xs rounded-full bg-rose-100 text-rose-800">
@@ -65,7 +56,6 @@
                                 </span>
                             </td>
 
-                            <!-- Estado -->
                             <td
                                 class="px-4 py-3 block md:table-cell before:content-['Estado:'] before:font-semibold before:block md:before:content-none">
                                 @if ($usuario->estado)
@@ -75,13 +65,17 @@
                                 @endif
                             </td>
 
-                            <!-- Último acceso -->
                             <td
                                 class="px-4 py-3 block md:table-cell before:content-['Último acceso:'] before:font-semibold before:block md:before:content-none">
-                                {{ $usuario->ultimo_acceso ?? 'Nunca' }}
+                                @if ($usuario->ultimo_acceso)
+                                    {{ $usuario->ultimo_acceso->diffForHumans() }}
+                                    <span
+                                        class="text-xs text-gray-500 block">{{ $usuario->ultimo_acceso->format('d/m/Y H:i') }}</span>
+                                @else
+                                    <span class="text-gray-400 italic">Nunca</span>
+                                @endif
                             </td>
 
-                            <!-- Acciones -->
                             <td
                                 class="px-4 py-3 flex space-x-2 block md:table-cell before:content-['Acciones:'] before:font-semibold before:block md:before:content-none">
                                 <div class="flex space-x-2">
@@ -114,16 +108,15 @@
         </div>
     </div>
 
-    <!-- Roles y permisos -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Roles -->
         <div class="bg-white shadow rounded-lg p-4">
             <h3 class="text-lg font-semibold mb-4">Roles del Sistema</h3>
             <div class="space-y-3">
                 @foreach ($roles as $rol)
                     <div class="flex justify-between items-center">
                         <p><span class="font-semibold">{{ $rol->nombre }}:</span> {{ $rol->descripcion }}</p>
-                        <a href="{{ route('roles.index', $rol->idRol) }}" class="text-stone-600 hover:text-stone-800" title="Ajustes">
+                        <a href="{{ route('roles.index', $rol->idRol) }}" class="text-stone-600 hover:text-stone-800"
+                            title="Ajustes">
                             <i class="fas fa-cog"></i>
                         </a>
                     </div>
@@ -131,28 +124,28 @@
             </div>
         </div>
 
-    <!-- Permisos por módulo -->
-    <div class="bg-white shadow rounded-lg p-4">
-        <h3 class="text-lg font-semibold mb-4">Módulos y Roles Permitidos</h3>
-        <div class="space-y-4">
-            @foreach ($modulos as $modulo)
-                <div class="border rounded-lg p-3">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-semibold text-stone-700">{{ $modulo->nombre }}</span>
-                        <span class="text-sm text-gray-500">{{ $modulo->descripcion }}</span>
+        <div class="bg-white shadow rounded-lg p-4">
+            <h3 class="text-lg font-semibold mb-4">Módulos y Roles Permitidos</h3>
+            <div class="space-y-4">
+                @foreach ($modulos as $modulo)
+                    <div class="border rounded-lg p-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-semibold text-stone-700">{{ $modulo->nombre }}</span>
+                            <span class="text-sm text-gray-500">{{ $modulo->descripcion }}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            @forelse ($modulo->roles as $rol)
+                                <span
+                                    class="px-3 py-1 text-xs rounded-full {{ $rol->color ?? 'bg-gray-100 text-gray-800' }}">
+                                    {{ $rol->nombre }}
+                                </span>
+                            @empty
+                                <span class="text-gray-400 text-xs">Sin roles asignados</span>
+                            @endforelse
+                        </div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
-                        @forelse ($modulo->roles as $rol)
-                            <span class="px-3 py-1 text-xs rounded-full {{ $rol->color ?? 'bg-gray-100 text-gray-800' }}">
-                                {{ $rol->nombre }}
-                            </span>
-                        @empty
-                            <span class="text-gray-400 text-xs">Sin roles asignados</span>
-                        @endforelse
-                    </div>
-                </div>
-            @endforeach
+                @endforeach
+            </div>
         </div>
-    </div>
-</div
+</div 
 @endsection

@@ -24,20 +24,17 @@ use App\Traits\Auditable;
 class VentaController extends Controller
 {
     use Auditable;
+
     public function index()
     {
-        // Categorías con sus productos activos
         $categorias = CategoriaProducto::with(['productos' => function ($query) {
             $query->activos();
         }])->get();
 
-        // Todos los productos activos (opcional, si quieres filtrar por JS)
         $productos = Producto::activos()->with('categoria')->get();
 
-        // Ventas realizadas
         $ventas = Venta::with('pedido.usuario', 'pedido.detalles.producto')->get();
 
-        // Pedidos listos en cocina
         $pedidos = Pedido::where('estado', 'listo')
             ->doesntHave('venta')
             ->with('detalles.producto')
@@ -51,23 +48,19 @@ class VentaController extends Controller
     {
         $request->validate([
             'mesa' => 'required',
-            'productos' => 'required', // JSON con los productos
+            'productos' => 'required',
         ]);
 
-        // Convertir productos JSON a array
         $productos = json_decode($request->productos, true);
 
-        // Calcular el total del pedido
         $total = collect($productos)->sum(fn($p) => $p['cantidad'] * $p['precio']);
 
-        // Obtener el usuario logueado (o null si no hay sesión)
         $usuario = Auth::user();
 
         if (!$usuario) {
             return redirect()->back()->with('error', 'Debes iniciar sesión para registrar pedidos.');
         }
 
-        // Crear pedido con total calculado
         $pedido = Pedido::create([
             'ciUsuario'   => $usuario->ciUsuario,
             'estado'      => 'pendiente',
@@ -78,7 +71,6 @@ class VentaController extends Controller
 
         ]);
 
-        // Crear detalle del pedido
         foreach ($productos as $producto) {
             $pedido->detalles()->create([
                 'idProducto' => $producto['idProducto'],
@@ -117,23 +109,11 @@ class VentaController extends Controller
 
         $ventas = $query->orderBy('fechaPago', 'desc')->paginate(10);
 
-        // 👇 Obtener todas las mesas que tienen ventas registradas
         $mesas = Pedido::select('mesa')->distinct()->get();
 
         return view('admin.ventas.historial', compact('ventas', 'mesas'));
     }
 
-
-
-
-
-
-
-
-
-    /**
-     * Formulario para registrar nueva venta
-     */
     public function create()
     {
 
@@ -145,9 +125,6 @@ class VentaController extends Controller
         return view('admin.ventas.create', compact('pedidos'));
     }
 
-    /**
-     * Guardar nueva venta
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -156,7 +133,6 @@ class VentaController extends Controller
 
         $pedido = Pedido::with('detalles')->findOrFail($request->idPedido);
 
-        // Calcular total desde detallePedidos
         $montoTotal = $pedido->detallePedidos->sum(function ($detalle) {
             return $detalle->subtotal;
         });
@@ -175,20 +151,12 @@ class VentaController extends Controller
             ->with('exito', 'Venta registrada correctamente.');
     }
 
-
-    /**
-     * Mostrar detalle de una venta
-     */
     public function show($idVenta)
     {
         $venta = Venta::with('pedido.detalles.producto')->findOrFail($idVenta);
         return view('admin.ventas.show', compact('venta'));
     }
 
-
-    /**
-     * Formulario para editar venta
-     */
     public function edit($id)
     {
         $venta = Venta::findOrFail($id);
@@ -196,16 +164,12 @@ class VentaController extends Controller
         return view('admin.ventas.edit', compact('venta', 'pedidos'));
     }
 
-
-    /**
-     * Actualizar venta
-     */
     public function update(Request $request, $id)
     {
         $request->validate([
             'montoTotal'  => 'required|numeric|min:0',
-            'metodo_pago' => 'required|string',
-            'fechaPago'   => 'required|date',
+            'metodo_pago' => 'required|in:Efectivo,Tarjeta,QR',
+            'fechaPago'   => 'required|date_format:Y-m-d\TH:i',
         ]);
 
         $venta = Venta::findOrFail($id);
@@ -225,11 +189,6 @@ class VentaController extends Controller
             ->with('exito', 'Venta actualizada correctamente.');
     }
 
-
-
-    /**
-     * Eliminar venta
-     */
     public function destroy($id)
     {
         $venta = Venta::findOrFail($id);

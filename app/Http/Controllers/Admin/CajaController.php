@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Log;
 class CajaController extends Controller
 {
     use Auditable;
+
     public function index()
     {
         $usuario = Auth::user();
@@ -32,7 +33,6 @@ class CajaController extends Controller
             abort(403, 'No tienes permisos para acceder a la caja');
         }
 
-        // --- Pedidos listos sin venta ---
         $pedidos = Pedido::where('estado', 'listo')
             ->doesntHave('venta')
             ->with('detalles.producto')
@@ -54,41 +54,32 @@ class CajaController extends Controller
 
         Log::info('Index Caja - Sesión actual:', session()->all());
 
-        // === Traer caja actual desde BD ===
+
         $cajaActual = \App\Models\CajaActual::where('estado', 'abierta')->first();
 
-        // === Último cierre (opcional) ===
         $ultimoCierre = \App\Models\CierreCaja::latest('fecha_cierre')->first();
 
-        // 🟡 Verificar si falta cerrar días anteriores o si ya es hora de cierre y no se ha cerrado
         $mostrarAlerta = false;
         $horaActual = now()->format('H:i');
 
-        // Si no hay cierre del día o fue de una fecha anterior
         if (!$ultimoCierre || \Carbon\Carbon::parse($ultimoCierre->fecha_cierre)->lt(now()->startOfDay())) {
-            // Mostrar alerta solo si ya pasó la hora de cierre (por ejemplo, 20:00)
             if ($horaActual >= '20:00') {
                 $mostrarAlerta = true;
             }
         }
 
-
-        // --- Fondo inicial ---
         $fondoInicial = $cajaActual?->fondo_inicial ?? 0;
 
         if ($cajaActual) {
             $ventasHoy = Venta::whereDate('fechaPago', now()->toDateString())->get();
 
-            // Total efectivo cobrado (para mostrar en resumen)
             $totalEfectivoCobrado = $ventasHoy->where('metodo_pago', 'Efectivo')->sum('montoTotal');
 
-            // Total efectivo que queda en caja = lo que se cobró
             $totalEfectivoReal = $totalEfectivoCobrado;
 
             $totalTarjeta  = $ventasHoy->where('metodo_pago', 'Tarjeta')->sum('montoTotal');
             $totalQR       = $ventasHoy->where('metodo_pago', 'QR')->sum('montoTotal');
 
-            // Total en caja = fondo inicial + efectivo + tarjeta + QR
             $totalEnCaja = $fondoInicial + $totalEfectivoReal + $totalTarjeta + $totalQR;
         } else {
             $totalEfectivoCobrado = 0;
@@ -105,19 +96,14 @@ class CajaController extends Controller
             'ultimoCierre'         => $ultimoCierre,
             'fondoInicial'         => $fondoInicial,
             'totalEnCaja'          => $totalEnCaja,
-            'totalEfectivoCobrado' => $totalEfectivoCobrado, // resumen
-            'totalEfectivo'        => $totalEfectivoCobrado, // mostrar en Blade como "Efectivo"
+            'totalEfectivoCobrado' => $totalEfectivoCobrado,
+            'totalEfectivo'        => $totalEfectivoCobrado,
             'totalTarjeta'         => $totalTarjeta,
             'totalQR'              => $totalQR,
             'mostrarAlerta'        => $mostrarAlerta,
         ])->with('title', 'Control de caja');
     }
 
-
-
-
-
-    // 🧾 Recibo individual
     public function recibo($idVenta)
     {
         $venta = Venta::with(['pedido.detalles.producto', 'pedido.usuario'])->findOrFail($idVenta);
@@ -128,7 +114,6 @@ class CajaController extends Controller
     {
         $usuario = Auth::user();
 
-        // Validar que no haya una caja abierta por este usuario
         $cajaAbierta = CajaActual::where('estado', 'abierta')->first();
 
         if ($cajaAbierta) {
@@ -155,7 +140,6 @@ class CajaController extends Controller
     }
 
 
-    // 💵 Cobrar pedido
     public function cobrar(Request $request)
     {
         $request->validate([
@@ -170,27 +154,22 @@ class CajaController extends Controller
         $pagoCliente = $request->pago_cliente;
         $cambio = $pagoCliente - $total;
 
-        // Obtener caja actual
         $cajaActual = CajaActual::where('estado', 'abierta')->first();
         $fondoDisponible = $cajaActual?->fondo_inicial ?? 0;
 
-        // Validar que haya fondo suficiente para dar cambio si es efectivo
         if ($request->tipo_pago === 'Efectivo' && $cambio > $fondoDisponible) {
             return redirect()->back()->with('error', "No hay suficiente fondo inicial para dar cambio (fondo disponible: Bs. {$fondoDisponible}).");
         }
 
-        // Ajustar fondo inicial si hay cambio
         if ($request->tipo_pago === 'Efectivo') {
             $cajaActual->fondo_inicial -= $cambio;
             $cajaActual->save();
         }
 
-        // Calcular monto total según tipo de pago
         $montoTotal = $request->tipo_pago === 'Tarjeta'
             ? $total - ($total * 0.018)
             : $total;
 
-        // Efectivo que realmente entra a caja (lo que queda)
         $efectivoReal = $request->tipo_pago === 'Efectivo' ? $pagoCliente - $cambio : 0;
 
         $venta = Venta::create([
@@ -209,8 +188,6 @@ class CajaController extends Controller
             ->with('exito', 'Venta realizada correctamente.');
     }
 
-
-
     public function cerrarCaja()
     {
         $usuario = Auth::user();
@@ -222,7 +199,6 @@ class CajaController extends Controller
                 ->with('error', 'No hay caja abierta.');
         }
 
-
         $ventasHoy = Venta::whereDate('fechaPago', now()->toDateString())->get();
 
         $totalEfectivo = $ventasHoy->where('metodo_pago', 'Efectivo')->sum('efectivo_real');
@@ -232,7 +208,6 @@ class CajaController extends Controller
 
         $totalEnCaja = $caja->fondo_inicial + $totalEfectivo + $totalTarjeta + $totalQR;
 
-        // Guardar cierre
         CierreCaja::create([
             'ciUsuario'      => $usuario->ciUsuario,
             'fondo_inicial'  => $caja->fondo_inicial,
@@ -245,7 +220,6 @@ class CajaController extends Controller
             'fecha_cierre'   => now(),
         ]);
 
-        // Cerrar caja actual
         $caja->update(['estado' => 'cerrada']);
 
         $this->logAction("Se cerró la caja con total de Bs. {$totalEnCaja}", 'Caja', 'Exitoso');
@@ -279,11 +253,6 @@ class CajaController extends Controller
         return redirect()->route('ventas.caja')->with('exito', 'Monto inicial actualizado correctamente.');
     }
 
-
-
-
-
-    // Exportar Excel de la caja en vivo
     public function exportCajaExcel()
     {
         $caja = CajaActual::where('estado', 'abierta')->first();
@@ -313,7 +282,6 @@ class CajaController extends Controller
         );
     }
 
-    // Exportar PDF de la caja en vivo
     public function exportCajaPDF()
     {
         $caja = CajaActual::where('estado', 'abierta')->first();

@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Reporte extends Model
 {
-   protected $table = 'Reporte';
+    protected $table = 'Reporte';
     protected $primaryKey = 'idReporte';
-public $timestamps = false;
+    public $timestamps = false;
     protected $fillable = [
         'tipo',
         'periodo',
@@ -17,9 +17,7 @@ public $timestamps = false;
         'archivo'
     ];
 
-
     protected $casts = [
-    'fechaGeneracion' => 'datetime',
-];
-
+        'fechaGeneracion' => 'datetime',
+    ];
 }

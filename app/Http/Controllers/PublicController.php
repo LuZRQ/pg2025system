@@ -13,17 +13,14 @@ class PublicController extends Controller
 
     public function index()
     {
-        // Solo productos activos para la página pública
         $productos = Producto::activos()->with('categoria')->get();
         $categorias = CategoriaProducto::all();
 
-        // Opiniones recientes (últimas 5)
         $opiniones = Calificacion::with('usuario')
             ->orderBy('fecha', 'desc')
             ->take(5)
             ->get();
 
-        // Resumen de calificaciones
         $total = Calificacion::count();
         $ratings = [];
         if ($total > 0) {
@@ -46,8 +43,8 @@ class PublicController extends Controller
                 ],
             ];
         }
-        // Revisar si el usuario ya opinó
-        $usuario = Auth::user(); // null si es visitante
+
+        $usuario = Auth::user();
         $yaOpino = null;
         if ($usuario) {
             $yaOpino = Calificacion::where('ciUsuario', $usuario->ciUsuario)->first();

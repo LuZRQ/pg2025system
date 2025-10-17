@@ -63,15 +63,13 @@ class CierreCajaExport implements FromArray, WithHeadings, WithStyles
 
     public function styles(Worksheet $sheet)
     {
-        // Encabezados
+       
         $sheet->getStyle('A1:E1')->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle('A1:E1')->getAlignment()->setHorizontal('center');
 
-        // Última fila (total mes)
-        $lastRow = count($this->semanas) + 2; // +1 encabezados, +1 total
+        $lastRow = count($this->semanas) + 2; 
         $sheet->getStyle("A{$lastRow}:E{$lastRow}")->getFont()->setBold(true);
 
-        // AutoSize columnas
         foreach (range('A', 'E') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }

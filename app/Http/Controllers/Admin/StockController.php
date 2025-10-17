@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CategoriaProducto;
 use Illuminate\Http\Request;
 use App\Models\Producto;
 use Carbon\Carbon;
@@ -14,39 +15,36 @@ class StockController extends Controller
 
     public function index(Request $request)
     {
-        // Verificamos si se debe reiniciar el stock diario automáticamente
-       $this->verificarResetDiario();
+        $this->verificarResetDiario();
 
-        $query = Producto::with('categoria');
+        $categorias = CategoriaProducto::with(['productos' => function ($query) {
+            $query->activos();
+        }])->get();
 
-        // 🔎 Filtro por categoría
-        if ($request->filled('categoria')) {
-            $query->whereHas('categoria', function ($q) use ($request) {
-                $q->where('nombreCategoria', $request->categoria);
-            });
-        }
+        $productos = collect();
 
-        $productos = $query->get();
+        foreach ($categorias as $categoria) {
+            foreach ($categoria->productos as $producto) {
+                if ($request->filled('estado') && $producto->getEstadoStock() !== $request->estado) {
+                    continue;
+                }
 
-        // 🔎 Filtro por estado de stock
-        if ($request->filled('estado')) {
-            $estado = $request->estado;
-            $productos = $productos->filter(function ($producto) use ($estado) {
-                return $producto->getEstadoStock() === $estado;
-            });
-        }
+                if ($request->filled('buscar') && !str_contains(strtolower($producto->nombre), strtolower($request->buscar))) {
+                    continue;
+                }
 
-        // 🔎 Filtro por búsqueda
-        if ($request->filled('buscar')) {
-            $buscar = strtolower($request->buscar);
-            $productos = $productos->filter(function ($producto) use ($buscar) {
-                return str_contains(strtolower($producto->nombre), $buscar);
-            });
+                if ($request->filled('categoria') && $categoria->nombreCategoria !== $request->categoria) {
+                    continue;
+                }
+
+                $productos->push($producto);
+            }
         }
 
         return view('admin.stock.index', compact('productos'))
             ->with('title', 'Control de stock');
     }
+
 
     public function update(Request $request, Producto $producto)
     {
@@ -116,20 +114,19 @@ class StockController extends Controller
         return redirect()->route('stock.index')->with('exito', 'Stock actualizado con salida.');
     }
 
-  private function verificarResetDiario()
-{
-    $hoy = now()->toDateString();
+    private function verificarResetDiario()
+    {
+        $hoy = now()->toDateString();
 
-    $productos = Producto::all();
-    foreach ($productos as $producto) {
-        if ($producto->fecha_actualizacion_stock !== $hoy) {
-            $producto->update([
-                'vendidos_dia' => 0,
-                'stock' => $producto->stock_inicial,
-                'fecha_actualizacion_stock' => $hoy,
-            ]);
+        $productos = Producto::all();
+        foreach ($productos as $producto) {
+            if ($producto->fecha_actualizacion_stock !== $hoy) {
+                $producto->update([
+                    'vendidos_dia' => 0,
+                    'stock' => $producto->stock_inicial,
+                    'fecha_actualizacion_stock' => $hoy,
+                ]);
+            }
         }
     }
-}
-
 }

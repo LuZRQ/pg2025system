@@ -3,12 +3,8 @@
 
 @section('content')
     <div class="p-4 sm:p-6 bg-gradient-to-br from-amber-100 via-orange-100 to-amber-200 min-h-screen">
-
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-            {{-- Productos --}}
             <div class="lg:col-span-8">
-                {{-- Categorías --}}
                 <div class="flex flex-wrap gap-2 mb-6">
                     <button class="btn-categoria px-4 py-2 rounded-lg bg-amber-700 text-white shadow hover:bg-amber-800"
                         data-categoria="all">Todo</button>
@@ -20,7 +16,6 @@
                     @endforeach
                 </div>
 
-                {{-- Cards de productos --}}
                 <div id="catalogo" class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                     @foreach ($productos as $producto)
                         <div class="producto-card bg-white rounded-2xl shadow-lg overflow-hidden border border-amber-200"
@@ -46,12 +41,11 @@
                 </div>
             </div>
 
-            {{-- Pedido actual --}}
             <div class="lg:col-span-4">
                 <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-amber-200">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                         <h2 class="font-bold text-lg text-amber-900">Pedido Actual</h2>
-                        {{-- Mesas --}}
+
                         <select id="select-mesa" class="border rounded-lg px-2 py-1 text-sm text-amber-800">
                             @for ($i = 1; $i <= 10; $i++)
                                 <option>Mesa: {{ str_pad($i, 3, '0', STR_PAD_LEFT) }}</option>
@@ -59,23 +53,19 @@
                         </select>
                     </div>
 
-                    {{-- Items --}}
                     <div id="pedido-items"></div>
 
-                    {{-- Total --}}
                     <div class="flex justify-between border-t pt-2 mb-4">
                         <span class="font-semibold text-amber-900">Total</span>
                         <span id="pedido-total" class="font-bold text-amber-800">Bs. 0.00</span>
                     </div>
 
-                    {{-- Comentarios --}}
                     <div class="mb-4">
                         <label class="block text-sm text-amber-700">Comentarios</label>
                         <textarea id="comentario-text" class="w-full border rounded-lg p-2 mt-1 text-sm"
                             placeholder="Ej: sin picante, poca sal..."></textarea>
                     </div>
 
-                    {{-- Botones --}}
                     <div class="space-y-3">
                         <button type="button" id="btn-enviar-pedido"
                             class="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
@@ -87,7 +77,6 @@
                         </button>
                     </div>
 
-                    {{-- Formulario oculto --}}
                     <form id="form-enviar" action="{{ route('ventas.enviarACocina') }}" method="POST" class="hidden">
                         @csrf
                         <input type="hidden" name="mesa" id="mesa">
@@ -96,9 +85,8 @@
                     </form>
                 </div>
 
-                {{-- Extras --}}
                 <div class="mt-6 space-y-3">
-                    {{-- Historial --}}
+
                     <a href="{{ route('ventas.historial') }}"
                         class="block w-full text-center bg-amber-500 text-white py-2 rounded-lg hover:bg-amber-600 shadow">
                         Ver historial
@@ -120,7 +108,6 @@
 
         </div>
 
-        {{-- Pedidos listos en cocina --}}
         <div class="mt-10 bg-white shadow rounded-2xl p-4 sm:p-6 border border-amber-200">
             <h2 class="font-bold text-lg text-amber-900 mb-4">📋 Pedidos Listos en Cocina</h2>
             <div id="pedidos-listos" class="grid grid-cols-1 md:grid-cols-2 gap-4">

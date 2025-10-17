@@ -17,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
 {
-     public function create()
+    public function create()
     {
         return view('auth.login');
     }
@@ -25,21 +25,17 @@ class AuthenticatedSessionController extends Controller
     public function store(Request $request)
     {
         $key = Str::lower($request->input('ci')) . '|' . $request->ip();
-
-        // Verificar si está bloqueado
         if (RateLimiter::tooManyAttempts($key, 3)) {
             throw ValidationException::withMessages([
                 'ci' => "Demasiados intentos fallidos 🙂",
             ]);
         }
 
-        // Sanitizar inputs
         $request->merge([
             'ci' => strip_tags($request->input('ci')),
             'contrasena' => strip_tags($request->input('contrasena')),
         ]);
 
-        // Validación
         $request->validate([
             'ci' => 'required|string|max:8|exists:Usuario,ciUsuario',
             'contrasena' => 'required|string|max:20',
@@ -50,14 +46,11 @@ class AuthenticatedSessionController extends Controller
             'g-recaptcha-response.captcha' => 'Error en la verificación CAPTCHA',
         ]);
 
-        // Buscar usuario
         $usuario = Usuario::where('ciUsuario', $request->ci)->first();
 
-        // Verificar credenciales
         if (!$usuario || !Hash::check($request->contrasena, $usuario->contrasena)) {
-            RateLimiter::hit($key, 3600); // Bloqueo 1 hora
+            RateLimiter::hit($key, 3600);
 
-            // Registrar intento fallido en Auditoria
             Auditoria::create([
                 'ciUsuario' => $request->ci,
                 'accion' => 'Intento de login fallido',
@@ -69,16 +62,16 @@ class AuthenticatedSessionController extends Controller
             return back()->withErrors(['ci' => 'Credenciales inválidas']);
         }
 
-        // Verificar estado
         if (!$usuario->estado) {
             return back()->withErrors(['ci' => 'Tu cuenta está inactiva, no puedes acceder.']);
         }
 
-        // Login correcto
         RateLimiter::clear($key);
         Auth::login($usuario);
 
-        // Registrar login exitoso en Auditoria
+        $usuario->ultimo_acceso = now();
+        $usuario->save();
+
         Auditoria::create([
             'ciUsuario' => $usuario->ciUsuario,
             'accion' => 'Login exitoso',
@@ -87,7 +80,7 @@ class AuthenticatedSessionController extends Controller
             'modulo' => 'Login',
         ]);
 
-        // Redirección según rol
+
         switch ($usuario->rol->nombre) {
             case 'Dueno':
                 return redirect()->route('usuarios.index');
@@ -112,7 +105,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Redirigir a la página pública
+
         return redirect()->route('home');
     }
 }

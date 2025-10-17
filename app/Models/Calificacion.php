@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Calificacion extends Model
 {
-   protected $table = 'Calificacion';
+    protected $table = 'Calificacion';
     protected $primaryKey = 'idCalificacion';
-public $timestamps = false;
+    public $timestamps = false;
     protected $fillable = [
         'ciUsuario',
         'calificacion',

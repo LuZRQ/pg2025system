@@ -63,7 +63,7 @@ Route::middleware(['auth', 'verificarRol:Gestión de Ventas'])->group(function (
         // Enviar pedidos a cocina
         Route::post('/enviarACocina', [VentaController::class, 'enviarACocina'])->name('enviarACocina');
 
-        // 💰 Caja (parte de ventas, pero usa CajaController)
+        //Caja (parte de ventas, pero usa CajaController)
         Route::get('/caja', [CajaController::class, 'index'])->name('caja');
         Route::post('/abrirCaja', [CajaController::class, 'abrirCaja'])->name('abrirCaja');
 
@@ -128,21 +128,20 @@ Route::middleware(['auth', 'verificarRol:Gestión de Reportes'])->group(function
     // Stock general
     Route::get('/reportes/stock/pdf', [ReporteController::class, 'stockPDF'])->name('reportes.stockPDF');
     Route::get('/reportes/stock/excel', [ReporteController::class, 'stockExcel'])->name('reportes.stockExcel');
-   // ✅ Ahora por año y mes
-Route::get('/reportes/cierre-caja/pdf/{anio}/{mes}', [ReporteController::class, 'cierreCajaPDF'])
-    ->name('reportes.cierreCajaPDF');
 
-Route::get('/reportes/cierre-caja/excel/{anio}/{mes}', [ReporteController::class, 'cierreCajaExcel'])
-    ->name('reportes.cierreCajaExcel');
+    // Ganancia total del mes (solo Excel)
+    Route::get('/reportes/ganancia-mes/excel', [ReporteController::class, 'gananciaMesExcel'])
+        ->name('reportes.gananciaMesExcel');
+
 
     // -------- REPORTES AVANZADOS --------
     // Productos más vendidos del mes
     Route::get('/reportes/productos-mes/pdf', [ReporteController::class, 'productosMesPDF'])->name('reportes.productosMesPDF');
     Route::get('/reportes/productos-mes/excel', [ReporteController::class, 'productosMesExcel'])->name('reportes.productosMesExcel');
 
-    // Ganancia total del mes
-    Route::get('/reportes/ganancia-mes/pdf', [ReporteController::class, 'gananciaMesPDF'])->name('reportes.gananciaMesPDF');
-    Route::get('/reportes/ganancia-mes/excel', [ReporteController::class, 'gananciaMesExcel'])->name('reportes.gananciaMesExcel');
+    // cierre de caja por mes
+    Route::get('/reportes/cierre-caja/pdf/{anio}/{mes}', [ReporteController::class, 'cierreCajaPDF'])->name('reportes.cierreCajaPDF');
+    Route::get('/reportes/cierre-caja/pdf/{anio}/{mes}', [ReporteController::class, 'cierreCajaExcel'])->name('reportes.cierreCajaExcel');
 
     // Insumos / Productos con alta rotación
     Route::get('/reportes/alta-rotacion/pdf', [ReporteController::class, 'altaRotacionPDF'])->name('reportes.altaRotacionPDF');

@@ -20,7 +20,6 @@ class AltaRotacionExport implements FromCollection, WithHeadings
                 foreach ($producto->detallePedidos as $detalle) {
                     $venta = $detalle->pedido->venta ?? null;
 
-                    // ✅ Solo contar ventas pagadas en el mes actual (rango completo)
                     if ($venta && $venta->fechaPago->between(now()->startOfMonth(), now()->endOfMonth())) {
                         $cantidadVendida += $detalle->cantidad;
                     }
@@ -33,8 +32,8 @@ class AltaRotacionExport implements FromCollection, WithHeadings
                     'Cantidad Vendida' => $cantidadVendida,
                 ];
             })
-            ->sortByDesc('Cantidad Vendida') // ordenar de mayor a menor
-            ->take(10); // ✅ solo los 10 más vendidos
+            ->sortByDesc('Cantidad Vendida')
+            ->take(10);
 
         return collect($productos);
     }

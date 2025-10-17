@@ -20,7 +20,6 @@ class BajaVentaExport implements FromCollection, WithHeadings
                 foreach ($producto->detallePedidos as $detalle) {
                     $venta = $detalle->pedido->venta ?? null;
 
-                    // Solo contar ventas pagadas en el mes actual
                     if ($venta && Carbon::parse($venta->fechaPago)->between(now()->startOfMonth(), now()->endOfMonth())) {
                         $cantidadVendida += $detalle->cantidad;
                     }

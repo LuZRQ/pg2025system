@@ -33,7 +33,6 @@ class VentasExport implements FromCollection, WithHeadings, WithStyles
             ];
         });
 
-        // Agregar fila de totales al final
         $rows->push([
             'ID Venta'      => '',
             'ID Pedido'     => '',

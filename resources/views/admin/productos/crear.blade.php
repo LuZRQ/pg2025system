@@ -11,7 +11,6 @@
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                <!-- Nombre -->
                 <div>
                     <label class="block mb-2 font-medium text-stone-700">Nombre</label>
                     <input type="text" name="nombre" value="{{ old('nombre') }}"
@@ -21,7 +20,6 @@
                     @enderror
                 </div>
 
-                <!-- Precio -->
                 <div>
                     <label class="block mb-2 font-medium text-stone-700">Precio</label>
                     <input type="number" step="0.01" name="precio" value="{{ old('precio') }}"
@@ -31,7 +29,6 @@
                     @enderror
                 </div>
 
-                <!-- Stock -->
                 <div>
                     <label class="block mb-2 font-medium text-stone-700">Stock Inicial</label>
                     <input type="number" name="stock" value="{{ old('stock') }}" min="0"
@@ -41,7 +38,6 @@
                     @enderror
                 </div>
 
-                <!-- Categoría -->
                 <div>
                     <label class="block mb-2 font-medium text-stone-700">Categoría</label>
                     <select name="categoriaId"
@@ -58,7 +54,7 @@
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-                <!-- Estado -->
+
                 <div>
                     <label class="block mb-2 font-medium text-stone-700">Estado</label>
                     <select name="estado"
@@ -70,7 +66,7 @@
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-                <!-- Imagen -->
+
                 <div>
                     <label class="block mb-2 font-medium text-stone-700">Imagen</label>
                     <input type="file" name="imagen"
@@ -80,7 +76,6 @@
                     @enderror
                 </div>
 
-                <!-- Descripción -->
                 <div class="md:col-span-2">
                     <label class="block mb-2 font-medium text-stone-700">Descripción</label>
                     <textarea name="descripcion" rows="3"
@@ -89,11 +84,7 @@
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-
-
             </div>
-
-
             <div class="mt-6 flex gap-4">
                 <button type="submit"
                     class="px-6 py-2 bg-amber-200 text-stone-800 font-medium rounded-lg hover:bg-amber-300 shadow">

@@ -17,8 +17,7 @@ class AuditoriaController extends Controller
 {
     public function __construct()
     {
-        // Limitar a 5 intentos por minuto el cambio de contraseña
-       // $this->middleware('throttle:5,1')->only('cambiarContrasena');
+        // $this->middleware('throttle:5,1')->only('cambiarContrasena');
     }
 
     // ====== Mostrar tabla de logs ======
@@ -41,21 +40,24 @@ class AuditoriaController extends Controller
                 'required',
                 'string',
                 'min:8',
+                'max:20',
                 'regex:/[A-Z]/',
                 'regex:/[0-9]/',
                 'regex:/[@$!%*?&]/',
                 'confirmed',
             ],
+
         ], [
             'nueva_contrasena.required' => 'La nueva contraseña es obligatoria',
             'nueva_contrasena.min' => 'La nueva contraseña debe tener al menos 8 caracteres',
+            'nueva_contrasena.max' => 'La nueva contraseña no puede superar 20 caracteres',
             'nueva_contrasena.regex' => 'La nueva contraseña debe contener al menos una mayúscula, un número y un símbolo',
             'nueva_contrasena.confirmed' => 'La confirmación de la contraseña no coincide',
         ]);
 
         $usuario = Auth::user();
 
-        // 🚨 Verificar contraseña actual
+        //  Verificar contraseña actual
         if (!Hash::check($request->contrasena_actual, $usuario->contrasena)) {
             activity('sistema')
                 ->causedBy($usuario)
@@ -70,11 +72,9 @@ class AuditoriaController extends Controller
             return back()->withErrors(['contrasena_actual' => 'La contraseña actual no es correcta']);
         }
         /** @var \App\Models\Usuario $usuario */
-        // ✅ Guardar nueva contraseña
         $usuario->contrasena = Hash::make($request->nueva_contrasena);
         $usuario->save();
 
-        // 🔒 Registrar auditoría
         activity('sistema')
             ->causedBy($usuario)
             ->withProperties([
@@ -85,7 +85,7 @@ class AuditoriaController extends Controller
             ->event('password-changed')
             ->log("El usuario {$usuario->nombre} {$usuario->apellido} cambió su contraseña correctamente");
 
-        return back()->with('exito', 'Contraseña actualizada correctamente ✅');
+        return back()->with('exito', 'Contraseña actualizada correctamente');
     }
 
     public function exportPDF()

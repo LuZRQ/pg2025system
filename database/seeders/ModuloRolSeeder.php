@@ -29,7 +29,7 @@ class ModuloRolSeeder extends Seeder
             ['nombre' => 'Gestión de Reportes', 'roles' => [$dueno->idRol]],
             ['nombre' => 'Gestión de Auditoría', 'roles' => [$dueno->idRol]],
             ['nombre' => 'Usuarios y Roles', 'roles' => [$dueno->idRol]],
-            // 'Página pública' no requiere roles
+            
         ];
 
         foreach ($modulos as $modData) {
@@ -38,7 +38,7 @@ class ModuloRolSeeder extends Seeder
                 ['descripcion' => $modData['nombre']]
             );
 
-            // Asociar roles
+            // Asocia roles
             $modulo->roles()->sync($modData['roles']);
         }
 
