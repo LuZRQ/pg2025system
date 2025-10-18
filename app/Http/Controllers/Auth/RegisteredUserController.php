@@ -45,7 +45,7 @@ class RegisteredUserController extends Controller
             'nombre' => 'required|string|max:50',
             'apellido' => 'required|string|max:60',
             'correo' => 'required|email|max:100|unique:Usuario,correo',
-            'telefono' => 'nullable|digits_between:8',
+            'telefono' => 'nullable|digits:8',
             'usuario' => 'required|string|max:30|unique:Usuario,usuario',
             'contrasena' => 'required|string|confirmed|min:6|max:20',
         ]);
@@ -70,7 +70,7 @@ class RegisteredUserController extends Controller
 
 
         Auth::login($usuario);
-
+        $usuario->load('rol');
         return redirect()->route('home')
             ->with('exito', '¡Bienvenido a Garabato Café! Tu cuenta se creó exitosamente.');
     }

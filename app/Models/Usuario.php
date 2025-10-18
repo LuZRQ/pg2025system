@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Rol;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * @property string $ciUsuario
@@ -19,7 +20,7 @@ use App\Models\Rol;
 
 class Usuario extends Authenticatable
 {
-    use Notifiable;
+    use HasFactory, Notifiable; 
     // ...
     public $timestamps = false;
     protected $table = 'Usuario';

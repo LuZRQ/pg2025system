@@ -19,11 +19,16 @@ Route::post('/salir', [AuthenticatedSessionController::class, 'destroy'])->name(
 Route::get('/registro', [RegisteredUserController::class, 'create'])->name('register');
 Route::post('/registro', [RegisteredUserController::class, 'store']);
 
-Route::middleware(['auth', 'verificarRol:Cliente'])->group(function () {
-    Route::post('/opiniones', [OpinionController::class, 'store'])->name('opiniones.store');
-Route::put('/opiniones', [OpinionController::class, 'update'])->name('opiniones.update')->middleware('auth', 'verificarRol:Cliente');
+// Solo requiere que el usuario esté autenticado y sea Cliente
+Route::middleware(['auth'])->group(function () {
+    Route::post('/opiniones', [OpinionController::class, 'store'])
+        ->name('opiniones.store')
+        ->middleware('esCliente');
 
-
+    Route::put('/opiniones', [OpinionController::class, 'update'])
+        ->name('opiniones.update')
+        ->middleware('esCliente');
 });
+
 
 require __DIR__.'/admin.php';

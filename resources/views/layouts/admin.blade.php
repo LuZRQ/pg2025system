@@ -44,12 +44,14 @@
             @foreach ($modulos as $modulo)
                 @php
                     $habilitado = in_array($modulo->idModulo, $rolModulos);
+                    $rutaValida = $modulo->ruta && Route::has($modulo->ruta);
                 @endphp
-                <a href="{{ $habilitado ? route($modulo->ruta) : '#' }}"
-                    class="block py-2 rounded {{ $habilitado ? 'hover:text-amber-300' : 'text-stone-500 cursor-not-allowed opacity-60' }}">
+                <a href="{{ $habilitado && $rutaValida ? route($modulo->ruta) : '#' }}"
+                    class="block py-2 rounded {{ $habilitado && $rutaValida ? 'hover:text-amber-300' : 'text-stone-500 cursor-not-allowed opacity-60' }}">
                     {{ $modulo->nombre }}
                 </a>
             @endforeach
+
         </nav>
 
         <div class="absolute bottom-0 w-full p-4 border-t border-stone-700">
