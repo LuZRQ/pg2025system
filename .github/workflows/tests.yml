@@ -56,9 +56,9 @@ jobs:
     - name: Limpiar configuración y preparar entorno
       run: |
         php artisan config:clear
-        php artisan cache:clear
         php artisan key:generate
-        php artisan migrate --env=testing
+        php artisan migrate
+        php artisan cache:clear
 
     - name: Ejecutar pruebas con PHPUnit
       run: ./vendor/bin/phpunit
