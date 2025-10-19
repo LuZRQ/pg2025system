@@ -35,8 +35,8 @@ jobs:
         extensions: mbstring, bcmath, pdo_mysql
         coverage: none
 
-    - name: Instalar dependencias
-      run: composer install --prefer-dist --no-progress --no-suggest
+    - name: Instalar dependencias con optimización
+      run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
     - name: Copiar archivo de entorno
       run: cp .env.example .env
@@ -53,10 +53,10 @@ jobs:
     - name: Confirmar entorno configurado
       run: cat .env
 
-    - name: Preparar entorno sin usar config cache
+    - name: Preparar entorno Laravel
       run: |
-            php artisan key:generate
-            php artisan migrate
+        php artisan key:generate
+        php artisan migrate
 
     - name: Ejecutar pruebas con PHPUnit
-      run: ./vendor/bin/phpunit
+      run: ./vendor/bin/phpunit --verbose
