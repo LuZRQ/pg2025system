@@ -41,6 +41,15 @@ jobs:
     - name: Copiar archivo de entorno
       run: cp .env.example .env
 
+    - name: Configurar entorno MySQL
+      run: |
+        sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=mysql/' .env
+        sed -i 's/DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+        sed -i 's/DB_PORT=.*/DB_PORT=3306/' .env
+        sed -i 's/DB_DATABASE=.*/DB_DATABASE=testing/' .env
+        sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
+        sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+
     - name: Configurar entorno de pruebas
       run: |
         php artisan config:clear
