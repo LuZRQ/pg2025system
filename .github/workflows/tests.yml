@@ -41,11 +41,12 @@ jobs:
     - name: Copiar archivo de entorno
       run: cp .env.example .env
 
-    - name: Generar clave de aplicación
-      run: php artisan key:generate
+    - name: Configurar entorno de pruebas
+      run: |
+        php artisan config:clear
+        php artisan cache:clear
+        php artisan key:generate
+        php artisan migrate --env=testing
 
-    - name: Ejecutar migraciones
-      run: php artisan migrate --env=testing
-
-    - name: Ejecutar pruebas
-      run: vendor/bin/phpunit
+    - name: Ejecutar pruebas con PHPUnit
+      run: ./vendor/bin/phpunit
