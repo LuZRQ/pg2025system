@@ -50,7 +50,10 @@ jobs:
         sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
         sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
 
-    - name: Configurar entorno de pruebas
+    - name: Confirmar entorno configurado
+      run: cat .env
+
+    - name: Limpiar configuración y preparar entorno
       run: |
         php artisan config:clear
         php artisan cache:clear
