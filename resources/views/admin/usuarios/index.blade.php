@@ -23,7 +23,7 @@
 
     <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
         <div class="flex justify-between items-center px-4 py-3 border-b">
-            <h3 class="text-lg font-semibold">Usuarios del Sistema</h3>
+            <h3 class="text-lg font-semibold">Usuarios registrados en el Sistema</h3>
             <a href="{{ route('usuarios.crear') }}"
                 class="px-4 py-2 bg-stone-600 text-white rounded-lg hover:bg-stone-500">+ Nuevo Usuario</a>
         </div>

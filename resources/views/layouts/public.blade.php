@@ -108,13 +108,16 @@
             </div>
 
             <div class="d-flex justify-content-center gap-4 fs-5">
-                <a class="text-light opacity-75 hover-opacity" href="#" aria-label="Instagram">
+                <a class="text-light opacity-75 hover-opacity" href="https://www.instagram.com/garabato_cafe_/"
+                    aria-label="Instagram">
                     <i class="bi bi-instagram"></i>
                 </a>
-                <a class="text-light opacity-75 hover-opacity" href="#" aria-label="Facebook">
+                <a class="text-light opacity-75 hover-opacity"
+                    href="https://www.facebook.com/p/Garabato-caf%C3%A9-100083580663445/" aria-label="Facebook">
                     <i class="bi bi-facebook"></i>
                 </a>
-                <a class="text-light opacity-75 hover-opacity" href="#" aria-label="TikTok">
+                <a class="text-light opacity-75 hover-opacity" href="https://www.tiktok.com/@garabato_cafe"
+                    aria-label="TikTok">
                     <i class="bi bi-tiktok"></i>
                 </a>
             </div>
