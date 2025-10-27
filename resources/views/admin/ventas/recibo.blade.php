@@ -58,7 +58,12 @@
                 <div class="space-y-1 text-[10px]">
                     <div>Fecha: {{ $venta->fechaPago?->format('d M Y') ?? '---' }}</div>
                     <div>Hora: {{ $venta->fechaPago?->format('H:i:s') ?? '---' }}</div>
-                    <div>Orden #: {{ str_pad($venta->idVenta ?? 0, 3, '0', STR_PAD_LEFT) }}</div>
+                    <div class="font-bold text-[11px] text-gray-800">
+                        Pedido N° {{ $venta->pedido->numero_diario ?? $venta->pedido->idPedido }}
+                    </div>
+                    <div>Orden interna: #{{ str_pad($venta->idVenta ?? 0, 3, '0', STR_PAD_LEFT) }}</div>
+
+
                     <div>Mesa: {{ $venta->pedido->mesa ?? '---' }}</div>
                     <div>Atendido por: {{ $venta->pedido->usuario->nombre ?? '---' }}</div>
                 </div>

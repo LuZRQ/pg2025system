@@ -105,7 +105,7 @@
 
         @yield('content')
     </main>
-
+@stack('scripts')
     @vite('resources/js/app.js')
     <script src="{{ asset('js/crudDelete.js') }}"></script>
     <script>

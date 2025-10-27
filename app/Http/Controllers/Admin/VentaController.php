@@ -44,49 +44,85 @@ class VentaController extends Controller
             ->with('title', 'Gestión de Ventas');
     }
 
-    public function enviarACocina(Request $request)
-    {
-        $request->validate([
-            'mesa' => 'required',
-            'productos' => 'required',
-        ]);
+public function enviarACocina(Request $request)
+{
+    // ✅ 1. Validar datos básicos
+    $request->validate([
+        'mesa' => 'required',
+        'productos' => 'required',
+    ]);
 
-        $productos = json_decode($request->productos, true);
+    $productos = json_decode($request->productos, true);
+    $total = collect($productos)->sum(fn($p) => $p['cantidad'] * $p['precio']);
 
-        $total = collect($productos)->sum(fn($p) => $p['cantidad'] * $p['precio']);
-
-        $usuario = Auth::user();
-
-        if (!$usuario) {
-            return redirect()->back()->with('error', 'Debes iniciar sesión para registrar pedidos.');
-        }
-
-        $pedido = Pedido::create([
-            'ciUsuario'   => $usuario->ciUsuario,
-            'estado'      => 'pendiente',
-            'comentarios' => $request->comentarios ?? null,
-            'fechaCreacion' => now(),
-            'total'       => $total,
-            'mesa' => $request->mesa,
-
-        ]);
-
-        foreach ($productos as $producto) {
-            $pedido->detalles()->create([
-                'idProducto' => $producto['idProducto'],
-                'cantidad'   => $producto['cantidad'],
-                'subtotal'   => $producto['cantidad'] * $producto['precio'],
-            ]);
-        }
-        $this->logAction(
-            "Se creó el pedido #{$pedido->idPedido} para la mesa {$pedido->mesa} por {$usuario->usuario}",
-            'Pedidos',
-            'Exitoso'
-        );
-
-        return redirect()->route('ventas.index')
-            ->with('exito', 'Pedido enviado a Cocina ');
+    $usuario = Auth::user();
+    if (!$usuario) {
+        return redirect()->back()->with('error', 'Debes iniciar sesión para registrar pedidos.');
     }
+
+    // ✅ 2. Calcular número correlativo diario
+    $numeroPedido = Pedido::whereDate('fechaCreacion', now()->toDateString())->count() + 1;
+
+    // ✅ 3. Crear el pedido
+    $pedido = Pedido::create([
+        'ciUsuario'     => $usuario->ciUsuario,
+        'estado'        => 'pendiente',
+        'comentarios'   => $request->comentarios ?? null,
+        'fechaCreacion' => now(),
+        'total'         => $total,
+        'mesa'          => $request->mesa,
+        'numero_diario' => $numeroPedido,
+    ]);
+
+    // ✅ 4. Guardar los detalles del pedido
+    foreach ($productos as $producto) {
+        $pedido->detalles()->create([
+            'idProducto' => $producto['idProducto'],
+            'cantidad'   => $producto['cantidad'],
+            'subtotal'   => $producto['cantidad'] * $producto['precio'],
+        ]);
+    }
+
+    // ✅ 5. Registrar acción en auditoría
+    $this->logAction(
+        "Se creó el pedido #{$pedido->idPedido} (N° diario {$pedido->numero_diario}) para la mesa {$pedido->mesa} por {$usuario->usuario}",
+        'Pedidos',
+        'Exitoso'
+    );
+
+    // ✅ 6. Preparar respuesta para impresión (según origen del request)
+    if ($request->expectsJson() || $request->ajax() || $request->isJson()) {
+        // Guardar el ID del último pedido (por si se quiere reimprimir)
+        session(['ultimoPedidoId' => $pedido->idPedido]);
+
+        // 🟢 Devuelve JSON con URL directa al recibo, listo para abrir
+        return response()->json([
+            'idPedido' => $pedido->idPedido,
+          'urlRecibo' => route('ventas.pedido.recibo', ['idPedido' => $pedido->idPedido])
+
+        ]);
+    }
+
+    // ✅ 7. Si no es AJAX, redirigir normalmente
+    return redirect()
+        ->route('ventas.pedido.recibo', ['idPedido' => $pedido->idPedido])
+        ->with('exito', "Pedido #{$pedido->numero_diario} enviado a cocina correctamente.");
+}
+
+/**
+ * Mostrar el recibo del pedido en formato imprimible.
+ */
+public function reciboPedido($idPedido)
+{
+    $pedido = Pedido::with('detalles.producto', 'usuario')->findOrFail($idPedido);
+
+    // Puedes enviar también hora actual o logo si quieres mostrar en el ticket
+    $fechaActual = now();
+
+    return view('admin.ventas.reciboPedido', compact('pedido', 'fechaActual'));
+}
+
+
 
     public function historial(Request $request)
     {

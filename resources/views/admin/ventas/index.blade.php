@@ -71,18 +71,23 @@
                             class="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
                             Enviar a Cocina
                         </button>
-                        <button type="button" id="btn-cancelar-pedido"
-                            class="w-full flex items-center justify-center gap-2 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">
-                            Cancelar Pedido
-                        </button>
-                    </div>
 
-                    <form id="form-enviar" action="{{ route('ventas.enviarACocina') }}" method="POST" class="hidden">
-                        @csrf
-                        <input type="hidden" name="mesa" id="mesa">
-                        <input type="hidden" name="comentarios" id="comentarios-hidden">
-                        <input type="hidden" name="productos" id="productos">
-                    </form>
+
+
+
+<button type="button" id="btn-cancelar-pedido"
+    class="w-full flex items-center justify-center gap-2 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">
+    Cancelar Pedido
+</button>
+</div>
+
+<form id="form-enviar" action="{{ route('ventas.enviarACocina') }}" method="POST" class="hidden">
+    @csrf
+    <input type="hidden" name="mesa" id="mesa">
+    <input type="hidden" name="comentarios" id="comentarios-hidden">
+    <input type="hidden" name="productos" id="productos">
+</form>
+
                 </div>
 
                 <div class="mt-6 space-y-3">
@@ -114,16 +119,19 @@
                 @forelse($pedidos as $pedido)
                     <div class="border rounded-lg p-4 shadow-sm">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-semibold text-amber-800">Mesa: {{ $pedido->mesa }}</span>
+                            <span class="font-semibold text-amber-800">
+                                Pedido N° {{ $pedido->numero_diario ?? $pedido->idPedido }}
+                            </span>
                             <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Listo</span>
                         </div>
+                        <span class="text-sm text-amber-600 block mb-2">Mesa {{ $pedido->mesa }}</span>
                         <ul class="text-sm text-amber-700 mb-3">
                             @foreach ($pedido->detalles as $detalle)
                                 <li>- {{ $detalle->cantidad }} x {{ $detalle->producto->nombre }}</li>
                             @endforeach
                         </ul>
-
                     </div>
+
                 @empty
                     <p class="text-gray-500">No hay pedidos listos todavía.</p>
                 @endforelse
@@ -131,4 +139,57 @@
         </div>
 
     </div>
+
+{{-- Script de envío AJAX solo para enviar a cocina --}}
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const btnEnviar = document.getElementById('btn-enviar-pedido');
+    const formEnviar = document.getElementById('form-enviar');
+
+    const obtenerProductosDelPedido = () => window.itemsDelPedido || [];
+
+    btnEnviar.addEventListener('click', async () => {
+        const productos = obtenerProductosDelPedido();
+        if (!productos.length) return alert('⚠️ Debes agregar al menos un producto al pedido.');
+
+        // Asignar datos al formulario oculto
+        document.getElementById('mesa').value = document.getElementById('select-mesa').value;
+        document.getElementById('comentarios-hidden').value = document.getElementById('comentario-text').value;
+        document.getElementById('productos').value = JSON.stringify(productos);
+
+        try {
+            const response = await fetch(formEnviar.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: new FormData(formEnviar)
+            });
+
+            if (!response.ok) throw new Error('Error al enviar el pedido');
+
+            const data = await response.json();
+            console.log('✅ Respuesta del servidor:', data);
+
+            if (!data.idPedido || !data.urlRecibo) throw new Error('Respuesta incompleta del servidor');
+
+            // Abrir recibo automáticamente en nueva pestaña
+            window.open(data.urlRecibo, '_blank');
+
+        } catch (e) {
+            console.error('❌ Error:', e);
+            alert('❌ Error al enviar el pedido. Intenta nuevamente.');
+        }
+    });
+});
+</script>
+@endpush
+
+
+
 @endsection
+
+
+

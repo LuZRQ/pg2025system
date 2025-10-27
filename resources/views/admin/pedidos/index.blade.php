@@ -53,22 +53,29 @@
                 @endphp
 
                 <div class="border rounded-xl p-4 shadow-sm {{ $bgColor }}">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <p class="font-bold text-lg text-gray-800">#{{ $pedido->idPedido }}</p>
-                            <p class="text-sm text-gray-600">{{ $pedido->direccion ?? 'Mesa ' . ($pedido->mesa ?? 'N/A') }}
-                            </p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm text-gray-500">{{ $pedido->fechaCreacion->format('H:i') }}</p>
-                            <p class="text-xs text-red-500 mt-1">
-                                @php
-                                    $diferenciaMinutos = now()->diffInMinutes($pedido->fechaCreacion);
-                                    echo $diferenciaMinutos > 0 ? $diferenciaMinutos . ' min' : 'Recién';
-                                @endphp
-                            </p>
-                        </div>
-                    </div>
+                 <div class="flex justify-between items-start mb-2">
+    <div>
+        <p class="font-bold text-lg text-gray-800 tracking-wide">
+             PEDIDO N° {{ $pedido->numero_diario ?? $pedido->idPedido }}
+        </p>
+        <p class="text-sm text-gray-600">
+             Mesa {{ $pedido->mesa ?? 'N/A' }}
+        </p>
+    </div>
+
+    <div class="text-right">
+        <p class="text-sm text-gray-500">
+            {{ $pedido->fechaCreacion->format('H:i') }}
+        </p>
+        <p class="text-xs text-red-500 mt-1 font-semibold">
+            @php
+                $diferenciaMinutos = now()->diffInMinutes($pedido->fechaCreacion);
+                echo $diferenciaMinutos > 0 ? $diferenciaMinutos . ' min' : 'Recién';
+            @endphp
+        </p>
+    </div>
+</div>
+
 
                     <p class="text-xs text-gray-500 mb-2">👤 Mesero: {{ $pedido->usuario->nombre ?? 'Desconocido' }}</p>
 

@@ -62,6 +62,9 @@ Route::middleware(['auth', 'verificarRol:Gestión de Ventas'])->group(function (
 
         // Enviar pedidos a cocina
         Route::post('/enviarACocina', [VentaController::class, 'enviarACocina'])->name('enviarACocina');
+Route::get('/ventas/pedido/recibo/{idPedido}', [VentaController::class, 'reciboPedido'])->name('ventas.pedido.recibo');
+
+
 
         //Caja (parte de ventas, pero usa CajaController)
         Route::get('/caja', [CajaController::class, 'index'])->name('caja');

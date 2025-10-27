@@ -18,7 +18,8 @@ class Pedido extends Model
         'comentarios',
         'estado',
         'total',
-        'fechaCreacion'
+        'fechaCreacion',
+        'numero_diario'
     ];
 
     protected $casts = [
