@@ -49,13 +49,19 @@ class Producto extends Model
         return $this->stock;
     }
 
-    public function getEstadoStock(): string
-    {
-        if ($this->stock <= 0) return 'rojo';
-        if ($this->stock < 5) return 'rojo';
-        if ($this->stock < 10) return 'amarillo';
-        return 'verde';
+   public function getEstadoStock(): string
+{
+    if ($this->stock <= 0) {
+        return 'rojo'; // sin stock
+    } elseif ($this->stock < 5) {
+        return 'rojo'; // crítico
+    } elseif ($this->stock < 10) {
+        return 'amarillo'; // bajo
+    } else {
+        return 'verde'; // suficiente
     }
+}
+
 
     public function getEstadoStockNombre(): string
     {

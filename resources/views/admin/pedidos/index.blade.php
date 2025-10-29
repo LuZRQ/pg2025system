@@ -126,11 +126,7 @@
                                 </form>
                             @endif
 
-                            <a href="{{ route('pedidos.recibo', $pedido->idPedido) }}" target="_blank"
-                                class="px-3 py-1 text-xs rounded-lg bg-amber-700 hover:bg-amber-800 text-white flex items-center space-x-1">
-                                <i class="fas fa-print"></i>
-                                <span>Imprimir</span>
-                            </a>
+    
 
                             @if ($pedido->estado === 'listo')
                                 <form action="{{ route('pedidos.cambiarEstado', $pedido->idPedido) }}" method="POST">

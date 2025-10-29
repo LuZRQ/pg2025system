@@ -32,6 +32,10 @@
                 class="flex items-center gap-2 px-4 py-2 bg-amber-200 text-stone-800 font-medium rounded-lg hover:bg-amber-300 shadow">
                 <span>➕</span> Nuevo producto
             </a>
+             <a href="{{ route('categorias.index') }}"
+        class="flex items-center gap-2 px-4 py-2 bg-amber-100 text-stone-800 font-medium rounded-lg hover:bg-amber-200 shadow">
+        <span>➕</span> Nueva categoría
+    </a>
         </div>
 
         <div class="overflow-x-auto bg-white rounded-lg shadow">

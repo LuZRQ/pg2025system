@@ -17,16 +17,30 @@ class UsuarioController extends Controller
     public function index(Request $request)
     {
         $usuarios = Usuario::with('rol')
+            // 🔍 Buscar por texto
             ->when($request->search, function ($query) use ($request) {
-                $query->where('nombre', 'like', "%{$request->search}%")
-                    ->orWhere('apellido', 'like', "%{$request->search}%")
-                    ->orWhere('usuario', 'like', "%{$request->search}%")
-                    ->orWhere('correo', 'like', "%{$request->search}%");
+                $query->where(function ($q) use ($request) {
+                    $q->where('nombre', 'like', "%{$request->search}%")
+                        ->orWhere('apellido', 'like', "%{$request->search}%")
+                        ->orWhere('usuario', 'like', "%{$request->search}%")
+                        ->orWhere('correo', 'like', "%{$request->search}%");
+                });
             })
+
+            // ✅ Filtro por estado
             ->when($request->filled('estado'), function ($query) use ($request) {
                 $query->where('estado', $request->estado);
             })
-            ->get();
+
+            // 🧩 Nuevo filtro por rol
+            ->when($request->filled('rol'), function ($query) use ($request) {
+                $query->where('rolId', $request->rol);
+            })
+
+            // 📜 Paginación (10 resultados por página)
+            ->orderBy('nombre')
+            ->paginate(10)
+            ->withQueryString(); // mantiene los filtros entre páginas
 
         $roles = Rol::all();
         $modulos = Modulo::with('roles')->get();

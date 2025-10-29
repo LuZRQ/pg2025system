@@ -25,28 +25,49 @@ class VentaController extends Controller
 {
     use Auditable;
 
-    public function index()
-    {
-        $categorias = CategoriaProducto::with(['productos' => function ($query) {
-            $query->activos();
-        }])->get();
+   public function index(Request $request)
+{
+    // 🔹 Obtener todas las categorías activas
+    $categorias = CategoriaProducto::orderBy('nombreCategoria')->get();
 
-        $productos = Producto::activos()->with('categoria')->get();
+    // 🔹 Filtros desde la vista
+    $categoriaId = $request->get('categoria');
+    $buscar = $request->get('buscar');
 
-        $ventas = Venta::with('pedido.usuario', 'pedido.detalles.producto')->get();
+    // 🔹 Base query para productos activos
+    $query = Producto::activos()->with('categoria');
 
-        $pedidos = Pedido::where('estado', 'listo')
-            ->doesntHave('venta')
-            ->with('detalles.producto')
-            ->get();
-
-        return view('admin.ventas.index', compact('categorias', 'productos', 'ventas', 'pedidos'))
-            ->with('title', 'Gestión de Ventas');
+    if ($categoriaId && $categoriaId !== 'all') {
+        $query->where('categoriaId', $categoriaId);
     }
+
+    if ($buscar) {
+        $query->where('nombre', 'like', "%{$buscar}%");
+    }
+
+    // 🔹 Paginación de productos (12 por página)
+    $productos = $query->orderBy('nombre')->paginate(12);
+
+    // 🔹 Ventas y pedidos listos (mantiene tu lógica)
+    $ventas = Venta::with('pedido.usuario', 'pedido.detalles.producto')->get();
+
+    $pedidos = Pedido::where('estado', 'listo')
+        ->doesntHave('venta')
+        ->with('detalles.producto')
+        ->get();
+
+    // 🔹 Retornar vista con datos
+    return view('admin.ventas.index', compact('categorias', 'productos', 'ventas', 'pedidos'))
+        ->with('title', 'Gestión de Ventas')
+        ->with([
+            'categoriaSeleccionada' => $categoriaId,
+            'busqueda' => $buscar,
+        ]);
+}
 
 public function enviarACocina(Request $request)
 {
-    // ✅ 1. Validar datos básicos
+    // ✅ 1. Validar datos
     $request->validate([
         'mesa' => 'required',
         'productos' => 'required',
@@ -74,7 +95,7 @@ public function enviarACocina(Request $request)
         'numero_diario' => $numeroPedido,
     ]);
 
-    // ✅ 4. Guardar los detalles del pedido
+    // ✅ 4. Guardar detalles
     foreach ($productos as $producto) {
         $pedido->detalles()->create([
             'idProducto' => $producto['idProducto'],
@@ -83,43 +104,45 @@ public function enviarACocina(Request $request)
         ]);
     }
 
-    // ✅ 5. Registrar acción en auditoría
+    // ✅ 5. Log en auditoría
     $this->logAction(
         "Se creó el pedido #{$pedido->idPedido} (N° diario {$pedido->numero_diario}) para la mesa {$pedido->mesa} por {$usuario->usuario}",
         'Pedidos',
         'Exitoso'
     );
 
-    // ✅ 6. Preparar respuesta para impresión (según origen del request)
-    if ($request->expectsJson() || $request->ajax() || $request->isJson()) {
-        // Guardar el ID del último pedido (por si se quiere reimprimir)
-        session(['ultimoPedidoId' => $pedido->idPedido]);
+    // ✅ 6. Guardar ID para posible reimpresión
+    session(['ultimoPedidoId' => $pedido->idPedido]);
 
-        // 🟢 Devuelve JSON con URL directa al recibo, listo para abrir
-        return response()->json([
-            'idPedido' => $pedido->idPedido,
-          'urlRecibo' => route('ventas.pedido.recibo', ['idPedido' => $pedido->idPedido])
-
-        ]);
-    }
-
-    // ✅ 7. Si no es AJAX, redirigir normalmente
+    // ✅ 7. Redirigir directo al recibo
     return redirect()
         ->route('ventas.pedido.recibo', ['idPedido' => $pedido->idPedido])
         ->with('exito', "Pedido #{$pedido->numero_diario} enviado a cocina correctamente.");
 }
 
 /**
- * Mostrar el recibo del pedido en formato imprimible.
+ * Mostrar el recibo del pedido en formato imprimible
  */
 public function reciboPedido($idPedido)
 {
     $pedido = Pedido::with('detalles.producto', 'usuario')->findOrFail($idPedido);
-
-    // Puedes enviar también hora actual o logo si quieres mostrar en el ticket
     $fechaActual = now();
 
     return view('admin.ventas.reciboPedido', compact('pedido', 'fechaActual'));
+}
+
+/**
+ * Reimprimir el último pedido enviado
+ */
+public function reimprimirUltimoPedido()
+{
+    $idPedido = session('ultimoPedidoId');
+
+    if (!$idPedido) {
+        return redirect()->back()->with('error', 'No hay un pedido reciente para reimprimir.');
+    }
+
+    return $this->reciboPedido($idPedido);
 }
 
 

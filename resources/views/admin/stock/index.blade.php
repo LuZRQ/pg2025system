@@ -71,12 +71,13 @@
                             <td class="px-4 py-2">{{ $vendidos }}</td>
                             <td class="px-4 py-2">{{ $restante }}</td>
                             <td class="px-4 py-2">
-                                @if ($producto->estadoStock === 'rojo')
+                                @if ($producto->getEstadoStock() === 'rojo')
+
                                     <span
                                         class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 flex items-center gap-1">
                                         <i class="fas fa-circle text-red-500 text-[0.6rem]"></i> ¡Agotado!
                                     </span>
-                                @elseif ($producto->estadoStock === 'amarillo')
+                                @elseif ($producto->getEstadoStock() === 'amarillo')
                                     <span
                                         class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 flex items-center gap-1">
                                         <i class="fas fa-circle text-yellow-500 text-[0.6rem]"></i> Bajo stock

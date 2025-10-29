@@ -15,6 +15,17 @@
                 <option value="0" {{ request('estado') == '0' ? 'selected' : '' }}>Inactivo</option>
             </select>
 
+
+            {{-- 🔽 Nuevo filtro de roles --}}
+            <select name="rol"
+                class="w-full md:w-auto px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400">
+                <option value="">Todos los roles</option>
+                @foreach ($roles as $rol)
+                    <option value="{{ $rol->idRol }}" {{ request('rol') == $rol->idRol ? 'selected' : '' }}>
+                        {{ $rol->nombre }}
+                    </option>
+                @endforeach
+            </select>
             <button type="submit" class="w-full md:w-auto px-4 py-2 bg-stone-700 text-white rounded-lg hover:bg-stone-600">
                 Buscar
             </button>
@@ -105,6 +116,10 @@
                 </tbody>
 
             </table>
+            <div class="px-4 py-3">
+                {{ $usuarios->links() }}
+            </div>
+
         </div>
     </div>
 
@@ -147,5 +162,4 @@
                 @endforeach
             </div>
         </div>
-</div 
-@endsection
+</div @endsection

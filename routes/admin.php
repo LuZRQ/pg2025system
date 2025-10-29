@@ -14,7 +14,8 @@ use App\Http\Controllers\Admin\{
     VentaController,
     PedidoController,
     CajaController,
-    ReporteController
+    ReporteController,
+    CategoriaProductoController
 };
 use App\Http\Controllers\PdfController as ControllersPdfController;
 
@@ -59,12 +60,15 @@ Route::middleware(['auth', 'verificarRol:Gestión de Ventas'])->group(function (
 
         // Eliminar venta
         Route::delete('/eliminar/{idVenta}', [VentaController::class, 'destroy'])->name('destroy');
+// Enviar pedidos a cocina
+Route::post('/enviarACocina', [VentaController::class, 'enviarACocina'])
+    ->name('enviarACocina');
 
-        // Enviar pedidos a cocina
-        Route::post('/enviarACocina', [VentaController::class, 'enviarACocina'])->name('enviarACocina');
-Route::get('/ventas/pedido/recibo/{idPedido}', [VentaController::class, 'reciboPedido'])->name('ventas.pedido.recibo');
-
-
+// Mostrar recibo del pedido
+Route::get('/pedido/recibo/{idPedido}', [VentaController::class, 'reciboPedido'])
+    ->name('pedido.recibo');
+Route::get('/pedido/reimprimir-ultimo', [VentaController::class, 'reimprimirUltimoPedido'])
+    ->name('pedido.reimprimir');
 
         //Caja (parte de ventas, pero usa CajaController)
         Route::get('/caja', [CajaController::class, 'index'])->name('caja');
@@ -108,6 +112,12 @@ Route::middleware(['auth', 'verificarRol:Pedidos de Cocina,Gestión de Productos
     Route::get('stock', [StockController::class, 'index'])->name('stock.index');
     Route::post('stock/{idProducto}/entrada', [StockController::class, 'entrada'])->name('stock.entrada');
     Route::post('stock/{idProducto}/salida', [StockController::class, 'salida'])->name('stock.salida');
+
+    // -------- Categorías --------
+Route::get('categorias', [CategoriaProductoController::class, 'index'])->name('categorias.index');
+Route::get('categorias/crear', [CategoriaProductoController::class, 'create'])->name('categorias.create');
+Route::post('categorias', [CategoriaProductoController::class, 'store'])->name('categorias.store');
+Route::delete('categorias/{idCategoria}', [CategoriaProductoController::class, 'destroy'])->name('categorias.destroy');
 
     // Recibo de pedido (tipo ticket para imprimir)
     Route::get('/cocina/pedidos/{pedido}/recibo', [PedidoController::class, 'imprimirRecibo'])

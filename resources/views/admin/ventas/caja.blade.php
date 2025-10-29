@@ -6,6 +6,7 @@
 
 @section('content')
     <div class="p-4 md:p-6 bg-gradient-to-br from-amber-50 via-orange-100 to-amber-200 min-h-screen">
+
         @if ($mostrarAlerta)
             <div
                 class="flex items-center bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md mb-4 shadow-md">
@@ -17,9 +18,11 @@
                 </div>
             </div>
         @endif
-        {{-- Panel Izquierdo: resumen de ventas --}}
+
         <div class="grid grid-cols-12 gap-6">
-            <div class="col-span-12 md:col-span-5 lg:col-span-4 p-2 md:p-4">
+            {{-- PANEL IZQUIERDO: resumen de ventas (Dueño y Cajero) --}}
+            @if (Auth::user()->rol?->nombre === 'Dueno' || Auth::user()->rol?->nombre === 'Cajero')
+               <div class="col-span-12 md:col-span-{{ Auth::user()->rol?->nombre === 'Dueno' ? '12' : '5' }} lg:col-span-{{ Auth::user()->rol?->nombre === 'Dueno' ? '12' : '4' }} p-2 md:p-4">
                 <div
                     class="bg-gradient-to-b from-amber-50 via-amber-100 to-emerald-50 rounded-2xl shadow-lg p-6 border border-amber-200">
                     @if ($cajaActual)
@@ -196,163 +199,166 @@
                     </form>
                 </div>
             </div>
+            @endif
 
-            {{-- Panel Derecho: Cobrar orden --}}
-           {{-- Panel Derecho: Cobrar orden --}}
-<div class="col-span-12 md:col-span-7 lg:col-span-8 p-2 md:p-4">
-    <div class="bg-white rounded-2xl shadow-lg p-4 md:p-6 border border-amber-200">
+            {{-- PANEL DERECHO: Cobrar orden (Solo Cajero) --}}
+             @if (Auth::user()->rol?->nombre === 'Cajero')
+                 <div class="col-span-12 md:col-span-7 lg:col-span-8 p-2 md:p-4">
+                <div class="bg-white rounded-2xl shadow-lg p-4 md:p-6 border border-amber-200">
 
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-            <h2 class="font-semibold text-lg text-amber-900">Cobrar orden</h2>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                        <h2 class="font-semibold text-lg text-amber-900">Cobrar orden</h2>
 
-            {{-- Selección de pedido listo --}}
-            <select id="pedidoSeleccionado" data-pedidos='@json($pedidosJS)'
-                class="w-full md:w-1/2 border rounded-lg px-2 py-2 text-amber-800">
-                <option disabled selected>Selecciona un pedido</option>
-                @foreach ($pedidos as $pedido)
-                    <option value="{{ $pedido->idPedido }}">
-                        Mesa: {{ $pedido->mesa }} — Pedido N° {{ $pedido->numero_diario ?? $pedido->idPedido }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
+                        {{-- Selección de pedido listo --}}
+                        <select id="pedidoSeleccionado" data-pedidos='@json($pedidosJS)'
+                            class="w-full md:w-1/2 border rounded-lg px-2 py-2 text-amber-800">
+                            <option disabled selected>Selecciona un pedido</option>
+                            @foreach ($pedidos as $pedido)
+                                <option value="{{ $pedido->idPedido }}">
+                                    Mesa: {{ $pedido->mesa }} — Pedido N°
+                                    {{ $pedido->numero_diario ?? $pedido->idPedido }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-        <div class="bg-amber-50 rounded-lg p-4 mb-6 shadow-inner">
-            <p class="text-sm text-amber-700">Total a pagar</p>
-            <p class="font-bold text-2xl text-amber-900" id="totalPagar">Bs. 0.00</p>
-        </div>
+                    <div class="bg-amber-50 rounded-lg p-4 mb-6 shadow-inner">
+                        <p class="text-sm text-amber-700">Total a pagar</p>
+                        <p class="font-bold text-2xl text-amber-900" id="totalPagar">Bs. 0.00</p>
+                    </div>
 
-        <div class="bg-white rounded-xl p-4 mb-4 shadow">
-            <div class="mb-4">
-                <label class="block text-sm text-amber-700">Tipo de pago</label>
-                <select class="w-full border rounded-lg px-2 py-2 mt-1 text-amber-800" id="tipoPago" name="tipo_pago">
-                    <option value="Efectivo">Efectivo</option>
-                    <option value="Tarjeta">Tarjeta</option>
-                    <option value="QR">QR</option>
-                </select>
+                    <div class="bg-white rounded-xl p-4 mb-4 shadow">
+                        <div class="mb-4">
+                            <label class="block text-sm text-amber-700">Tipo de pago</label>
+                            <select class="w-full border rounded-lg px-2 py-2 mt-1 text-amber-800" id="tipoPago"
+                                name="tipo_pago">
+                                <option value="Efectivo">Efectivo</option>
+                                <option value="Tarjeta">Tarjeta</option>
+                                <option value="QR">QR</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm text-amber-700">Pago del cliente</label>
+                            <input type="number" class="w-full border rounded-lg px-2 py-2 mt-1 text-amber-900"
+                                id="pagoCliente" name="pago_cliente" placeholder="0.00">
+                        </div>
+
+                        {{-- Solo se muestra si el pago es en efectivo --}}
+                        <div id="bloqueCambio" class="bg-gray-100 rounded-lg p-4 mb-0 hidden">
+                            <p class="text-sm text-gray-600">Cambio</p>
+                            <p class="font-semibold text-gray-800" id="cambio">Bs. 0.00</p>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto mb-6">
+                        <table id="tablaOrden" class="w-full border-collapse rounded-lg overflow-hidden">
+                            <thead class="bg-amber-700 text-white">
+                                <tr>
+                                    <th class="px-4 py-2 text-left">Cantidad</th>
+                                    <th class="px-4 py-2 text-left">Platillo</th>
+                                    <th class="px-4 py-2 text-left">Comentarios</th>
+                                    <th class="px-4 py-2 text-left">Precio</th>
+                                    <th class="px-4 py-2 text-left">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-amber-200"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row justify-between mt-4 gap-2">
+                        <a href="{{ route('ventas.caja') }}"
+                            class="px-6 py-2 rounded-lg bg-yellow-100 text-amber-900 hover:bg-yellow-200 shadow text-center">
+                            ✖ Cerrar
+                        </a>
+
+                        <form id="formCobrar" action="{{ route('ventas.cobrar') }}" method="POST"
+                            class="flex-1 md:flex-none">
+                            @csrf
+                            <input type="hidden" name="idPedido" id="pedidoIdSeleccionado">
+                            <input type="hidden" name="montoTotal" id="montoTotalInput">
+                            <input type="hidden" name="tipo_pago" id="tipoPagoInput">
+                            <input type="hidden" name="pago_cliente" id="pagoClienteInput">
+
+                            <button type="submit"
+                                class="w-full px-6 py-2 rounded-lg bg-yellow-100 text-amber-900 hover:bg-yellow-200 shadow font-semibold">
+                                ✔ Terminar orden
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
             </div>
+            @endif
 
-            <div class="mb-4">
-                <label class="block text-sm text-amber-700">Pago del cliente</label>
-                <input type="number" class="w-full border rounded-lg px-2 py-2 mt-1 text-amber-900"
-                    id="pagoCliente" name="pago_cliente" placeholder="0.00">
-            </div>
-
-            {{-- Solo se muestra si el pago es en efectivo --}}
-            <div id="bloqueCambio" class="bg-gray-100 rounded-lg p-4 mb-0 hidden">
-                <p class="text-sm text-gray-600">Cambio</p>
-                <p class="font-semibold text-gray-800" id="cambio">Bs. 0.00</p>
-            </div>
         </div>
-
-        <div class="overflow-x-auto mb-6">
-            <table id="tablaOrden" class="w-full border-collapse rounded-lg overflow-hidden">
-                <thead class="bg-amber-700 text-white">
-                    <tr>
-                        <th class="px-4 py-2 text-left">Cantidad</th>
-                        <th class="px-4 py-2 text-left">Platillo</th>
-                        <th class="px-4 py-2 text-left">Comentarios</th>
-                        <th class="px-4 py-2 text-left">Precio</th>
-                        <th class="px-4 py-2 text-left">Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-amber-200"></tbody>
-            </table>
-        </div>
-
-        <div class="flex flex-col md:flex-row justify-between mt-4 gap-2">
-            <a href="{{ route('ventas.caja') }}"
-                class="px-6 py-2 rounded-lg bg-yellow-100 text-amber-900 hover:bg-yellow-200 shadow text-center">
-                ✖ Cerrar
-            </a>
-
-            <form id="formCobrar" action="{{ route('ventas.cobrar') }}" method="POST" class="flex-1 md:flex-none">
-                @csrf
-                <input type="hidden" name="idPedido" id="pedidoIdSeleccionado">
-                <input type="hidden" name="montoTotal" id="montoTotalInput">
-                <input type="hidden" name="tipo_pago" id="tipoPagoInput">
-                <input type="hidden" name="pago_cliente" id="pagoClienteInput">
-
-                <button type="submit"
-                    class="w-full px-6 py-2 rounded-lg bg-yellow-100 text-amber-900 hover:bg-yellow-200 shadow font-semibold">
-                    ✔ Terminar orden
-                </button>
-            </form>
-        </div>
-
     </div>
-</div>
-
-        </div>
-    </div>
-
-
 
     @push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // --- MODALES DE CAJA ---
-    const modalAbrir = document.getElementById('modalAbrirCaja');
-    const btnAbrir = document.getElementById('btnAbrirCaja');
-    if (btnAbrir && modalAbrir) {
-        btnAbrir.addEventListener('click', () => {
-            modalAbrir.classList.remove('hidden');
-            modalAbrir.classList.add('flex');
-        });
-    }
-    window.cerrarModalAbrirCaja = () => {
-        modalAbrir.classList.add('hidden');
-        modalAbrir.classList.remove('flex');
-    };
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // --- MODALES DE CAJA ---
+                const modalAbrir = document.getElementById('modalAbrirCaja');
+                const btnAbrir = document.getElementById('btnAbrirCaja');
+                if (btnAbrir && modalAbrir) {
+                    btnAbrir.addEventListener('click', () => {
+                        modalAbrir.classList.remove('hidden');
+                        modalAbrir.classList.add('flex');
+                    });
+                }
+                window.cerrarModalAbrirCaja = () => {
+                    modalAbrir.classList.add('hidden');
+                    modalAbrir.classList.remove('flex');
+                };
 
-    const modalEditar = document.getElementById('modalEditarMonto');
-    const btnEditar = document.getElementById('btnOpenEditarMonto');
-    const inputEditar = document.getElementById('inputMontoInicial');
-    if (btnEditar && modalEditar) {
-        btnEditar.addEventListener('click', () => {
-            inputEditar.value = "{{ $fondoInicial }}";
-            modalEditar.classList.remove('hidden');
-            modalEditar.classList.add('flex');
-        });
-    }
-    window.cerrarModalEditarMonto = () => {
-        modalEditar.classList.add('hidden');
-        modalEditar.classList.remove('flex');
-    };
+                const modalEditar = document.getElementById('modalEditarMonto');
+                const btnEditar = document.getElementById('btnOpenEditarMonto');
+                const inputEditar = document.getElementById('inputMontoInicial');
+                if (btnEditar && modalEditar) {
+                    btnEditar.addEventListener('click', () => {
+                        inputEditar.value = "{{ $fondoInicial }}";
+                        modalEditar.classList.remove('hidden');
+                        modalEditar.classList.add('flex');
+                    });
+                }
+                window.cerrarModalEditarMonto = () => {
+                    modalEditar.classList.add('hidden');
+                    modalEditar.classList.remove('flex');
+                };
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            cerrarModalAbrirCaja();
-            cerrarModalEditarMonto();
-        }
-    });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        cerrarModalAbrirCaja();
+                        cerrarModalEditarMonto();
+                    }
+                });
 
-    // --- NUEVO BLOQUE: CAMBIO SEGÚN TIPO DE PAGO ---
-    const tipoPago = document.getElementById('tipoPago');
-    const bloqueCambio = document.getElementById('bloqueCambio');
-    const pagoCliente = document.getElementById('pagoCliente');
-    const totalPagar = document.getElementById('totalPagar');
-    const cambioTexto = document.getElementById('cambio');
+                // --- NUEVO BLOQUE: CAMBIO SEGÚN TIPO DE PAGO ---
+                const tipoPago = document.getElementById('tipoPago');
+                const bloqueCambio = document.getElementById('bloqueCambio');
+                const pagoCliente = document.getElementById('pagoCliente');
+                const totalPagar = document.getElementById('totalPagar');
+                const cambioTexto = document.getElementById('cambio');
 
-    if (tipoPago && bloqueCambio && pagoCliente && totalPagar && cambioTexto) {
-        // Ocultar cambio al inicio si no es efectivo
-        bloqueCambio.classList.toggle('hidden', tipoPago.value !== 'Efectivo');
+                if (tipoPago && bloqueCambio && pagoCliente && totalPagar && cambioTexto) {
+                    // Ocultar cambio al inicio si no es efectivo
+                    bloqueCambio.classList.toggle('hidden', tipoPago.value !== 'Efectivo');
 
-        // Mostrar/ocultar cambio según tipo de pago
-        tipoPago.addEventListener('change', () => {
-            bloqueCambio.classList.toggle('hidden', tipoPago.value !== 'Efectivo');
-        });
+                    // Mostrar/ocultar cambio según tipo de pago
+                    tipoPago.addEventListener('change', () => {
+                        bloqueCambio.classList.toggle('hidden', tipoPago.value !== 'Efectivo');
+                    });
 
-        // Calcular cambio automáticamente
-        pagoCliente.addEventListener('input', () => {
-            const total = parseFloat(totalPagar.textContent.replace('Bs.', '').trim()) || 0;
-            const pago = parseFloat(pagoCliente.value) || 0;
-            const cambio = Math.max(pago - total, 0);
-            cambioTexto.textContent = `Bs. ${cambio.toFixed(2)}`;
-        });
-    }
-});
-</script>
-@endpush
+                    // Calcular cambio automáticamente
+                    pagoCliente.addEventListener('input', () => {
+                        const total = parseFloat(totalPagar.textContent.replace('Bs.', '').trim()) || 0;
+                        const pago = parseFloat(pagoCliente.value) || 0;
+                        const cambio = Math.max(pago - total, 0);
+                        cambioTexto.textContent = `Bs. ${cambio.toFixed(2)}`;
+                    });
+                }
+            });
+        </script>
+    @endpush
 
 @endsection
