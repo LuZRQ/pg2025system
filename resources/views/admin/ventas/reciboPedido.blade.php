@@ -50,13 +50,19 @@
 
                 <hr class="my-2 border-dashed border-gray-400">
 
-                <div class="space-y-1 text-[10px]">
-                    <div>Fecha: {{ $pedido->fechaCreacion->format('d M Y') }}</div>
-                    <div>Hora: {{ $pedido->fechaCreacion->format('H:i:s') }}</div>
-                    <div>Orden #: {{ str_pad($pedido->idPedido, 3, '0', STR_PAD_LEFT) }}</div>
-                    <div>Mesa: {{ $pedido->mesa ?? '---' }}</div>
-                    <div>Atendido por: {{ $pedido->usuario->nombre ?? '---' }}</div>
-                </div>
+               <div class="space-y-1 text-[10px]">
+    <div>Fecha: {{ $pedido->fechaCreacion->format('d M Y') }}</div>
+    <div>Hora: {{ $pedido->fechaCreacion->format('H:i:s') }}</div>
+    {{-- Mostramos número diario si existe, sino ID --}}
+    <div>Orden #: {{ $pedido->numero_diario ?? str_pad($pedido->idPedido, 3, '0', STR_PAD_LEFT) }}</div>
+    <div>Mesa: {{ $pedido->mesa ?? '---' }}</div>
+    <div>Atendido por: {{ $pedido->usuario->nombre ?? '---' }}</div>
+    {{-- Comentario opcional --}}
+    @if($pedido->comentarios)
+        <div>Comentario: {{ $pedido->comentarios }}</div>
+    @endif
+</div>
+
 
                 <hr class="my-2 border-dashed border-gray-400">
 

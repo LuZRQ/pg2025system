@@ -70,6 +70,16 @@ Route::get('/pedido/recibo/{idPedido}', [VentaController::class, 'reciboPedido']
 Route::get('/pedido/reimprimir-ultimo', [VentaController::class, 'reimprimirUltimoPedido'])
     ->name('pedido.reimprimir');
 
+// Pedidos del mesero
+Route::get('/pedidos-mesero', [PedidoController::class, 'pedidosMesero'])
+    ->name('pedidos.mesero');
+
+// Cancelar pedido (del mesero)
+// Cancelar pedido (del mesero)
+Route::put('/cancelar-pedido/{id}', [PedidoController::class, 'cancelarPedido'])
+    ->name('cancelar.pedido');
+
+
         //Caja (parte de ventas, pero usa CajaController)
         Route::get('/caja', [CajaController::class, 'index'])->name('caja');
         Route::post('/abrirCaja', [CajaController::class, 'abrirCaja'])->name('abrirCaja');

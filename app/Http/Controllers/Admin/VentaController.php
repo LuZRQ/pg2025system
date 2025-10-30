@@ -25,7 +25,7 @@ class VentaController extends Controller
 {
     use Auditable;
 
-   public function index(Request $request)
+public function index(Request $request)
 {
     // 🔹 Obtener todas las categorías activas
     $categorias = CategoriaProducto::orderBy('nombreCategoria')->get();
@@ -56,14 +56,37 @@ class VentaController extends Controller
         ->with('detalles.producto')
         ->get();
 
-    // 🔹 Retornar vista con datos
-    return view('admin.ventas.index', compact('categorias', 'productos', 'ventas', 'pedidos'))
-        ->with('title', 'Gestión de Ventas')
-        ->with([
-            'categoriaSeleccionada' => $categoriaId,
-            'busqueda' => $buscar,
-        ]);
+    // 🔹 Pedidos actuales y listos del mesero logueado
+    $usuario = Auth::user();
+$pedidosActuales = Pedido::with(['detalles.producto'])
+    ->where('ciUsuario', $usuario->ciUsuario)
+    ->whereNotIn('estado', ['cancelado', 'listo'])
+    ->orderBy('fechaCreacion', 'desc')
+    ->get();
+
+$pedidosListos = Pedido::with(['detalles.producto'])
+    ->where('ciUsuario', $usuario->ciUsuario)
+    ->where('estado', 'listo')
+     ->whereDate('fechaCreacion', now()->toDateString()) 
+    ->get();
+
+
+    // 🔹 Retornar vista con todos los datos
+    return view('admin.ventas.index', compact(
+        'categorias',
+        'productos',
+        'ventas',
+        'pedidos',
+        'pedidosActuales',
+        'pedidosListos'
+    ))
+    ->with('title', 'Gestión de Ventas')
+    ->with([
+        'categoriaSeleccionada' => $categoriaId,
+        'busqueda' => $buscar,
+    ]);
 }
+
 
 public function enviarACocina(Request $request)
 {

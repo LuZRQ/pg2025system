@@ -154,31 +154,71 @@
         </div>
 
     </div>
+  {{-- Pedidos actuales --}}
+    <div class="mb-10">
+        <h2 class="text-xl font-semibold text-stone-700 mb-3">Pedidos en curso</h2>
 
-    {{-- Pedidos listos --}}
-    <div class="mt-10 bg-white shadow rounded-2xl p-4 sm:p-6 border border-amber-200">
-        <h2 class="font-bold text-lg text-amber-900 mb-4">📋 Pedidos Listos en Cocina</h2>
-        <div id="pedidos-listos" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            @forelse($pedidos as $pedido)
-                <div class="border rounded-lg p-4 shadow-sm">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-semibold text-amber-800">
-                            Pedido N° {{ $pedido->numero_diario ?? $pedido->idPedido }}
-                        </span>
-                        <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Listo</span>
+        @if ($pedidosActuales->isEmpty())
+            <p class="text-stone-500">No tienes pedidos en curso.</p>
+        @else
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach ($pedidosActuales as $pedido)
+                    <div class="bg-white shadow-md rounded-2xl p-4 border border-amber-100">
+                        <h3 class="font-semibold text-amber-700">Pedido #{{ $pedido->idPedido }}</h3>
+                        <p class="text-sm text-stone-600 mb-2">Estado: 
+                            <span class="font-medium">{{ ucfirst($pedido->estado) }}</span>
+                        </p>
+
+                        <ul class="text-sm text-stone-700 mb-3">
+                            @foreach ($pedido->detalles as $detalle)
+                                <li>- {{ $detalle->producto->nombre }} (x{{ $detalle->cantidad }})</li>
+                            @endforeach
+                        </ul>
+
+                        <p class="text-xs text-stone-500">Fecha: {{ $pedido->fechaCreacion }}</p>
                     </div>
-                    <span class="text-sm text-amber-600 block mb-2">Mesa {{ $pedido->mesa }}</span>
-                    <ul class="text-sm text-amber-700 mb-3">
-                        @foreach ($pedido->detalles as $detalle)
-                            <li>- {{ $detalle->cantidad }} x {{ $detalle->producto->nombre }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @empty
-                <p class="text-gray-500">No hay pedidos listos todavía.</p>
-            @endforelse
-        </div>
+                @endforeach
+            </div>
+        @endif
     </div>
+    {{-- Pedidos listos --}}
+{{-- Pedidos listos --}}
+<div class="mt-10 bg-white shadow rounded-2xl p-4 sm:p-6 border border-amber-200">
+    <h2 class="font-bold text-lg text-amber-900 mb-4">📋 Pedidos Listos en Cocina</h2>
+    <div id="pedidos-listos" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        @forelse($pedidos as $pedido)
+            <div class="border rounded-lg p-4 shadow-sm">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-semibold text-amber-800">
+                        Pedido N° {{ $pedido->numero_diario ?? $pedido->idPedido }}
+                    </span>
+                    <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Listo</span>
+                </div>
+                <span class="text-sm text-amber-600 block mb-2">Mesa {{ $pedido->mesa }}</span>
+                <ul class="text-sm text-amber-700 mb-3">
+                    @foreach ($pedido->detalles as $detalle)
+                        <li>- {{ $detalle->cantidad }} x {{ $detalle->producto->nombre }}</li>
+                    @endforeach
+                </ul>
+
+                {{-- Botón cancelar pedido --}}
+                <form action="{{ route('ventas.cancelar.pedido', $pedido->idPedido) }}" method="POST"
+                      onsubmit="return confirm('¿Seguro que deseas cancelar este pedido?');">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="estado" value="cancelado">
+                    <button type="submit"
+                        class="mt-2 bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded-lg">
+                        Cancelar pedido
+                    </button>
+                </form>
+            </div>
+        @empty
+            <p class="text-gray-500">No hay pedidos listos todavía.</p>
+        @endforelse
+    </div>
+</div>
+
 </div>
 
 <script>

@@ -4,7 +4,7 @@
 @section('content')
     <div class="p-6 bg-gradient-to-br from-amber-50 via-orange-100 to-amber-200 min-h-screen">
 
-        <div class="flex space-x-3 mb-8 justify-center">
+        <div class="flex flex-wrap gap-2 mb-8 justify-center">
             <a href="{{ route('pedidos.index') }}"
                 class="px-4 py-2 rounded-lg {{ request('estado') ? 'bg-gray-100 text-amber-800 hover:bg-amber-200' : 'bg-amber-700 text-white shadow hover:bg-amber-800' }}">
                 Todos

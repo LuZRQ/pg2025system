@@ -7,7 +7,7 @@ use App\Models\Pedido;
 use Illuminate\Http\Request;
 use App\Traits\Auditable;
 use Barryvdh\DomPDF\Facade\Pdf;
-
+use Illuminate\Support\Facades\Auth;
 class PedidoController extends Controller
 {
     use Auditable;
@@ -81,11 +81,13 @@ class PedidoController extends Controller
                 }
             }
 
-            foreach ($pedido->detalles as $detalle) {
-                $producto = $detalle->producto;
-                $oldStock = $producto->stock;
+           foreach ($pedido->detalles as $detalle) {
+    // Recargar el producto directamente de la BD (evita usar el cache del primer pedido)
+    $producto = \App\Models\Producto::find($detalle->producto->idProducto);
 
-                $resultado = $producto->descontarStock($detalle->cantidad);
+    $oldStock = $producto->stock;
+
+    $resultado = $producto->descontarStock($detalle->cantidad);
 
                 if (!$resultado) {
                     return redirect()->back()->with(
@@ -129,12 +131,76 @@ class PedidoController extends Controller
             "Pedido marcado como '{$nuevoEstado}'" . ($nuevoEstado === 'listo' ? ' y stock actualizado.' : '.')
         );
     }
-
-
-
-    public function imprimirRecibo($idPedido)
+    // 🧾 Mostrar los pedidos actuales y listos del mesero logueado
+    public function pedidosMesero()
     {
-        $pedido = Pedido::with('detalles.producto', 'usuario')->findOrFail($idPedido);
-        return view('admin.pedidos.recibo', compact('pedido'));
+        $usuario = Auth::user();
+
+        // Pedidos en curso (no cancelados ni listos)
+        $pedidosActuales = Pedido::with(['detalles.producto'])
+            ->where('usuario_id', $usuario->id)
+            ->whereNotIn('estado', ['cancelado', 'listo'])
+            ->orderBy('fechaCreacion', 'desc')
+            ->get();
+
+        // Pedidos que ya están listos
+        $pedidosListos = Pedido::with(['detalles.producto'])
+            ->where('usuario_id', $usuario->id)
+            ->where('estado', 'listo')
+            ->orderBy('fechaCreacion', 'desc')
+            ->get();
+
+        return view('admin.ventas.pedidos_mesero', compact('pedidosActuales', 'pedidosListos'))
+            ->with('title', 'Pedidos del Mesero');
     }
+
+    // 🚫 Cancelar un pedido (desde vista del mesero)
+    public function cancelarPedido($idPedido)
+    {
+        $pedido = Pedido::with('detalles.producto')->findOrFail($idPedido);
+
+        // Solo el mesero que creó el pedido puede cancelarlo
+   if ($pedido->ciUsuario !== Auth::user()->ciUsuario) {
+
+
+            return redirect()->back()->with('error', 'No puedes cancelar pedidos de otros meseros.');
+        }
+
+        // Si el pedido ya fue cancelado o cobrado
+        if ($pedido->estado === 'cancelado') {
+            return redirect()->back()->with('info', 'Este pedido ya está cancelado.');
+        }
+
+        // Si el pedido ya fue cobrado o cerrado
+        if ($pedido->estado === 'cobrado') {
+            return redirect()->back()->with('error', 'Este pedido ya fue cobrado y no se puede cancelar.');
+        }
+
+        // Si ya estaba listo, lo registramos como pérdida
+        if ($pedido->estado === 'listo') {
+            foreach ($pedido->detalles as $detalle) {
+                $producto = $detalle->producto;
+
+                $this->logAction(
+                    "Pedido #{$pedido->idPedido} cancelado (Listo) - pérdida de {$detalle->cantidad}x {$producto->nombre}",
+                    'Pedidos',
+                    'Cancelado'
+                );
+            }
+        }
+
+        // Actualizar estado
+        $pedido->estado = 'cancelado';
+        $pedido->save();
+
+        $this->logAction(
+            "Pedido #{$pedido->idPedido} fue cancelado por el mesero " . Auth::user()->nombre,
+            'Pedidos',
+            'Cancelación'
+        );
+
+        return redirect()->back()->with('exito', 'El pedido fue cancelado correctamente.');
+    }
+
+
 }
