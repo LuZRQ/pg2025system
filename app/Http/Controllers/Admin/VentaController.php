@@ -220,10 +220,15 @@ public function reimprimirUltimoPedido()
         });
 
         $venta = Venta::create([
-            'idPedido'   => $pedido->idPedido,
-            'montoTotal' => $montoTotal,
-            'fechaPago'  => now(),
-        ]);
+    'idPedido'     => $pedido->idPedido,
+    'montoTotal'   => $montoTotal,
+    'fechaPago'    => now(),
+    'metodo_pago'  => $request->metodo_pago,
+    'pago_cliente' => $request->pago_cliente,
+    'cambio'       => max(0, $request->pago_cliente - $montoTotal),
+    'efectivo_real'=> $request->metodo_pago === 'Efectivo' ? $request->pago_cliente : 0,
+]);
+
         $this->logAction(
             "Se registró la venta #{$venta->idVenta} del pedido #{$pedido->idPedido}, monto total: {$montoTotal}",
             'Ventas',
@@ -255,11 +260,15 @@ public function reimprimirUltimoPedido()
         ]);
 
         $venta = Venta::findOrFail($id);
-        $venta->update([
-            'montoTotal'  => $request->montoTotal,
-            'metodo_pago' => $request->metodo_pago,
-            'fechaPago'   => $request->fechaPago,
-        ]);
+       $venta->update([
+    'montoTotal'   => $request->montoTotal,
+    'metodo_pago'  => $request->metodo_pago,
+    'fechaPago'    => $request->fechaPago,
+    'pago_cliente' => $request->pago_cliente,
+    'cambio'       => max(0, $request->pago_cliente - $request->montoTotal),
+    'efectivo_real'=> $request->metodo_pago === 'Efectivo' ? $request->pago_cliente : 0,
+]);
+
 
         $this->logAction(
             "Se actualizó la venta #{$venta->idVenta} con monto total {$venta->montoTotal}",

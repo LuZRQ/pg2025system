@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Venta extends Model
 {
-     use HasFactory;
+    use HasFactory;
     protected $table = 'Venta';
     protected $primaryKey = 'idVenta';
     public $timestamps = false;
@@ -19,6 +19,7 @@ class Venta extends Model
         'metodo_pago',
         'pago_cliente',
         'cambio',
+        'efectivo_real',
     ];
     protected $casts = [
         'fechaPago' => 'datetime',

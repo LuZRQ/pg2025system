@@ -28,6 +28,6 @@ class VerMenuTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSeeText($producto->nombre);
-        $response->assertSeeText($categoria->nombreCategoria);
+         $response->assertSeeText($categoria->nombreCategoria);
     }
 }

@@ -128,17 +128,21 @@
                     <input type="hidden" name="productos" id="productos">
                 </form>
             </div>
+         {{-- Para Cajero/Dueño --}}
+@if(($rol === 'Cajero' || $rol === 'Mesero') && session('ultimoPedidoId'))
+    <a href="{{ route('ventas.pedido.reimprimir') }}" target="_blank"
+       class="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+       Reimprimir Último Pedido
+    </a>
+@endif
+    
             @endif
+
 
             {{-- Historial y caja para Cajero/Dueño --}}
             @if($rol === 'Cajero' || $rol === 'Dueno')
             <div class="mt-6 space-y-3">
-                @if(session('ultimoPedidoId'))
-                    <a href="{{ route('ventas.pedido.reimprimir') }}" target="_blank"
-                       class="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
-                       Reimprimir Último Pedido
-                    </a>
-                @endif
+              
 
                 <a href="{{ route('ventas.historial') }}"
                     class="block w-full text-center bg-amber-500 text-white py-2 rounded-lg hover:bg-amber-600 shadow">
@@ -149,42 +153,48 @@
                     class="block w-full text-center bg-amber-800 text-white py-2 rounded-lg hover:bg-amber-900 shadow">
                     Control de caja
                 </a>
+                   {{-- Botón Reimprimir para Cajero/Dueño --}}
+   
             </div>
             @endif
         </div>
 
     </div>
   {{-- Pedidos actuales --}}
-    <div class="mb-10">
-        <h2 class="text-xl font-semibold text-stone-700 mb-3">Pedidos en curso</h2>
+{{-- Pedidos en curso solo para Mesero --}}
+@if($rol === 'Mesero')
+<div class="mb-10">
+    <h2 class="text-xl font-semibold text-stone-700 mb-3">Pedidos en curso</h2>
 
-        @if ($pedidosActuales->isEmpty())
-            <p class="text-stone-500">No tienes pedidos en curso.</p>
-        @else
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @foreach ($pedidosActuales as $pedido)
-                    <div class="bg-white shadow-md rounded-2xl p-4 border border-amber-100">
-                        <h3 class="font-semibold text-amber-700">Pedido #{{ $pedido->idPedido }}</h3>
-                        <p class="text-sm text-stone-600 mb-2">Estado: 
-                            <span class="font-medium">{{ ucfirst($pedido->estado) }}</span>
-                        </p>
+    @if ($pedidosActuales->isEmpty())
+        <p class="text-stone-500">No tienes pedidos en curso.</p>
+    @else
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach ($pedidosActuales as $pedido)
+                <div class="bg-white shadow-md rounded-2xl p-4 border border-amber-100">
+                    <h3 class="font-semibold text-amber-700">Pedido #{{ $pedido->idPedido }}</h3>
+                    <p class="text-sm text-stone-600 mb-2">Estado: 
+                        <span class="font-medium">{{ ucfirst($pedido->estado) }}</span>
+                    </p>
 
-                        <ul class="text-sm text-stone-700 mb-3">
-                            @foreach ($pedido->detalles as $detalle)
-                                <li>- {{ $detalle->producto->nombre }} (x{{ $detalle->cantidad }})</li>
-                            @endforeach
-                        </ul>
+                    <ul class="text-sm text-stone-700 mb-3">
+                        @foreach ($pedido->detalles as $detalle)
+                            <li>- {{ $detalle->producto->nombre }} (x{{ $detalle->cantidad }})</li>
+                        @endforeach
+                    </ul>
 
-                        <p class="text-xs text-stone-500">Fecha: {{ $pedido->fechaCreacion }}</p>
-                    </div>
-                @endforeach
-            </div>
-        @endif
-    </div>
+                    <p class="text-xs text-stone-500">Fecha: {{ $pedido->fechaCreacion }}</p>
+                </div>
+            @endforeach
+        </div>
+    @endif
+</div>
+@endif
     {{-- Pedidos listos --}}
-{{-- Pedidos listos --}}
+{{-- Pedidos listos (todos pueden verlos) --}}
 <div class="mt-10 bg-white shadow rounded-2xl p-4 sm:p-6 border border-amber-200">
     <h2 class="font-bold text-lg text-amber-900 mb-4">📋 Pedidos Listos en Cocina</h2>
+
     <div id="pedidos-listos" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         @forelse($pedidos as $pedido)
             <div class="border rounded-lg p-4 shadow-sm">
