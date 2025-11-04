@@ -58,16 +58,31 @@
                 @error('usuario') <small class="text-warning">{{ $message }}</small> @enderror
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Contraseña</label>
-                <input type="password" name="contrasena" class="form-control" required minlength="6" maxlength="20">
-                @error('contrasena') <small class="text-warning">{{ $message }}</small> @enderror
-            </div>
+           <div class="mb-3 position-relative">
+    <label class="form-label fw-bold">Contraseña</label>
+    <div class="input-group">
+        <input type="password" name="contrasena" id="contrasena" class="form-control" required minlength="6" maxlength="20">
+        <button class="btn btn-outline-secondary" type="button" id="togglePassword"
+                style="background: transparent; border-color: #f0dd97;">
+            <i class="fas fa-eye" style="color: #f0dd97;"></i>
+        </button>
+    </div>
+    @error('contrasena') <small class="text-warning">{{ $message }}</small> @enderror
+</div>
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Confirmar Contraseña</label>
-                <input type="password" name="contrasena_confirmation" class="form-control" required minlength="6" maxlength="20">
-            </div>
+<div class="mb-3 position-relative">
+    <label class="form-label fw-bold">Confirmar Contraseña</label>
+    <div class="input-group">
+        <input type="password" name="contrasena_confirmation" id="contrasena_confirmation" class="form-control" required minlength="6" maxlength="20">
+        <button class="btn btn-outline-secondary" type="button" id="togglePasswordConfirm"
+                style="background: transparent; border-color: #f0dd97;">
+            <i class="fas fa-eye" style="color: #f0dd97;"></i>
+        </button>
+    </div>
+</div>
+
+
+
 
             <button type="submit" class="btn w-100 fw-bold text-dark" style="background-color: #f0dd97;">
                 Registrarme
@@ -75,4 +90,30 @@
         </form>
     </div>
 </section>
+
+<script>
+    // Contraseña principal
+    const togglePasswordBtn = document.querySelector('#togglePassword');
+    const passwordInput = document.querySelector('#contrasena');
+
+    togglePasswordBtn.addEventListener('click', function () {
+        const isPassword = passwordInput.getAttribute('type') === 'password';
+        passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+        this.innerHTML = isPassword
+            ? '<i class="fas fa-eye-slash" style="color: #f0dd97;"></i>'
+            : '<i class="fas fa-eye" style="color: #f0dd97;"></i>';
+    });
+
+    // Contraseña de confirmación
+    const togglePasswordConfirmBtn = document.querySelector('#togglePasswordConfirm');
+    const passwordConfirmInput = document.querySelector('#contrasena_confirmation');
+
+    togglePasswordConfirmBtn.addEventListener('click', function () {
+        const isPassword = passwordConfirmInput.getAttribute('type') === 'password';
+        passwordConfirmInput.setAttribute('type', isPassword ? 'text' : 'password');
+        this.innerHTML = isPassword
+            ? '<i class="fas fa-eye-slash" style="color: #f0dd97;"></i>'
+            : '<i class="fas fa-eye" style="color: #f0dd97;"></i>';
+    });
+</script>
 @endsection

@@ -34,9 +34,14 @@ class Producto extends Model
         return $query->where('estado', 1);
     }
 
-    public function detallePedidos()
+  public function detallePedidos()
     {
         return $this->hasMany(DetallePedido::class, 'idProducto', 'idProducto');
+    }
+
+    public function variantes()
+    {
+        return $this->hasMany(ProductoVariante::class, 'productoId', 'idProducto');
     }
 
     public function getVendidosAttribute()
@@ -49,19 +54,18 @@ class Producto extends Model
         return $this->stock;
     }
 
-   public function getEstadoStock(): string
-{
-    if ($this->stock <= 0) {
-        return 'rojo'; // sin stock
-    } elseif ($this->stock < 5) {
-        return 'rojo'; // crítico
-    } elseif ($this->stock < 10) {
-        return 'amarillo'; // bajo
-    } else {
-        return 'verde'; // suficiente
+    public function getEstadoStock(): string
+    {
+        if ($this->stock <= 0) {
+            return 'rojo'; // sin stock
+        } elseif ($this->stock < 5) {
+            return 'rojo'; // crítico
+        } elseif ($this->stock < 10) {
+            return 'amarillo'; // bajo
+        } else {
+            return 'verde'; // suficiente
+        }
     }
-}
-
 
     public function getEstadoStockNombre(): string
     {
@@ -73,16 +77,41 @@ class Producto extends Model
         };
     }
 
-    public function descontarStock(int $cantidad): bool
+    /**
+     * Descontar stock del producto o de una variante
+     *
+     * @param int $cantidad
+     * @param int|null $varianteId
+     * @return bool
+     */
+    public function descontarStock(int $cantidad, ?int $varianteId = null): bool
     {
-        if ($this->stock < $cantidad) {
-            return false;
+        if ($varianteId) {
+            // Buscar variante
+            $variante = $this->variantes()->find($varianteId);
+            if (!$variante || $variante->stock < $cantidad) {
+                return false;
+            }
+            $variante->stock -= $cantidad;
+            $variante->save();
+        } else {
+            // Producto sin variantes
+            if ($this->stock < $cantidad) {
+                return false;
+            }
+            $this->stock -= $cantidad;
         }
 
-        $this->stock -= $cantidad;
-        $this->vendidos_dia += $cantidad;
+        // Actualizar stock total del producto principal (sumando variantes si existen)
+        if ($this->variantes()->count() > 0) {
+            $this->stock = $this->variantes()->sum('stock');
+        } else {
+            $this->vendidos_dia += $cantidad;
+        }
+
         $this->save();
 
         return true;
     }
+
 }

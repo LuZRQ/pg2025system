@@ -9,42 +9,58 @@ use App\Traits\Auditable;
 
 class CategoriaProductoController extends Controller
 {
-      use Auditable; // si quieres logs
+    use Auditable; // si quieres logs
 
     // Listar categorías
-public function index()
-{
-    $categorias = CategoriaProducto::all();
-    return view('admin.productos.indexCategorias', compact('categorias'));
-}
+    public function index()
+    {
+        $categorias = CategoriaProducto::all();
+        return view('admin.productos.indexCategorias', compact('categorias'));
+    }
 
-// Mostrar formulario para crear categoría
-public function create()
-{
-    return view('admin.productos.crearCategoria');
-}
+    // Mostrar formulario para crear categoría
+    public function create()
+    {
+        return view('admin.productos.crearCategoria');
+    }
 
     // Guardar categoría
     public function store(Request $request)
-{
-    $request->validate([
-        'nombreCategoria' => 'required|string|max:100|unique:CategoriaProducto,nombreCategoria',
-        'descripcion' => 'nullable|string|max:255', // ✅ agregado
-    ]);
+    {
+        $request->validate([
+            'nombreCategoria' => [
+                'required',
+                'string',
+                'max:100',
+                'unique:CategoriaProducto,nombreCategoria',
+                'regex:/\S+/'
+            ],
+            'descripcion' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^\S.*\S$|^\S$/'
+            ],
+        ], [
+            'nombreCategoria.required' => 'El nombre de la categoría es obligatorio',
+            'nombreCategoria.regex' => 'El nombre no puede estar vacío o solo espacios',
+            'descripcion.regex' => 'La descripción no puede estar vacía o solo espacios',
+        ]);
 
-    $categoria = CategoriaProducto::create([
-        'nombreCategoria' => $request->nombreCategoria,
-        'descripcion' => $request->descripcion, // ✅ agregado
-    ]);
 
-    $this->logAction(
-        "Se creó la categoría '{$categoria->nombreCategoria}' (ID: {$categoria->idCategoria})",
-        'Categorías',
-        'Exitoso'
-    );
+        $categoria = CategoriaProducto::create([
+            'nombreCategoria' => $request->nombreCategoria,
+            'descripcion' => $request->descripcion, 
+        ]);
 
-    return redirect()->route('categorias.index')->with('exito', 'Categoría creada correctamente.');
-}
+        $this->logAction(
+            "Se creó la categoría '{$categoria->nombreCategoria}' (ID: {$categoria->idCategoria})",
+            'Categorías',
+            'Exitoso'
+        );
+
+        return redirect()->route('categorias.index')->with('exito', 'Categoría creada correctamente.');
+    }
 
 
     // Eliminar categoría

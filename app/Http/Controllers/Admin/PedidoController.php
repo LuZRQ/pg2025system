@@ -53,84 +53,96 @@ class PedidoController extends Controller
         return view('admin.pedidos.listos', compact('pedidos'));
     }
 
-    public function cambiarEstado(Request $request, $idPedido)
-    {
+   public function cambiarEstado(Request $request, $idPedido)
+{
+    $pedido = Pedido::with('detalles.producto.variantes')->findOrFail($idPedido);
+    $nuevoEstado = $request->input('estado');
 
-        $pedido = Pedido::with('detalles.producto')->findOrFail($idPedido);
+    if (!in_array($nuevoEstado, ['pendiente', 'en preparación', 'listo', 'cancelado'])) {
+        return redirect()->back()->with('error', 'Estado inválido.');
+    }
 
+    if ($pedido->estado === $nuevoEstado) {
+        return redirect()->back()->with('info', "El pedido ya está en estado '{$nuevoEstado}'.");
+    }
 
-        $nuevoEstado = $request->input('estado');
+    if ($nuevoEstado === 'listo') {
+        foreach ($pedido->detalles as $detalle) {
+            $producto = $detalle->producto;
+            $varianteId = $detalle->variante_id ?? null; // si la tabla detalle tiene id de variante
 
-        if (!in_array($nuevoEstado, ['pendiente', 'en preparación', 'listo', 'cancelado'])) {
-            return redirect()->back()->with('error', 'Estado inválido.');
-        }
-
-        if ($pedido->estado === $nuevoEstado) {
-            return redirect()->back()->with('info', "El pedido ya está en estado '{$nuevoEstado}'.");
-        }
-
-        if ($nuevoEstado === 'listo') {
-            foreach ($pedido->detalles as $detalle) {
-                $producto = $detalle->producto;
-
+            // Validar stock
+            if ($varianteId) {
+                $variante = $producto->variantes()->find($varianteId);
+                if (!$variante || $variante->stock < $detalle->cantidad) {
+                    return redirect()->back()->with(
+                        'error',
+                        "No hay suficiente stock de la variante {$variante->tipo} de {$producto->nombre}."
+                    );
+                }
+            } else {
                 if ($producto->stock < $detalle->cantidad) {
                     return redirect()->back()->with(
                         'error',
-                        "No hay suficiente stock de {$producto->nombre} para completar el pedido."
+                        "No hay suficiente stock de {$producto->nombre}."
                     );
                 }
             }
-
-           foreach ($pedido->detalles as $detalle) {
-    // Recargar el producto directamente de la BD (evita usar el cache del primer pedido)
-    $producto = \App\Models\Producto::find($detalle->producto->idProducto);
-
-    $oldStock = $producto->stock;
-
-    $resultado = $producto->descontarStock($detalle->cantidad);
-
-                if (!$resultado) {
-                    return redirect()->back()->with(
-                        'error',
-                        "Error inesperado al descontar el stock de {$producto->nombre}."
-                    );
-                }
-
-
-                $this->logAction(
-                    "Descuento de stock por Pedido #{$pedido->idPedido}: {$detalle->cantidad}x {$producto->nombre} (de {$oldStock} a {$producto->stock})",
-                    'Stock',
-                    'Descuento automático'
-                );
-            }
         }
 
-        if ($nuevoEstado === 'cancelado' && $pedido->estado === 'listo') {
-            foreach ($pedido->detalles as $detalle) {
-                $producto = $detalle->producto;
+        // Descontar stock
+        foreach ($pedido->detalles as $detalle) {
+            $producto = $detalle->producto;
+            $varianteId = $detalle->variante_id ?? null;
 
-                $this->logAction(
-                    "Pedido #{$pedido->idPedido} cancelado - pérdida de {$detalle->cantidad}x {$producto->nombre}",
-                    'Pedidos',
-                    'Cancelado'
+            $oldStock = $producto->stock;
+            $resultado = $producto->descontarStock($detalle->cantidad, $varianteId);
+
+            if (!$resultado) {
+                return redirect()->back()->with(
+                    'error',
+                    "Error inesperado al descontar el stock de {$producto->nombre}."
                 );
             }
+
+            $this->logAction(
+                "Descuento de stock por Pedido #{$pedido->idPedido}: {$detalle->cantidad}x {$producto->nombre}" .
+                ($varianteId ? " (Variante ID: $varianteId)" : "") .
+                " (de {$oldStock} a {$producto->stock})",
+                'Stock',
+                'Descuento automático'
+            );
         }
-
-        $pedido->estado = $nuevoEstado;
-        $pedido->save();
-
-        $this->logAction(
-            "Pedido #{$pedido->idPedido} cambiado a '{$nuevoEstado}'" . ($nuevoEstado === 'listo' ? ' con descuento de stock' : ''),
-            'Pedidos',
-            'Exitoso'
-        );
-
-        return redirect()->back()->with(
-            'exito',
-            "Pedido marcado como '{$nuevoEstado}'" . ($nuevoEstado === 'listo' ? ' y stock actualizado.' : '.')
-        );
     }
+
+    // Cancelación de pedido listo
+    if ($nuevoEstado === 'cancelado' && $pedido->estado === 'listo') {
+        foreach ($pedido->detalles as $detalle) {
+            $producto = $detalle->producto;
+
+            $this->logAction(
+                "Pedido #{$pedido->idPedido} cancelado - pérdida de {$detalle->cantidad}x {$producto->nombre}",
+                'Pedidos',
+                'Cancelado'
+            );
+        }
+    }
+
+    $pedido->estado = $nuevoEstado;
+    $pedido->save();
+
+    $this->logAction(
+        "Pedido #{$pedido->idPedido} cambiado a '{$nuevoEstado}'" . ($nuevoEstado === 'listo' ? ' con descuento de stock' : ''),
+        'Pedidos',
+        'Exitoso'
+    );
+
+    return redirect()->back()->with(
+        'exito',
+        "Pedido marcado como '{$nuevoEstado}'" . ($nuevoEstado === 'listo' ? ' y stock actualizado.' : '.')
+    );
+}
+
     // 🧾 Mostrar los pedidos actuales y listos del mesero logueado
     public function pedidosMesero()
     {

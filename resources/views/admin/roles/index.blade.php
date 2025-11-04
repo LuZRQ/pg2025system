@@ -43,14 +43,15 @@
                                 Ajustes
                             </span>
                         </a>
-                        <form action="{{ route('roles.eliminar', $rol->idRol) }}" method="POST" class="delete-form">
-                            @csrf
-                            @method('DELETE')
-                            <button type="button" class="text-red-600 hover:text-red-800 delete-btn"
-                                data-nombre="{{ $rol->nombre }}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
+    <form action="{{ route('roles.eliminar', $rol->idRol) }}" method="POST" class="form-eliminar">
+    @csrf
+    @method('DELETE')
+    <button type="submit" class="text-red-600 hover:text-red-800">
+        <i class="fas fa-trash"></i>
+    </button>
+</form>
+
+
                     </div>
                 </div>
             @endforeach

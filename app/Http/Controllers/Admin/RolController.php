@@ -28,10 +28,10 @@ class RolController extends Controller
     public function guardar(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:50|unique:roles,nombre',
+            'nombre' => 'required|string|max:50|unique:Rol,nombre',
             'descripcion' => 'nullable|string|max:255',
             'modulos' => 'array',
-            'modulos.*' => 'exists:modulos,id',
+            'modulos.*' => 'exists:Modulo,idModulo',
         ], [
             'nombre.required' => 'El nombre del rol es obligatorio',
             'nombre.unique' => 'Ya existe un rol con este nombre',
@@ -70,10 +70,10 @@ class RolController extends Controller
         $rol = Rol::findOrFail($idRol);
 
         $request->validate([
-            'nombre' => 'required|string|max:50|unique:roles,nombre,' . $rol->id,
+            'nombre' => 'required|string|max:50|unique:Rol,nombre,' . $rol->id,
             'descripcion' => 'nullable|string|max:255',
             'modulos' => 'array',
-            'modulos.*' => 'exists:modulos,id',
+            'modulos.*' => 'exists:Modulo,idModulo',
         ], [
             'nombre.required' => 'El nombre del rol es obligatorio',
             'nombre.unique' => 'Ya existe un rol con este nombre',

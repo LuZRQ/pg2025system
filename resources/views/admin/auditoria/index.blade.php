@@ -11,37 +11,55 @@
                     <div class="mb-4 p-2 bg-green-100 text-green-700 rounded">{{ session('success') }}</div>
                 @endif
 
-                <form method="POST" action="{{ route('auditoria.cambiarContrasena') }}">
-                    @csrf
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700">Contraseña Actual</label>
-                        <input type="password" name="contrasena_actual"
-                            class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        @error('contrasena_actual')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
+              <form method="POST" action="{{ route('auditoria.cambiarContrasena') }}">
+    @csrf
+    <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">Contraseña Actual</label>
+        <div class="relative">
+            <input type="password" name="contrasena_actual" id="contrasena_actual"
+                class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10">
+            <button type="button" id="toggleContrasenaActual"
+                class="absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-eye" style="color: #f0dd97;"></i>
+            </button>
+        </div>
+        @error('contrasena_actual')
+            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+        @enderror
+    </div>
 
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700">Nueva Contraseña</label>
-                        <input type="password" name="nueva_contrasena"
-                            class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        @error('nueva_contrasena')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
+    <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">Nueva Contraseña</label>
+        <div class="relative">
+            <input type="password" name="nueva_contrasena" id="nueva_contrasena"
+                class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10">
+            <button type="button" id="toggleNuevaContrasena"
+                class="absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-eye" style="color: #f0dd97;"></i>
+            </button>
+        </div>
+        @error('nueva_contrasena')
+            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+        @enderror
+    </div>
 
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700">Confirmar Nueva Contraseña</label>
-                        <input type="password" name="nueva_contrasena_confirmation"
-                            class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
+    <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700">Confirmar Nueva Contraseña</label>
+        <div class="relative">
+            <input type="password" name="nueva_contrasena_confirmation" id="nueva_contrasena_confirmation"
+                class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 pr-10">
+            <button type="button" id="toggleNuevaContrasenaConfirm"
+                class="absolute top-1/2 right-2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-eye" style="color: #f0dd97;"></i>
+            </button>
+        </div>
+    </div>
 
-                    <button type="submit"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow">
-                        Actualizar Contraseña
-                    </button>
-                </form>
+    <button type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow">
+        Actualizar Contraseña
+    </button>
+</form>
             </div>
 
             <div class="bg-gray-50 border border-gray-200 rounded-xl shadow p-6">
@@ -115,4 +133,23 @@
         @endif
 
     </div>
+
+    <script>
+    function togglePassword(toggleBtnId, inputId) {
+        const toggleBtn = document.getElementById(toggleBtnId);
+        const input = document.getElementById(inputId);
+
+        toggleBtn.addEventListener('click', function () {
+            const isPassword = input.getAttribute('type') === 'password';
+            input.setAttribute('type', isPassword ? 'text' : 'password');
+            this.innerHTML = isPassword
+                ? '<i class="fas fa-eye-slash" style="color: #f0dd97;"></i>'
+                : '<i class="fas fa-eye" style="color: #f0dd97;"></i>';
+        });
+    }
+
+    togglePassword('toggleContrasenaActual', 'contrasena_actual');
+    togglePassword('toggleNuevaContrasena', 'nueva_contrasena');
+    togglePassword('toggleNuevaContrasenaConfirm', 'nueva_contrasena_confirmation');
+</script>
 @endsection

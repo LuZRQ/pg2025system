@@ -260,106 +260,122 @@
 
 
     {{-- =================== MENÚ =================== --}}
-    <section id="menu" class="py-5 bg-light">
-        <div class="container">
-            <h3 class="text-center section-title mb-4">Nuestro Menú</h3>
-            <ul class="nav nav-pills justify-content-center gap-2 pill-filter mb-4">
+<section id="menu" class="py-5 bg-light">
+    <div class="container">
+        <h3 class="text-center section-title mb-4">Nuestro Menú</h3>
+        <ul class="nav nav-pills justify-content-center gap-2 pill-filter mb-4">
+            @php
+                $totalProductos = count($productos);
+            @endphp
+            <li class="nav-item">
+                <a class="nav-link active" data-category="all" href="#">Todo ({{ $totalProductos }})</a>
+            </li>
+
+            @foreach ($categorias as $categoria)
                 @php
-                    $totalProductos = count($productos);
+                    $countCat = $productos->where('categoriaId', $categoria->idCategoria)->count();
                 @endphp
                 <li class="nav-item">
-                    <a class="nav-link active" data-category="all" href="#">Todo ({{ $totalProductos }})</a>
+                    <a class="nav-link" data-category="{{ $categoria->idCategoria }}" href="#">
+                        {{ $categoria->nombreCategoria }} ({{ $countCat }})
+                    </a>
                 </li>
+            @endforeach
+        </ul>
 
-                @foreach ($categorias as $categoria)
-                    @php
-                        $countCat = $productos->where('categoriaId', $categoria->idCategoria)->count();
-                    @endphp
-                    <li class="nav-item">
-                        <a class="nav-link" data-category="{{ $categoria->idCategoria }}" href="#">
-                            {{ $categoria->nombreCategoria }} ({{ $countCat }})
-                        </a>
-                    </li>
-                @endforeach
-            </ul>
+        <div class="row g-4" id="menu-items">
+    @foreach ($productos as $p)
+        <div class="col-12 col-md-6 col-lg-4 menu-item" data-category="{{ $p->categoriaId }}">
+            <div class="menu-card garabato-card rounded-4 p-3 h-100 shadow-sm">
 
-            <div class="row g-4" id="menu-items">
-                @foreach ($productos as $p)
-                    <div class="col-12 col-md-6 col-lg-4 menu-item" data-category="{{ $p->categoriaId }}">
-                        <div class="menu-card garabato-card rounded-4 p-3 h-100 shadow-sm">
+                <div class="ratio ratio-16x9 mb-3 rounded-3 overflow-hidden border garabato-img position-relative">
+                    <div class="absolute top-0 start-0 w-100 h-100 bg-gradient-to-tr from-amber-200 to-amber-400"></div>
+                    <img src="{{ $p->imagen ? asset('storage/' . $p->imagen) : asset('images/default.png') }}"
+                        alt="{{ $p->nombre }}"
+                        class="w-100 h-100 object-fit-cover position-absolute top-0 start-0 mix-blend-multiply">
+                </div>
 
-                            <div
-                                class="ratio ratio-16x9 mb-3 rounded-3 overflow-hidden border garabato-img position-relative">
-                                <div
-                                    class="absolute top-0 start-0 w-100 h-100 bg-gradient-to-tr from-amber-200 to-amber-400">
-                                </div>
-                                <img src="{{ $p->imagen ? asset('storage/' . $p->imagen) : asset('images/default.png') }}"
-                                    alt="{{ $p->nombre }}"
-                                    class="w-100 h-100 object-fit-cover position-absolute top-0 start-0 mix-blend-multiply">
-                            </div>
-                            <h5 class="mb-1 fw-bold">{{ $p->nombre }}</h5>
-                            <p class="text-muted small mb-2">{{ $p->descripcion }}</p>
-                            <div class="fw-bold text-coffee">Bs. {{ number_format($p->precio, 2, ',', '.') }}</div>
-                        </div>
-                    </div>
-                @endforeach
+                <h5 class="mb-1 fw-bold">{{ $p->nombre }}</h5>
+
+               {{-- Mostrar variantes si tiene --}}
+@if($p->variantes && $p->variantes->count() > 0)
+    <ul class="list-unstyled mb-2">
+        @foreach($p->variantes as $var)
+            <li>
+                - {{ $var->nombre }}: Bs. {{ number_format($var->precio, 2, ',', '.') }}
+                @if(isset($var->tipo))
+                    <span class="badge {{ $var->tipo === 'caliente' ? 'bg-danger' : 'bg-primary' }}">
+                        {{ ucfirst($var->tipo) }}
+                    </span>
+                @endif
+            </li>
+        @endforeach
+    </ul>
+@endif
+
+                <p class="text-muted small mb-2">{{ $p->descripcion }}</p>
+                <div class="fw-bold text-coffee">Bs. {{ number_format($p->precio, 2, ',', '.') }}</div>
             </div>
         </div>
-    </section>
+    @endforeach
+</div>
+    </div>
+</section>
 
-    <style>
-        .menu-card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            background: linear-gradient(135deg, #fffaf0, #fdf3e5);
-            border-radius: 16px;
-            border: 1px solid #e0cda9;
-        }
+<style>
+    .menu-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background: linear-gradient(135deg, #fffaf0, #fdf3e5);
+        border-radius: 16px;
+        border: 1px solid #e0cda9;
+    }
 
-        .garabato-img img {
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
+    .garabato-img img {
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
 
-        .garabato-img img:hover {
-            transform: scale(1.05);
-        }
+    .garabato-img img:hover {
+        transform: scale(1.05);
+    }
 
-        .nav-link {
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+    .nav-link {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
 
-        .nav-link:hover {
-            background-color: #b8734e;
-            color: gold !important;
-        }
-    </style>
+    .nav-link:hover {
+        background-color: #b8734e;
+        color: gold !important;
+    }
+</style>
 
-    <script>
-        const filterLinks = document.querySelectorAll('.nav-link[data-category]');
-        const menuItems = document.querySelectorAll('.menu-item');
+<script>
+    const filterLinks = document.querySelectorAll('.nav-link[data-category]');
+    const menuItems = document.querySelectorAll('.menu-item');
 
-        filterLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
+    filterLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
 
-                filterLinks.forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
+            filterLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
 
-                const category = this.dataset.category;
+            const category = this.dataset.category;
 
-                menuItems.forEach(item => {
-                    if (category === 'all' || item.dataset.category.toString() === category
-                        .toString()) {
-                        item.style.display = 'block';
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
+            menuItems.forEach(item => {
+                if (category === 'all' || item.dataset.category.toString() === category.toString()) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
             });
         });
-    </script>
+    });
+</script>
 
+
+    
 
 
     {{-- Nuestra Historia --}}

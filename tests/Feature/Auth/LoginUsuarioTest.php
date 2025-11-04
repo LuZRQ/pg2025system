@@ -12,7 +12,11 @@ use PHPUnit\Framework\Attributes\Test;
 class LoginUsuarioTest extends TestCase
 {
     use RefreshDatabase;
-
+/**
+     * Prueba que un usuario activo con credenciales correctas
+     * pueda iniciar sesión y que el sistema redirija según su rol.
+     * En este caso, se comprueba que el rol "Cajero" ingresa al módulo de ventas.
+     */
     #[Test]
     public function un_usuario_activo_puede_iniciar_sesion_y_redirige_segun_su_rol(): void
     {
@@ -33,7 +37,11 @@ class LoginUsuarioTest extends TestCase
         $response->assertRedirect(route('ventas.index'));
         $this->assertAuthenticatedAs($usuario);
     }
-
+/**
+     * Prueba que si la contraseña ingresada es incorrecta,
+     * el inicio de sesión falla, se retorna un error en la sesión
+     * y no se autenticará al usuario.
+     */
     #[Test]
     public function un_usuario_con_contrasena_incorrecta_no_puede_iniciar_sesion(): void
     {
@@ -54,7 +62,11 @@ class LoginUsuarioTest extends TestCase
         $response->assertSessionHasErrors('ci');
         $this->assertGuest();
     }
-
+/**
+     * Prueba que un usuario marcado como inactivo
+     * (estado = false) no pueda iniciar sesión aunque sus
+     * credenciales sean correctas.
+     */
     #[Test]
     public function un_usuario_inactivo_no_puede_iniciar_sesion(): void
     {

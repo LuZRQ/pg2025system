@@ -29,28 +29,38 @@
                     <th class="px-4 py-2">ID</th>
                     <th class="px-4 py-2">Nombre de la Categoría</th>
                     <th class="px-4 py-2">Descripción</th>
+                      @if (auth()->user()->rol->nombreRol === 'Dueño')
                     <th class="px-4 py-2">Acciones</th>
+                @endif
                 </tr>
             </thead>
-            <tbody class="text-stone-700">
-                @foreach ($categorias as $categoria)
-                    <tr class="border-t hover:bg-stone-50">
-                        <td class="px-4 py-2">{{ $categoria->idCategoria }}</td>
-                        <td class="px-4 py-2 font-medium">{{ $categoria->nombreCategoria }}</td>
-                        <td class="px-4 py-2">{{ $categoria->descripcion ?? '-' }}</td>
-                        <td class="px-4 py-2 flex items-center gap-3">
-                            <form action="{{ route('categorias.destroy', $categoria->idCategoria) }}" method="POST"
-                                  onsubmit="return confirm('¿Seguro que quieres eliminar esta categoría?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:text-red-800">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
+            <tbody class="text-stone-700"> 
+    @foreach ($categorias as $categoria)
+        <tr class="border-t hover:bg-stone-50">
+            <td class="px-4 py-2">{{ $categoria->idCategoria }}</td>
+            <td class="px-4 py-2 font-medium">{{ $categoria->nombreCategoria }}</td>
+            <td class="px-4 py-2">{{ $categoria->descripcion ?? '-' }}</td>
+          <td class="px-4 py-2 flex items-center gap-3">
+
+    @if (auth()->user()->rol->nombreRol === 'Dueño')
+        <form action="{{ route('categorias.destroy', $categoria->idCategoria) }}" 
+              method="POST" class="form-eliminar">
+            @csrf
+            @method('DELETE')
+            <button type="submit" 
+                    class="text-red-600 hover:text-red-800"
+                    onclick="return confirm('¿Seguro deseas eliminar esta categoría?')">
+                <i class="fas fa-trash"></i>
+            </button>
+        </form>
+    @endif
+
+</td>
+
+        </tr>
+    @endforeach
+</tbody>
+
         </table>
     </div>
 </div>

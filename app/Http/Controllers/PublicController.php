@@ -13,7 +13,15 @@ class PublicController extends Controller
 
     public function index()
     {
-        $productos = Producto::activos()->with('categoria')->get();
+       
+         $productos = Producto::activos()
+        ->with([
+            'categoria',   // relación con la categoría
+            'variantes' => function ($query) {
+                $query->activas(); // traer solo variantes activas
+            }
+        ])
+        ->get();
         $categorias = CategoriaProducto::all();
 
         $opiniones = Calificacion::with('usuario')

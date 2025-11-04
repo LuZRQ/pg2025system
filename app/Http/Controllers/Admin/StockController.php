@@ -18,8 +18,12 @@ class StockController extends Controller
         $this->verificarResetDiario();
 
         $categorias = CategoriaProducto::with(['productos' => function ($query) {
-            $query->activos();
-        }])->get();
+    $query->activos()
+          ->with(['variantes' => function ($q) {
+              $q->activas(); // solo variantes activas
+          }]);
+}])->get();
+
 
         $productos = collect();
 
@@ -63,70 +67,110 @@ class StockController extends Controller
         return redirect()->route($redirect)->with('exito', 'Producto actualizado correctamente.');
     }
 
-    // Registrar entrada de stock
     public function entrada(Request $request, $idProducto)
-    {
-        $producto = Producto::findOrFail($idProducto);
+{
+    $producto = Producto::findOrFail($idProducto);
 
-        $request->validate([
-            'cantidad' => 'required|integer|min:1',
-        ]);
+    $request->validate([
+        'cantidad' => 'required|integer|min:1',
+        'idVariante' => 'nullable|exists:producto_variantes,idVariante',
+    ]);
 
-        $producto->stock += $request->cantidad;
-
-        if ($producto->stock_inicial < $producto->stock) {
-            $producto->stock_inicial = $producto->stock;
-        }
-
-        $producto->save();
+    if ($request->filled('idVariante')) {
+        $variante = $producto->variantes()->findOrFail($request->idVariante);
+        $oldStock = $variante->stock;
+        $variante->stock += $request->cantidad;
+        $variante->save();
 
         $this->logAction(
-            "Se registró entrada de {$request->cantidad} unidades en {$producto->nombre}",
+            "Entrada de {$request->cantidad} unidades en {$producto->nombre} ({$variante->tipo}). Stock anterior: {$oldStock}, nuevo: {$variante->stock}",
             'Stock',
             'Exitoso'
         );
+    } else {
+        $oldStock = $producto->stock;
+        $producto->stock += $request->cantidad;
+        if ($producto->stock_inicial < $producto->stock) {
+            $producto->stock_inicial = $producto->stock;
+        }
+        $producto->save();
 
-        return redirect()->route('stock.index')->with('exito', 'Stock actualizado con entrada.');
+        $this->logAction(
+            "Entrada de {$request->cantidad} unidades en {$producto->nombre}. Stock anterior: {$oldStock}, nuevo: {$producto->stock}",
+            'Stock',
+            'Exitoso'
+        );
     }
 
-    // Registrar salida de stock
-    public function salida(Request $request, $idProducto)
-    {
-        $producto = Producto::findOrFail($idProducto);
+    return redirect()->route('stock.index')->with('exito', 'Stock actualizado con entrada.');
+}
 
-        $request->validate([
-            'cantidad' => 'required|integer|min:1',
-        ]);
 
+   public function salida(Request $request, $idProducto)
+{
+    $producto = Producto::findOrFail($idProducto);
+
+    $request->validate([
+        'cantidad' => 'required|integer|min:1',
+        'idVariante' => 'nullable|exists:producto_variantes,idVariante',
+    ]);
+
+    if ($request->filled('idVariante')) {
+        $variante = $producto->variantes()->findOrFail($request->idVariante);
+
+        if ($variante->stock < $request->cantidad) {
+            return redirect()->route('stock.index')->with('error', 'No hay suficiente stock disponible en esta variante.');
+        }
+
+        $oldStock = $variante->stock;
+        $variante->stock -= $request->cantidad;
+        $variante->save();
+
+        $this->logAction(
+            "Salida de {$request->cantidad} unidades de {$producto->nombre} ({$variante->tipo}). Stock anterior: {$oldStock}, nuevo: {$variante->stock}",
+            'Stock',
+            'Exitoso'
+        );
+    } else {
         if ($producto->stock < $request->cantidad) {
             return redirect()->route('stock.index')->with('error', 'No hay suficiente stock disponible.');
         }
 
+        $oldStock = $producto->stock;
         $producto->stock -= $request->cantidad;
         $producto->save();
 
         $this->logAction(
-            "Salida de stock: -{$request->cantidad} unidades del producto '{$producto->nombre}'. Stock actual: {$producto->stock}",
+            "Salida de {$request->cantidad} unidades del producto '{$producto->nombre}'. Stock anterior: {$oldStock}, nuevo: {$producto->stock}",
             'Stock',
             'Exitoso'
         );
-
-        return redirect()->route('stock.index')->with('exito', 'Stock actualizado con salida.');
     }
 
-    private function verificarResetDiario()
-    {
-        $hoy = now()->toDateString();
+    return redirect()->route('stock.index')->with('exito', 'Stock actualizado con salida.');
+}
 
-        $productos = Producto::all();
-        foreach ($productos as $producto) {
-            if ($producto->fecha_actualizacion_stock !== $hoy) {
-                $producto->update([
-                    'vendidos_dia' => 0,
-                    'stock' => $producto->stock_inicial,
-                    'fecha_actualizacion_stock' => $hoy,
+
+ private function verificarResetDiario()
+{
+    $hoy = now()->toDateString();
+
+    $productos = Producto::with('variantes')->get();
+    foreach ($productos as $producto) {
+        if ($producto->fecha_actualizacion_stock !== $hoy) {
+            $producto->update([
+                'vendidos_dia' => 0,
+                'stock' => $producto->stock_inicial,
+                'fecha_actualizacion_stock' => $hoy,
+            ]);
+
+            foreach ($producto->variantes as $variante) {
+                $variante->update([
+                    'stock' => $variante->stock_inicial ?? $variante->stock,
                 ]);
             }
         }
     }
+}
+
 }

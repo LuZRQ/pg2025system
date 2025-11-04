@@ -7,38 +7,60 @@ document.addEventListener('DOMContentLoaded', () => {
     const formEnviar = document.getElementById('form-enviar');
 
     // Filtrar productos
-   // Filtrar productos
-document.querySelectorAll('.btn-categoria').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const categoriaId = btn.dataset.categoria;
+    document.querySelectorAll('.btn-categoria').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const categoriaId = btn.dataset.categoria;
 
-        // Quitar la clase activa de todos los botones
-        document.querySelectorAll('.btn-categoria').forEach(b => {
-            b.classList.remove('bg-amber-700', 'text-white');
-            b.classList.add('bg-amber-100', 'text-amber-800');
-        });
+            // Quitar la clase activa de todos los botones
+            document.querySelectorAll('.btn-categoria').forEach(b => {
+                b.classList.remove('bg-amber-700', 'text-white');
+                b.classList.add('bg-amber-100', 'text-amber-800');
+            });
 
-        // Agregar clase activa al botón clickeado
-        btn.classList.add('bg-amber-700', 'text-white');
-        btn.classList.remove('bg-amber-100', 'text-amber-800');
+            // Agregar clase activa al botón clickeado
+            btn.classList.add('bg-amber-700', 'text-white');
+            btn.classList.remove('bg-amber-100', 'text-amber-800');
 
-        // Filtrar productos
-        document.querySelectorAll('.producto-card').forEach(card => {
-            card.style.display = (categoriaId === 'all' || card.dataset.categoria == categoriaId) ? 'block' : 'none';
+            // Filtrar productos
+            document.querySelectorAll('.producto-card').forEach(card => {
+                card.style.display = (categoriaId === 'all' || card.dataset.categoria == categoriaId) ? 'block' : 'none';
+            });
         });
     });
-});
-
 
     // Agregar productos
     document.querySelectorAll('.btn-agregar').forEach(btn => {
         btn.addEventListener('click', () => {
             const id = parseInt(btn.dataset.id);
             const nombre = btn.dataset.nombre;
-            const precio = parseFloat(btn.dataset.precio);
-            let item = pedido.find(p => p.idProducto === id);
+            const precioBase = parseFloat(btn.dataset.precio);
+            const variantes = btn.dataset.variantes ? JSON.parse(btn.dataset.variantes) : null;
+
+            // Obtener la variante seleccionada (si existe)
+            let varianteSeleccionada = null;
+            if (variantes) {
+                const contenedor = btn.closest('.producto-card');
+                const selectVariante = contenedor.querySelector('.select-variante');
+                if (selectVariante && selectVariante.value) {
+                    varianteSeleccionada = variantes.find(v => v.idVariante == selectVariante.value);
+                }
+            }
+
+            const precio = varianteSeleccionada ? parseFloat(varianteSeleccionada.precio) : precioBase;
+            const idVariante = varianteSeleccionada ? varianteSeleccionada.idVariante : null;
+            const nombreConVariante = varianteSeleccionada ? `${nombre} - ${varianteSeleccionada.nombre}` : nombre;
+
+            // Buscar item por idProducto + idVariante
+            let item = pedido.find(p => p.idProducto === id && p.idVariante === idVariante);
             if (item) item.cantidad++;
-            else pedido.push({ idProducto: id, nombre, precio, cantidad: 1 });
+            else pedido.push({
+                idProducto: id,
+                idVariante: idVariante,
+                nombre: nombreConVariante,
+                precio: precio,
+                cantidad: 1
+            });
+
             renderPedido();
         });
     });
@@ -69,53 +91,51 @@ document.querySelectorAll('.btn-categoria').forEach(btn => {
             pedidoItems.appendChild(div);
 
             // Eventos
-            div.querySelector('.btn-increment').addEventListener('click', () => cambiarCantidad(item.idProducto, 1));
-            div.querySelector('.btn-decrement').addEventListener('click', () => cambiarCantidad(item.idProducto, -1));
-            div.querySelector('.btn-eliminar').addEventListener('click', () => eliminarItem(item.idProducto));
+            div.querySelector('.btn-increment').addEventListener('click', () => cambiarCantidad(item.idProducto, 1, item.idVariante));
+            div.querySelector('.btn-decrement').addEventListener('click', () => cambiarCantidad(item.idProducto, -1, item.idVariante));
+            div.querySelector('.btn-eliminar').addEventListener('click', () => eliminarItem(item.idProducto, item.idVariante));
         });
         pedidoTotal.innerText = 'Bs. ' + total.toFixed(2);
     }
 
     // Cambiar cantidad
-    function cambiarCantidad(id, delta) {
-        let item = pedido.find(p => p.idProducto === id);
+    function cambiarCantidad(id, delta, idVariante = null) {
+        let item = pedido.find(p => p.idProducto === id && p.idVariante === idVariante);
         if (item) {
             item.cantidad += delta;
-            if (item.cantidad <= 0) pedido = pedido.filter(p => p.idProducto !== id);
+            if (item.cantidad < 1) item.cantidad = 1; 
             renderPedido();
         }
     }
 
     // Eliminar item
-    function eliminarItem(id) {
-        pedido = pedido.filter(p => p.idProducto !== id);
+    function eliminarItem(id, idVariante = null) {
+        pedido = pedido.filter(p => !(p.idProducto === id && p.idVariante === idVariante));
         renderPedido();
     }
 
     // Enviar pedido
     const btnEnviar = document.getElementById('btn-enviar-pedido');
-if (btnEnviar) {
-    btnEnviar.addEventListener('click', () => {
-        if (pedido.length === 0) return alert("No hay productos en el pedido");
+    if (btnEnviar) {
+        btnEnviar.addEventListener('click', () => {
+            if (pedido.length === 0) return alert("No hay productos en el pedido");
 
-        formEnviar.mesa.value = mesaSelect.value.replace("Mesa: ", "");
-        formEnviar.comentarios.value = comentarioText.value;
-        formEnviar.productos.value = JSON.stringify(pedido);
-        formEnviar.submit();
-        alert("✅ Pedido enviado correctamente a cocina.");
-        cancelarPedido();
-    });
-}
-
+            formEnviar.mesa.value = mesaSelect.value.replace("Mesa: ", "");
+            formEnviar.comentarios.value = comentarioText.value;
+            formEnviar.productos.value = JSON.stringify(pedido);
+            formEnviar.submit();
+            alert(" Pedido enviado correctamente a cocina.");
+            cancelarPedido();
+        });
+    }
 
     // Cancelar pedido
- const btnCancelar = document.getElementById('btn-cancelar-pedido');
-if (btnCancelar) {
-    btnCancelar.addEventListener('click', () => {
-        cancelarPedido();
-    });
-}
-
+    const btnCancelar = document.getElementById('btn-cancelar-pedido');
+    if (btnCancelar) {
+        btnCancelar.addEventListener('click', () => {
+            cancelarPedido();
+        });
+    }
 
     function cancelarPedido() {
         pedido = [];

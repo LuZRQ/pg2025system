@@ -38,44 +38,64 @@ class ProductoController extends Controller
         $categorias = CategoriaProducto::all();
         return view('admin.productos.crear', compact('categorias'));
     }
+   
 
-    public function guardar(Request $request)
-    {
-        $request->validate([
-            'nombre' => 'required|string|max:100',
-            'descripcion' => 'nullable|string|max:255',
-            'precio' => 'required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
-            'stock' => 'required|integer|min:0',
-            'categoriaId' => 'required|exists:CategoriaProducto,idCategoria',
-            'estado' => 'required|boolean',
-            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-        ]);
+   public function guardar(Request $request)
+{
+    $request->validate([
+        'nombre' => 'required|string|max:100',
+        'descripcion' => 'nullable|string|max:255',
+        'precio' => 'nullable|numeric|min:1|regex:/^\d+(\.\d{1,2})?$/', // solo si no tiene variantes
+        'stock' => 'nullable|integer|min:0', // stock general si no tiene variantes
+        'categoriaId' => 'required|exists:CategoriaProducto,idCategoria',
+        'estado' => 'required|boolean',
+        'imagen' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
+        'variantes' => 'nullable|array',
+        'variantes.*.tipo' => 'required_with:variantes|in:caliente,frio',
+        'variantes.*.precio' => 'required_with:variantes|numeric|min:1|regex:/^\d+(\.\d{1,2})?$/',
+        'variantes.*.stock' => 'required_with:variantes|integer|min:0',
+    ]);
 
-        $nombreArchivo = null;
-        if ($request->hasFile('imagen')) {
-            $archivo = $request->file('imagen');
-            $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
-            $archivo->storeAs('productos', $nombreArchivo, 'public');
-        }
-
-        $producto = Producto::create([
-            'nombre' => $request->nombre,
-            'descripcion' => $request->descripcion,
-            'precio' => $request->precio,
-            'stock' => $request->stock,
-            'categoriaId' => $request->categoriaId,
-            'estado' => $request->estado,
-            'imagen' => $nombreArchivo ? 'productos/' . $nombreArchivo : null,
-        ]);
-
-        $this->logAction(
-            "Se creó el producto '{$producto->nombre}' (ID: {$producto->idProducto})",
-            'Productos',
-            'Exitoso'
-        );
-
-        return redirect()->route('productos.index')->with('exito', 'Producto creado correctamente.');
+    // Guardar imagen si existe
+    $nombreArchivo = null;
+    if ($request->hasFile('imagen')) {
+        $archivo = $request->file('imagen');
+        $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
+        $archivo->storeAs('productos', $nombreArchivo, 'public');
     }
+
+    // Crear producto principal
+    $producto = Producto::create([
+        'nombre' => $request->nombre,
+        'descripcion' => $request->descripcion,
+        'precio' => $request->precio, // se usará si no tiene variantes
+        'stock' => $request->stock,
+        'categoriaId' => $request->categoriaId,
+        'estado' => $request->estado,
+        'imagen' => $nombreArchivo ? 'productos/' . $nombreArchivo : null,
+    ]);
+
+    // Guardar variantes si existen
+    if ($request->filled('variantes')) {
+        foreach ($request->variantes as $variante) {
+            $producto->variantes()->create([
+                'tipo' => $variante['tipo'],
+                'precio' => $variante['precio'],
+                'stock' => $variante['stock'],
+                'estado' => $producto->estado, // hereda estado del producto
+            ]);
+        }
+    }
+
+    $this->logAction(
+        "Se creó el producto '{$producto->nombre}' (ID: {$producto->idProducto})",
+        'Productos',
+        'Exitoso'
+    );
+
+    return redirect()->route('productos.index')->with('exito', 'Producto creado correctamente.');
+}
+
 
     public function editar($idProducto)
     {
@@ -84,47 +104,71 @@ class ProductoController extends Controller
         return view('admin.productos.editar', compact('producto', 'categorias'));
     }
 
-    public function actualizar(Request $request, $idProducto)
-    {
-        $producto = Producto::findOrFail($idProducto);
+   public function actualizar(Request $request, $idProducto)
+{
+    $producto = Producto::findOrFail($idProducto);
 
-        $request->validate([
-            'nombre' => 'required|string|max:100|unique:producto,nombre,' . $idProducto . ',idProducto',
-            'descripcion' => 'nullable|string|max:255',
-            'precio' => 'required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
-            'stock' => 'required|integer|min:0',
-            'categoriaId' => 'required|exists:CategoriaProducto,idCategoria',
-            'estado' => 'required|boolean',
-            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-        ]);
+    $request->validate([
+        'nombre' => 'required|string|max:100|unique:producto,nombre,' . $idProducto . ',idProducto',
+        'descripcion' => 'nullable|string|max:255',
+        'precio' => 'nullable|numeric|min:1|regex:/^\d+(\.\d{1,2})?$/',
+        'stock' => 'nullable|integer|min:0',
+        'categoriaId' => 'required|exists:CategoriaProducto,idCategoria',
+        'estado' => 'required|boolean',
+        'imagen' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
+        'variantes' => 'nullable|array',
+        'variantes.*.tipo' => 'required_with:variantes|in:caliente,frio',
+        'variantes.*.precio' => 'required_with:variantes|numeric|min:1|regex:/^\d+(\.\d{1,2})?$/',
+        'variantes.*.stock' => 'required_with:variantes|integer|min:0',
+    ]);
 
-        $nombreArchivo = $producto->imagen;
-
-        if ($request->hasFile('imagen')) {
-            $archivo = $request->file('imagen');
-            $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
-            $archivo->storeAs('productos', $nombreArchivo, 'public');
-            $nombreArchivo = 'productos/' . $nombreArchivo;
-        }
-
-        $producto->update([
-            'nombre' => $request->nombre,
-            'descripcion' => $request->descripcion,
-            'precio' => $request->precio,
-            'stock' => $request->stock,
-            'categoriaId' => $request->categoriaId,
-            'estado' => $request->estado,
-            'imagen' => $nombreArchivo,
-        ]);
-
-        $this->logAction(
-            "Se actualizó el producto '{$producto->nombre}' (ID: {$producto->idProducto})",
-            'Productos',
-            'Exitoso'
-        );
-
-        return redirect()->route('productos.index')->with('exito', 'Producto actualizado correctamente.');
+    // 📸 Manejo de imagen
+    $nombreArchivo = $producto->imagen;
+    if ($request->hasFile('imagen')) {
+        $archivo = $request->file('imagen');
+        $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
+        $archivo->storeAs('productos', $nombreArchivo, 'public');
+        $nombreArchivo = 'productos/' . $nombreArchivo;
     }
+
+    // 🧱 Actualizar producto base
+    $producto->update([
+        'nombre' => $request->nombre,
+        'descripcion' => $request->descripcion,
+        'precio' => $request->precio,
+        'stock' => $request->stock,
+        'categoriaId' => $request->categoriaId,
+        'estado' => $request->estado,
+        'imagen' => $nombreArchivo,
+    ]);
+
+    // 🧹 Eliminar variantes anteriores (para evitar duplicados)
+    $producto->variantes()->delete();
+
+    // 🆕 Crear las variantes nuevas
+    if ($request->filled('variantes')) {
+        foreach ($request->variantes as $variante) {
+            if (!empty($variante['tipo'])) {
+                $producto->variantes()->create([
+                    'tipo' => $variante['tipo'],
+                    'precio' => $variante['precio'],
+                    'stock' => $variante['stock'] ?? 0,
+                    'estado' => $producto->estado,
+                ]);
+            }
+        }
+    }
+
+    // 🧾 Log
+    $this->logAction(
+        "Se actualizó el producto '{$producto->nombre}' (ID: {$producto->idProducto})",
+        'Productos',
+        'Exitoso'
+    );
+
+    return redirect()->route('productos.index')->with('exito', 'Producto actualizado correctamente.');
+}
+
 
     public function eliminar($idProducto)
     {

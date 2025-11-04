@@ -35,7 +35,14 @@ public function index(Request $request)
     $buscar = $request->get('buscar');
 
     // 🔹 Base query para productos activos
-    $query = Producto::activos()->with('categoria');
+    // 🔹 Base query para productos activos
+$query = Producto::activos()
+    ->with([
+        'categoria',
+        'variantes' => function ($q) {
+            $q->activas(); // usa el scope que ya tienes en tu modelo
+        }
+    ]);
 
     if ($categoriaId && $categoriaId !== 'all') {
         $query->where('categoriaId', $categoriaId);
@@ -69,6 +76,7 @@ $pedidosListos = Pedido::with(['detalles.producto'])
     ->where('estado', 'listo')
      ->whereDate('fechaCreacion', now()->toDateString()) 
     ->get();
+
 
 
     // 🔹 Retornar vista con todos los datos
@@ -208,35 +216,61 @@ public function reimprimirUltimoPedido()
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'idPedido' => 'required|exists:Pedido,idPedido',
-        ]);
+{
+    $request->validate([
+        'idPedido' => 'required|exists:Pedido,idPedido',
+    ]);
 
-        $pedido = Pedido::with('detalles')->findOrFail($request->idPedido);
+    $pedido = Pedido::with('detalles.producto.variantes')->findOrFail($request->idPedido);
 
-        $montoTotal = $pedido->detallePedidos->sum(function ($detalle) {
-            return $detalle->subtotal;
-        });
+    // 🔹 Calcular monto total
+    $montoTotal = $pedido->detallePedidos->sum(function ($detalle) {
+        return $detalle->subtotal;
+    });
 
-        $venta = Venta::create([
-    'idPedido'     => $pedido->idPedido,
-    'montoTotal'   => $montoTotal,
-    'fechaPago'    => now(),
-    'metodo_pago'  => $request->metodo_pago,
-    'pago_cliente' => $request->pago_cliente,
-    'cambio'       => max(0, $request->pago_cliente - $montoTotal),
-    'efectivo_real'=> $request->metodo_pago === 'Efectivo' ? $request->pago_cliente : 0,
-]);
+    // 🔹 Descontar stock de cada detalle
+    foreach ($pedido->detallePedidos as $detalle) {
+        $producto = $detalle->producto;
+        $varianteId = $detalle->variante_id ?? null; // suponiendo que agregaste campo variante_id en detallePedidos
+
+        $resultado = $producto->descontarStock($detalle->cantidad, $varianteId);
+
+        if (!$resultado) {
+            return redirect()->back()->with(
+                'error',
+                "No hay suficiente stock de {$producto->nombre}" . ($varianteId ? " (Variante ID: $varianteId)" : "")
+            );
+        }
 
         $this->logAction(
-            "Se registró la venta #{$venta->idVenta} del pedido #{$pedido->idPedido}, monto total: {$montoTotal}",
-            'Ventas',
-            'Exitoso'
+            "Descuento de stock por Venta (Pedido #{$pedido->idPedido}): {$detalle->cantidad}x {$producto->nombre}" .
+            ($varianteId ? " (Variante ID: $varianteId)" : ""),
+            'Stock',
+            'Descuento automático'
         );
-        return redirect()->route('ventas.index')
-            ->with('exito', 'Venta registrada correctamente.');
     }
+
+    // 🔹 Crear la venta
+    $venta = Venta::create([
+        'idPedido'     => $pedido->idPedido,
+        'montoTotal'   => $montoTotal,
+        'fechaPago'    => now(),
+        'metodo_pago'  => $request->metodo_pago,
+        'pago_cliente' => $request->pago_cliente,
+        'cambio'       => max(0, $request->pago_cliente - $montoTotal),
+        'efectivo_real'=> $request->metodo_pago === 'Efectivo' ? $request->pago_cliente : 0,
+    ]);
+
+    $this->logAction(
+        "Se registró la venta #{$venta->idVenta} del pedido #{$pedido->idPedido}, monto total: {$montoTotal}",
+        'Ventas',
+        'Exitoso'
+    );
+
+    return redirect()->route('ventas.index')
+        ->with('exito', 'Venta registrada correctamente y stock actualizado.');
+}
+
 
     public function show($idVenta)
     {
