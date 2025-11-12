@@ -34,7 +34,7 @@ class Producto extends Model
         return $query->where('estado', 1);
     }
 
-  public function detallePedidos()
+    public function detallePedidos()
     {
         return $this->hasMany(DetallePedido::class, 'idProducto', 'idProducto');
     }
@@ -50,9 +50,9 @@ class Producto extends Model
     }
 
     public function getRestanteAttribute()
-    {
-        return $this->stock;
-    }
+{
+    return $this->stock_inicial; // restante = stock inicial
+}
 
     public function getEstadoStock(): string
     {
@@ -85,33 +85,62 @@ class Producto extends Model
      * @return bool
      */
     public function descontarStock(int $cantidad, ?int $varianteId = null): bool
-    {
-        if ($varianteId) {
-            // Buscar variante
-            $variante = $this->variantes()->find($varianteId);
-            if (!$variante || $variante->stock < $cantidad) {
-                return false;
-            }
-            $variante->stock -= $cantidad;
-            $variante->save();
-        } else {
-            // Producto sin variantes
-            if ($this->stock < $cantidad) {
-                return false;
-            }
-            $this->stock -= $cantidad;
+{
+    if ($varianteId) {
+        // 🔹 Descontar stock en una variante
+        $variante = $this->variantes()->find($varianteId);
+        if (!$variante || $variante->stock < $cantidad) {
+            return false;
         }
 
-        // Actualizar stock total del producto principal (sumando variantes si existen)
-        if ($this->variantes()->count() > 0) {
-            $this->stock = $this->variantes()->sum('stock');
-        } else {
-            $this->vendidos_dia += $cantidad;
-        }
+        // Descontar del stock restante de la variante
+        $variante->stock -= $cantidad;
 
+        // Actualizar vendidos del día (si lo manejas)
+        $variante->vendidos_dia = ($variante->stock_inicial ?? 0) - $variante->stock;
+        $variante->save();
+
+        // Actualizar stock restante del producto base (suma de todas las variantes)
+        $this->stock_inicial = $this->variantes()->sum('stock');
+        $this->vendidos_dia = $this->stock - $this->stock_inicial;
         $this->save();
 
         return true;
     }
+
+    // 🔹 Sin variante: producto simple
+    if ($this->stock_inicial < $cantidad) {
+        return false;
+    }
+
+    // Descontar del stock restante
+    $this->stock_inicial -= $cantidad;
+
+    // Actualizar vendidos
+    $this->vendidos_dia = $this->stock - $this->stock_inicial;
+    $this->save();
+
+    return true;
+}
+
+public function resetStockDiario()
+{
+    if ($this->fecha_actualizacion_stock != now()->toDateString()) {
+
+        // Producto base
+        $this->vendidos_dia = 0;
+        $this->stock_inicial = $this->stock; // stock vuelve al valor inicial
+        $this->fecha_actualizacion_stock = now()->toDateString();
+        $this->save();
+
+        // Variantes
+        foreach ($this->variantes as $variante) {
+            $variante->vendidos_dia = 0;
+            $variante->stock = $variante->stock_inicial;
+            $variante->save();
+        }
+    }
+}
+
 
 }

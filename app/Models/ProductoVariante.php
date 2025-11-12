@@ -18,14 +18,20 @@ class ProductoVariante extends Model
         'tipo',
         'precio',
         'stock',
+        'stock_inicial', 
         'estado',
+        'vendidos_dia',           // NUEVO
+    'fecha_actualizacion_stock',
     ];
 
     // Tipo de dato para que Eloquent los transforme automáticamente
     protected $casts = [
         'precio' => 'decimal:2',
         'stock' => 'integer',
+           'stock_inicial' => 'integer', 
         'estado' => 'boolean',
+           'vendidos_dia' => 'integer',
+    'fecha_actualizacion_stock' => 'date',
     ];
 
     // Relación inversa: cada variante pertenece a un producto
@@ -45,4 +51,24 @@ class ProductoVariante extends Model
     {
         return ucfirst($this->tipo);
     }
+public function getVendidosAttribute()
+{
+    return $this->vendidos_dia;
+}
+
+public function getRestanteAttribute()
+{
+    return $this->stock; // restante = stock actual
+}
+
+public function resetStockDiario()
+{
+    $today = now()->toDateString();
+    if ($this->fecha_actualizacion_stock != $today) {
+        $this->vendidos_dia = 0;
+        $this->fecha_actualizacion_stock = $today;
+        $this->save();
+    }
+}
+
 }

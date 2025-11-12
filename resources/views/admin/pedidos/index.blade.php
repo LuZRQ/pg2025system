@@ -79,14 +79,32 @@
 
                     <p class="text-xs text-gray-500 mb-2">👤 Mesero: {{ $pedido->usuario->nombre ?? 'Desconocido' }}</p>
 
-                    <ul class="text-sm text-gray-800 mb-2 space-y-1">
-                        @foreach ($pedido->detalles as $detalle)
-                            <li>
-                                {{ $detalle->cantidad }}x {{ $detalle->producto->nombre }}
-                                <span class="float-right">Bs. {{ number_format($detalle->subtotal, 2) }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
+                  <ul class="text-sm text-gray-800 mb-2 space-y-2">
+    @foreach ($pedido->detalles as $detalle)
+        @php
+            $variante = $detalle->producto->variantes->firstWhere('idVariante', $detalle->variante_id ?? null);
+        @endphp
+
+        <li class="bg-white/70 rounded-md px-3 py-2 shadow-sm border border-amber-100">
+            <div class="flex justify-between items-center">
+                <div>
+                    <span class="font-semibold text-amber-900">
+                        {{ $detalle->cantidad }}x {{ $detalle->producto->nombre }}
+                    </span>
+                    @if ($variante)
+                        <span class="ml-2 text-xs font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                            {{ ucfirst($variante->tipo) }}
+                        </span>
+                    @endif
+                </div>
+                <span class="text-amber-800 font-semibold">
+                    Bs. {{ number_format($detalle->subtotal, 2) }}
+                </span>
+            </div>
+        </li>
+    @endforeach
+</ul>
+
 
                     @if ($pedido->comentarios)
                         <div

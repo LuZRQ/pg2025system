@@ -174,6 +174,10 @@ Route::middleware(['auth', 'verificarRol:Gestión de Reportes'])->group(function
     Route::get('/reportes/baja-venta/pdf', [ReporteController::class, 'bajaVentaPDF'])->name('reportes.bajaVentaPDF');
     Route::get('/reportes/baja-venta/excel', [ReporteController::class, 'bajaVentaExcel'])->name('reportes.bajaVentaExcel');
 
+
+Route::get('/reportes/inventario', [ReporteController::class, 'inventario'])
+    ->name('reportes.inventario');
+
     // -------- AVANZADOS (por tipo, genera al vuelo)
     Route::get('/reportes/avanzado/{tipo}', [ReporteController::class, 'showAvanzadoPDF'])->name('reportes.showAvanzado');
     Route::get('/reportes/descargar/pdf/{tipo}', [ReporteController::class, 'downloadPDF'])->name('reportes.downloadPDFByTipo');

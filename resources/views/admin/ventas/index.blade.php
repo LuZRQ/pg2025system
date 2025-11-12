@@ -81,22 +81,26 @@
         @endif
 
         {{-- Botón agregar --}}
-        <button
-            class="btn-agregar w-full flex justify-center items-center gap-2 bg-amber-700 text-white py-2 rounded-lg hover:bg-amber-800 transition-colors"
-            data-id="{{ $producto->idProducto }}"
-            data-nombre="{{ $producto->nombre }}"
-            data-precio="{{ $producto->precio }}"
-            @if ($producto->variantes && $producto->variantes->count() > 0)
-                data-tiene-variantes="true"
-                data-variantes='@json($producto->variantes->map(fn($v) => [
-                    "idVariante" => $v->idVariante,
-                    "nombre" => ucfirst($v->tipo),
-                    "precio" => $v->precio
-                ]))'
-            @endif
-        >
-            Agregar
-        </button>
+      <button
+    class="btn-agregar w-full flex justify-center items-center gap-2 bg-amber-700 text-white py-2 rounded-lg hover:bg-amber-800 transition-colors"
+    data-id="{{ $producto->idProducto }}"
+    data-nombre="{{ $producto->nombre }}"
+    data-precio="{{ $producto->precio }}"
+    data-stock="{{ $producto->stock_inicial }}" {{-- stock del producto --}}
+    @if ($producto->variantes && $producto->variantes->count() > 0)
+        data-tiene-variantes="true"
+       data-variantes="{{ json_encode($producto->variantes->map(fn($v) => [
+    'idVariante' => $v->idVariante,
+    'nombre' => ucfirst($v->tipo),
+    'precio' => $v->precio,
+    'stock' => $v->stock,
+])) }}"
+
+    @endif
+>
+    Agregar
+</button>
+
     </div>
 </div>
 

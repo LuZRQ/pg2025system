@@ -72,22 +72,23 @@ class PedidoController extends Controller
             $varianteId = $detalle->variante_id ?? null; // si la tabla detalle tiene id de variante
 
             // Validar stock
-            if ($varianteId) {
-                $variante = $producto->variantes()->find($varianteId);
-                if (!$variante || $variante->stock < $detalle->cantidad) {
-                    return redirect()->back()->with(
-                        'error',
-                        "No hay suficiente stock de la variante {$variante->tipo} de {$producto->nombre}."
-                    );
-                }
-            } else {
-                if ($producto->stock < $detalle->cantidad) {
-                    return redirect()->back()->with(
-                        'error',
-                        "No hay suficiente stock de {$producto->nombre}."
-                    );
-                }
-            }
+           if ($varianteId) {
+    $variante = $producto->variantes()->find($varianteId);
+    if (!$variante || $variante->stock < $detalle->cantidad) {
+        return redirect()->back()->with(
+            'error',
+            "No hay suficiente stock de la variante {$variante->tipo} de {$producto->nombre}."
+        );
+    }
+} else {
+    if ($producto->stock_inicial < $detalle->cantidad) {
+        return redirect()->back()->with(
+            'error',
+            "No hay suficiente stock de {$producto->nombre}."
+        );
+    }
+}
+
         }
 
         // Descontar stock

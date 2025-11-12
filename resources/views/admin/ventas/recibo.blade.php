@@ -72,15 +72,28 @@
 
                 <div class="space-y-1 text-[10px]">
                     @if ($venta->pedido && $venta->pedido->detalles)
-                        @foreach ($venta->pedido->detalles as $detalle)
-                            <div class="flex justify-between">
-                                <span>{{ $detalle->cantidad }} x {{ $detalle->producto->nombre }}</span>
-                                <span>Bs. {{ number_format($detalle->subtotal, 2) }}</span>
-                            </div>
-                            @if ($detalle->comentarios)
-                                <div class="ml-2 text-[9px] text-gray-500 italic">({{ $detalle->comentarios }})</div>
-                            @endif
-                        @endforeach
+                     @foreach ($venta->pedido->detalles as $detalle)
+    @php
+        $variante = $detalle->producto->variantes->firstWhere('idVariante', $detalle->variante_id ?? null);
+    @endphp
+
+    <div class="flex justify-between">
+        <span>
+            {{ $detalle->cantidad }} x {{ $detalle->producto->nombre }}
+            @if ($variante)
+                <span class="ml-1 text-[9px] font-medium">
+                    ({{ ucfirst($variante->tipo) }})
+                </span>
+            @endif
+        </span>
+        <span>Bs. {{ number_format($detalle->subtotal, 2) }}</span>
+    </div>
+
+    @if ($detalle->comentarios)
+        <div class="ml-2 text-[9px] text-gray-500 italic">({{ $detalle->comentarios }})</div>
+    @endif
+@endforeach
+
                     @else
                         <div>No hay detalles disponibles.</div>
                     @endif

@@ -123,8 +123,9 @@
                                 value="{{ $var['precio'] ?? '' }}" placeholder="Precio" 
                                 class="px-2 py-1 border rounded-lg focus:ring-2 focus:ring-amber-400 focus:outline-none">
                             <input type="number" min="0" name="variantes[{{ $index }}][stock]" 
-                                value="{{ $var['stock'] ?? 0 }}" placeholder="Stock"
-                                class="px-2 py-1 border rounded-lg focus:ring-2 focus:ring-amber-400 focus:outline-none w-28">
+       value="{{ $var['stock_inicial'] ?? 0 }}" placeholder="Stock" 
+       class="px-2 py-1 border rounded-lg focus:ring-2 focus:ring-amber-400 focus:outline-none">
+
                             <button type="button" class="bg-red-500 text-white px-2 rounded remove-variante">Eliminar</button>
                         </div>
                         @php $index++; @endphp

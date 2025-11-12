@@ -101,6 +101,19 @@
         </div>
     </div>
 
+
+     {{--consultarreportes en tiempom real--}}
+<div class="bg-white shadow-lg rounded-2xl p-6 mb-10">
+    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-amber-900">
+        <i class="fas fa-boxes"></i> Reporte Histórico de Inventario
+    </h2>
+
+    <a href="{{ route('reportes.inventario') }}"
+        class="px-6 py-3 bg-amber-900 hover:bg-amber-700 text-white rounded-lg shadow font-semibold flex items-center gap-2">
+        <i class="fas fa-search"></i> Abrir Reporte
+    </a>
+</div>
+
     {{-- SECCIÓN 1: REPORTES RÁPIDOS --}}
     <div class="bg-white shadow-lg rounded-2xl p-6 mb-6">
         <h2 class="text-xl font-semibold mb-4"><i class="fas fa-bolt mr-2"></i> Reportes Rápidos</h2>

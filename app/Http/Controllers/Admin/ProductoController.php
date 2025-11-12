@@ -13,25 +13,32 @@ class ProductoController extends Controller
     use Auditable;
     
     public function index(Request $request)
-    {
-        $categorias = CategoriaProducto::all();
+{
+    $categorias = CategoriaProducto::all();
 
-        $productos = Producto::with('categoria')
-            ->when($request->search, function ($query) use ($request) {
-                $query->where('nombre', 'like', "%{$request->search}%")
-                    ->orWhere('descripcion', 'like', "%{$request->search}%");
-            })
-            ->when($request->categoria, function ($query) use ($request) {
-                $query->where('categoriaId', $request->categoria);
-            })
-            ->when($request->estado !== null && $request->estado !== '', function ($query) use ($request) {
-                $query->where('estado', $request->estado);
-            })
-            ->get();
+    // Traer productos con categoría y variantes
+    $productos = Producto::with('categoria', 'variantes')
+        ->when($request->search, function ($query) use ($request) {
+            $query->where('nombre', 'like', "%{$request->search}%")
+                  ->orWhere('descripcion', 'like', "%{$request->search}%");
+        })
+        ->when($request->categoria, function ($query) use ($request) {
+            $query->where('categoriaId', $request->categoria);
+        })
+        ->when($request->estado !== null && $request->estado !== '', function ($query) use ($request) {
+            $query->where('estado', $request->estado);
+        })
+        ->get();
 
-        return view('admin.productos.index', compact('productos', 'categorias'))
-            ->with('title', 'Gestión de Productos');
+    // 🔹 Reset stock diario si es necesario
+    foreach ($productos as $producto) {
+        $producto->resetStockDiario();
     }
+
+    return view('admin.productos.index', compact('productos', 'categorias'))
+        ->with('title', 'Gestión de Productos');
+}
+
 
     public function crear()
     {
@@ -47,6 +54,7 @@ class ProductoController extends Controller
         'descripcion' => 'nullable|string|max:255',
         'precio' => 'nullable|numeric|min:1|regex:/^\d+(\.\d{1,2})?$/', // solo si no tiene variantes
         'stock' => 'nullable|integer|min:0', // stock general si no tiene variantes
+       
         'categoriaId' => 'required|exists:CategoriaProducto,idCategoria',
         'estado' => 'required|boolean',
         'imagen' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
@@ -70,22 +78,27 @@ class ProductoController extends Controller
         'descripcion' => $request->descripcion,
         'precio' => $request->precio, // se usará si no tiene variantes
         'stock' => $request->stock,
+        'stock_inicial' => $request->stock, 
         'categoriaId' => $request->categoriaId,
         'estado' => $request->estado,
         'imagen' => $nombreArchivo ? 'productos/' . $nombreArchivo : null,
     ]);
 
     // Guardar variantes si existen
-    if ($request->filled('variantes')) {
-        foreach ($request->variantes as $variante) {
-            $producto->variantes()->create([
-                'tipo' => $variante['tipo'],
-                'precio' => $variante['precio'],
-                'stock' => $variante['stock'],
-                'estado' => $producto->estado, // hereda estado del producto
-            ]);
-        }
+  if ($request->filled('variantes')) {
+    foreach ($request->variantes as $variante) {
+        $producto->variantes()->create([
+            'tipo' => $variante['tipo'],
+            'precio' => $variante['precio'],
+            'stock' => $variante['stock'] ?? 0,
+            'stock_inicial' => $variante['stock'] ?? 0,
+            'vendidos_dia' => 0,
+            'fecha_actualizacion_stock' => now()->toDateString(),
+            'estado' => $producto->estado, // hereda estado del producto
+        ]);
     }
+}
+
 
     $this->logAction(
         "Se creó el producto '{$producto->nombre}' (ID: {$producto->idProducto})",
@@ -122,7 +135,7 @@ class ProductoController extends Controller
         'variantes.*.stock' => 'required_with:variantes|integer|min:0',
     ]);
 
-    // 📸 Manejo de imagen
+    // Manejo de imagen
     $nombreArchivo = $producto->imagen;
     if ($request->hasFile('imagen')) {
         $archivo = $request->file('imagen');
@@ -131,35 +144,39 @@ class ProductoController extends Controller
         $nombreArchivo = 'productos/' . $nombreArchivo;
     }
 
-    // 🧱 Actualizar producto base
+    // Actualizar producto base
     $producto->update([
         'nombre' => $request->nombre,
         'descripcion' => $request->descripcion,
         'precio' => $request->precio,
         'stock' => $request->stock,
+        'stock_inicial' => $request->stock_inicial ?? $request->stock, 
         'categoriaId' => $request->categoriaId,
         'estado' => $request->estado,
         'imagen' => $nombreArchivo,
     ]);
 
-    // 🧹 Eliminar variantes anteriores (para evitar duplicados)
+    // Eliminar variantes anteriores (para evitar duplicados)
     $producto->variantes()->delete();
 
-    // 🆕 Crear las variantes nuevas
-    if ($request->filled('variantes')) {
-        foreach ($request->variantes as $variante) {
-            if (!empty($variante['tipo'])) {
-                $producto->variantes()->create([
-                    'tipo' => $variante['tipo'],
-                    'precio' => $variante['precio'],
-                    'stock' => $variante['stock'] ?? 0,
-                    'estado' => $producto->estado,
-                ]);
-            }
+    // Crear las variantes nuevas
+if ($request->filled('variantes')) {
+    foreach ($request->variantes as $variante) {
+        if (!empty($variante['tipo'])) {
+            $producto->variantes()->create([
+                'tipo' => $variante['tipo'],
+                'precio' => $variante['precio'],
+                'stock' => $variante['stock'] ?? 0,
+                'stock_inicial' => $variante['stock'] ?? 0,
+                'vendidos_dia' => 0,
+                'fecha_actualizacion_stock' => now()->toDateString(),
+                'estado' => $producto->estado,
+            ]);
         }
     }
+}
 
-    // 🧾 Log
+    // Log
     $this->logAction(
         "Se actualizó el producto '{$producto->nombre}' (ID: {$producto->idProducto})",
         'Productos',

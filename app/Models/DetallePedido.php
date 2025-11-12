@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class DetallePedido extends Model
 {
-     use HasFactory;
+    use HasFactory;
     protected $table = 'DetallePedido';
     protected $primaryKey = 'idDetallePedido';
     public $timestamps = false;
@@ -15,6 +15,7 @@ class DetallePedido extends Model
     protected $fillable = [
         'idPedido',
         'idProducto',
+        'variante_id',
         'cantidad',
         'subtotal'
     ];
@@ -23,8 +24,13 @@ class DetallePedido extends Model
     {
         return $this->belongsTo(Producto::class, 'idProducto', 'idProducto');
     }
-     public function pedido()
+    public function pedido()
     {
         return $this->belongsTo(Pedido::class, 'idPedido', 'idPedido');
+    }
+
+    public function variante()
+    {
+        return $this->belongsTo(ProductoVariante::class, 'variante_id', 'idVariante'); // 👈 relación correcta
     }
 }

@@ -50,29 +50,48 @@
 
                 <hr class="my-2 border-dashed border-gray-400">
 
-               <div class="space-y-1 text-[10px]">
-    <div>Fecha: {{ $pedido->fechaCreacion->format('d M Y') }}</div>
-    <div>Hora: {{ $pedido->fechaCreacion->format('H:i:s') }}</div>
-    {{-- Mostramos número diario si existe, sino ID --}}
-    <div>Orden #: {{ $pedido->numero_diario ?? str_pad($pedido->idPedido, 3, '0', STR_PAD_LEFT) }}</div>
-    <div>Mesa: {{ $pedido->mesa ?? '---' }}</div>
-    <div>Atendido por: {{ $pedido->usuario->nombre ?? '---' }}</div>
-    {{-- Comentario opcional --}}
-    @if($pedido->comentarios)
-        <div>Comentario: {{ $pedido->comentarios }}</div>
-    @endif
-</div>
+                <div class="space-y-1 text-[10px]">
+                    <div>Fecha: {{ $pedido->fechaCreacion->format('d M Y') }}</div>
+                    <div>Hora: {{ $pedido->fechaCreacion->format('H:i:s') }}</div>
+                    {{-- Mostramos número diario si existe, sino ID --}}
+                    <div>Orden #: {{ $pedido->numero_diario ?? str_pad($pedido->idPedido, 3, '0', STR_PAD_LEFT) }}</div>
+                    <div>Mesa: {{ $pedido->mesa ?? '---' }}</div>
+                    <div>Atendido por: {{ $pedido->usuario->nombre ?? '---' }}</div>
+                    {{-- Comentario opcional --}}
+                    @if ($pedido->comentarios)
+                        <div>Comentario: {{ $pedido->comentarios }}</div>
+                    @endif
+                </div>
 
 
                 <hr class="my-2 border-dashed border-gray-400">
 
                 <div class="space-y-1 text-[10px]">
                     @foreach ($pedido->detalles as $detalle)
+                        @php
+                            $variante = $detalle->producto->variantes->firstWhere(
+                                'idVariante',
+                                $detalle->variante_id ?? null,
+                            );
+                        @endphp
+
                         <div class="flex justify-between">
-                            <span>{{ $detalle->cantidad }} x {{ $detalle->producto->nombre }}</span>
+                            <span>
+                                {{ $detalle->cantidad }} x {{ $detalle->producto->nombre }}
+                                @if ($variante)
+                                    <span class="ml-1 text-[9px] font-medium">
+                                        ({{ ucfirst($variante->tipo) }})
+                                    </span>
+                                @endif
+                            </span>
                             <span>Bs. {{ number_format($detalle->subtotal, 2) }}</span>
                         </div>
+
+                        @if ($detalle->comentarios)
+                            <div class="ml-2 text-[9px] text-gray-500 italic">({{ $detalle->comentarios }})</div>
+                        @endif
                     @endforeach
+
                 </div>
 
                 <hr class="my-2 border-dashed border-gray-400">

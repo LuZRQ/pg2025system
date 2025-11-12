@@ -20,6 +20,7 @@ use App\Exports\AltaRotacionExport;
 use App\Exports\BajaVentaExport;
 use App\Exports\CierreCajaExport;
 use App\Exports\HistoricoCajaMensualExport;
+use App\Models\CategoriaProducto;
 use App\Models\CierreCaja;
 use Illuminate\Support\Facades\Auth;
 use App\Traits\Auditable;
@@ -847,4 +848,79 @@ class ReporteController extends Controller
         );
         return response()->download($ruta);
     }
+
+public function inventario(Request $request)
+{
+    $desde = null;
+    $hasta = null;
+
+    // 🔹 RANGO PREDEFINIDO
+    if ($request->filled('fecha_predefinida')) {
+        switch ($request->fecha_predefinida) {
+            case 'hoy':
+                $desde = now()->startOfDay();
+                $hasta = now()->endOfDay();
+                break;
+            case 'semana':
+                $desde = now()->startOfWeek();
+                $hasta = now()->endOfWeek();
+                break;
+            case 'mes':
+                $desde = now()->startOfMonth();
+                $hasta = now()->endOfMonth();
+                break;
+            case 'anio':
+                $desde = now()->startOfYear();
+                $hasta = now()->endOfYear();
+                break;
+        }
+    }
+
+    // 🔹 RANGO PERSONALIZADO
+    if ($request->filled('desde')) $desde = Carbon::parse($request->desde)->startOfDay();
+    if ($request->filled('hasta')) $hasta = Carbon::parse($request->hasta)->endOfDay();
+
+    // 🔹 Consulta base con relaciones
+    $query = Producto::with(['categoria', 'variantes']);
+
+    if ($request->filled('categoria')) {
+        $query->where('categoriaId', $request->categoria);
+    }
+
+    $productos = $query->get()->map(function ($producto) {
+
+        // ✅ Producto sin variantes
+        $producto->stockInicial = $producto->stock;       // Stock real inicial
+$producto->restante     = $producto->stock_inicial; // Lo que queda
+$producto->vendidos     = $producto->stockInicial - $producto->restante;
+
+        // ✅ Variantes
+        foreach ($producto->variantes as $variante) {
+           $variante->stockInicial = $variante->stock_inicial; // Stock inicial de variante
+$variante->restante     = $variante->stock;         // Stock restante
+$variante->vendidos     = $variante->stockInicial - $variante->restante;
+
+        }
+
+        return $producto;
+    });
+
+    // ===== KPIs =====
+    $ventasQuery = Venta::query();
+    if ($desde && $hasta)
+        $ventasQuery->whereBetween('fechaPago', [$desde, $hasta]);
+
+    $totalVentas = $ventasQuery->sum('montoTotal');
+    $productoTop = $productos->sortByDesc('vendidos')->first();
+    $productosCriticos = $productos->filter(fn($p) => $p->restante <= 5)->count();
+
+    $categorias = CategoriaProducto::all();
+
+    return view('admin.reportes.inventario', compact(
+        'productos', 'categorias', 'totalVentas', 'productoTop', 'productosCriticos'
+    ))->with('title', 'Dashboard de Inventario Histórico');
+}
+
+
+
 }

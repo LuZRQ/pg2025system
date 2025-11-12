@@ -35,7 +35,6 @@ public function index(Request $request)
     $buscar = $request->get('buscar');
 
     // 🔹 Base query para productos activos
-    // 🔹 Base query para productos activos
 $query = Producto::activos()
     ->with([
         'categoria',
@@ -130,6 +129,7 @@ public function enviarACocina(Request $request)
     foreach ($productos as $producto) {
         $pedido->detalles()->create([
             'idProducto' => $producto['idProducto'],
+             'variante_id' => $producto['idVariante'] ?? null,
             'cantidad'   => $producto['cantidad'],
             'subtotal'   => $producto['cantidad'] * $producto['precio'],
         ]);
