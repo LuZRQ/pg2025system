@@ -65,7 +65,18 @@
 
 
                 <hr class="my-2 border-dashed border-gray-400">
+@php
+    $tieneNuevos = $pedido->detalles->contains('es_nuevo', 1);
+@endphp
 
+@if($tieneNuevos)
+    <div class="my-2 text-[10px] bg-yellow-100 border-l-4 border-yellow-600 px-2 py-1 font-semibold text-yellow-800">
+        ⚠️ ACTUALIZACIÓN DEL PEDIDO
+        <div class="text-[9px] font-normal text-yellow-700">
+            Se añadieron productos adicionales a esta orden.
+        </div>
+    </div>
+@endif
                 <div class="space-y-1 text-[10px]">
                     @foreach ($pedido->detalles as $detalle)
                         @php

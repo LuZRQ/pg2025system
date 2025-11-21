@@ -20,21 +20,43 @@
                 <thead class="bg-amber-600 text-white">
                     <tr>
                         <th class="px-4 py-2">Producto</th>
+                        <th class="px-4 py-2">Variante</th>
                         <th class="px-4 py-2">Cantidad</th>
                         <th class="px-4 py-2">Precio</th>
                         <th class="px-4 py-2">Subtotal</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach ($venta->pedido->detalles as $detalle)
-                        <tr class="border-b">
-                            <td class="px-4 py-2">{{ $detalle->producto->nombre }}</td>
-                            <td class="px-4 py-2">{{ $detalle->cantidad }}</td>
-                            <td class="px-4 py-2">Bs {{ number_format($detalle->precio, 2) }}</td>
-                            <td class="px-4 py-2">Bs {{ number_format($detalle->cantidad * $detalle->precio, 2) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
+           <tbody>
+@foreach ($venta->pedido->detalles as $detalle)
+    <tr class="border-b">
+
+        {{-- NOMBRE PRODUCTO --}}
+        <td class="px-4 py-2">{{ $detalle->producto->nombre }}</td>
+
+        {{-- VARIANTE --}}
+       <td class="px-4 py-2">
+    {{ $detalle->variante ? $detalle->variante->tipo : 'Sin variante' }}
+</td>
+
+
+        {{-- CANTIDAD --}}
+        <td class="px-4 py-2">{{ $detalle->cantidad }}</td>
+
+        {{-- PRECIO UNITARIO (REAL) --}}
+        <td class="px-4 py-2">
+            Bs {{ number_format($detalle->subtotal / $detalle->cantidad, 2) }}
+        </td>
+
+        {{-- SUBTOTAL --}}
+        <td class="px-4 py-2">
+            Bs {{ number_format($detalle->subtotal, 2) }}
+        </td>
+
+    </tr>
+@endforeach
+</tbody>
+
+
             </table>
 
             <div class="mt-6 flex justify-between">

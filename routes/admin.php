@@ -60,7 +60,13 @@ Route::middleware(['auth', 'verificarRol:Gestión de Ventas'])->group(function (
 
         // Eliminar venta
         Route::delete('/eliminar/{idVenta}', [VentaController::class, 'destroy'])->name('destroy');
-// Enviar pedidos a cocina
+// Descargar PDF del historial filtrado
+Route::get('/historial/pdf', [VentaController::class, 'historialPDF'])
+    ->name('historial.pdf');
+
+
+
+        // Enviar pedidos a cocina
 Route::post('/enviarACocina', [VentaController::class, 'enviarACocina'])
     ->name('enviarACocina');
 
@@ -73,6 +79,10 @@ Route::get('/pedido/reimprimir-ultimo', [VentaController::class, 'reimprimirUlti
 // Pedidos del mesero
 Route::get('/pedidos-mesero', [PedidoController::class, 'pedidosMesero'])
     ->name('pedidos.mesero');
+
+Route::post('/agregar-productos/{pedido}', [VentaController::class, 'agregarNuevosProductos'])
+    ->name('agregar.productos');
+
 
 // Cancelar pedido (del mesero)
 // Cancelar pedido (del mesero)

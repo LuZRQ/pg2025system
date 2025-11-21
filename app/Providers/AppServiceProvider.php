@@ -26,9 +26,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Forzar HTTPS en producción (como en ngrok)
-       if (config('app.env') === 'production') {
-            URL::forceScheme('https');
-       }
+   //  if (config('app.env') === 'production') {
+       //    URL::forceScheme('https');
+     //  }
 
         //Limitar intentos de login
         RateLimiter::for('login', function (Request $request) {

@@ -1,6 +1,6 @@
 {{-- resources/views/admin/ventas/edit.blade.php --}}
 @php
-    $backRoute = route('ventas.historial'); 
+    $backRoute = route('ventas.show',['idVenta' => $venta->idVenta]); 
     $title = 'Editar ventas'; 
 @endphp
 @extends('layouts.crud')
@@ -37,7 +37,7 @@
             </div>
 
             <div class="flex justify-end space-x-2">
-                <a href="{{ route('ventas.historial') }}"
+               <a href="{{ route('ventas.show', ['idVenta' => $venta->idVenta]) }}"
                    class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg shadow">Cancelar</a>
                 <button type="submit"
                         class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow">Guardar Cambios</button>
