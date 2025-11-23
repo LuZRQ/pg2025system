@@ -116,6 +116,9 @@ Route::middleware(['auth', 'verificarRol:Pedidos de Cocina,Gestión de Productos
     // Pedidos de cocina
     Route::get('/cocina/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
     Route::post('/cocina/pedidos/{pedido}/estado', [PedidoController::class, 'cambiarEstado'])->name('pedidos.cambiarEstado');
+    Route::post('/cocina/detalle/{detalle}/estado', [PedidoController::class, 'cambiarEstadoDetalle'])
+    ->name('detalle.cambiarEstado');
+
     Route::get('/cocina/pedidos/{pedido}', [PedidoController::class, 'mostrar'])->name('pedidos.mostrar');
     Route::get('/cocina/pedidos/listos', [PedidoController::class, 'listos'])->name('pedidos.listos');
 

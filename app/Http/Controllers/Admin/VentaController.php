@@ -27,74 +27,77 @@ class VentaController extends Controller
 {
     use Auditable;
 
-    public function index(Request $request)
-    {
-        // 🔹 Obtener todas las categorías activas
-        $categorias = CategoriaProducto::orderBy('nombreCategoria')->get();
+   public function index(Request $request)
+{
+    // 🔹 Obtener todas las categorías activas
+    $categorias = CategoriaProducto::orderBy('nombreCategoria')->get();
 
-        // 🔹 Filtros desde la vista
-        $categoriaId = $request->get('categoria');
-        $buscar = $request->get('buscar');
+    // 🔹 Filtros desde la vista
+    $categoriaId = $request->get('categoria');
+    $buscar = $request->get('buscar');
 
-        // 🔹 Base query para productos activos
-        $query = Producto::activos()
-            ->with([
-                'categoria',
-                'variantes' => function ($q) {
-                    $q->activas(); // usa el scope que ya tienes en tu modelo
-                }
-            ]);
+    // 🔹 Base query para productos activos (listado principal)
+    $query = Producto::activos()
+        ->with([
+            'categoria',
+            'variantes' => function ($q) {
+                $q->activas();
+            }
+        ]);
 
-        if ($categoriaId && $categoriaId !== 'all') {
-            $query->where('categoriaId', $categoriaId);
-        }
-
-        if ($buscar) {
-            $query->where('nombre', 'like', "%{$buscar}%");
-        }
-
-        // 🔹 Paginación de productos (12 por página)
-        $productos = $query->orderBy('nombre')->paginate(12);
-
-        // 🔹 Ventas y pedidos listos (mantiene tu lógica)
-        $ventas = Venta::with('pedido.usuario', 'pedido.detalles.producto')->get();
-
-        $pedidos = Pedido::where('estado', 'listo')
-            ->doesntHave('venta')
-            ->with('detalles.producto')
-            ->get();
-
-        // 🔹 Pedidos actuales y listos del mesero logueado
-        $usuario = Auth::user();
-        $pedidosActuales = Pedido::with(['detalles.producto'])
-            ->where('ciUsuario', $usuario->ciUsuario)
-            ->whereNotIn('estado', ['cancelado', 'listo'])
-            ->orderBy('fechaCreacion', 'desc')
-            ->get();
-
-        $pedidosListos = Pedido::with(['detalles.producto'])
-            ->where('ciUsuario', $usuario->ciUsuario)
-            ->where('estado', 'listo')
-            ->whereDate('fechaCreacion', now()->toDateString())
-            ->get();
-
-
-
-        // 🔹 Retornar vista con todos los datos
-        return view('admin.ventas.index', compact(
-            'categorias',
-            'productos',
-            'ventas',
-            'pedidos',
-            'pedidosActuales',
-            'pedidosListos'
-        ))
-            ->with('title', 'Gestión de Ventas')
-            ->with([
-                'categoriaSeleccionada' => $categoriaId,
-                'busqueda' => $buscar,
-            ]);
+    if ($categoriaId && $categoriaId !== 'all') {
+        $query->where('categoriaId', $categoriaId);
     }
+
+    if ($buscar) {
+        $query->where('nombre', 'like', "%{$buscar}%");
+    }
+
+    // 🔹 Paginación de productos (12 por página)
+    $productos = $query->orderBy('nombre')->paginate(12);
+
+    // 🔹 Productos para el modal: TODOS, sin filtro
+    $productosModal = Producto::activos()
+        ->with(['categoria', 'variantes' => fn($q) => $q->activas()])
+        ->orderBy('nombre')
+        ->get();
+
+    // 🔹 Ventas y pedidos listos
+    $ventas = Venta::with('pedido.usuario', 'pedido.detalles.producto')->get();
+
+    $pedidos = Pedido::where('estado', 'listo')
+        ->doesntHave('venta')
+        ->with('detalles.producto')
+        ->get();
+
+    $usuario = Auth::user();
+    $pedidosActuales = Pedido::with(['detalles.producto'])
+        ->where('ciUsuario', $usuario->ciUsuario)
+        ->whereNotIn('estado', ['cancelado', 'listo'])
+        ->orderBy('fechaCreacion', 'desc')
+        ->get();
+
+    $pedidosListos = Pedido::with(['detalles.producto'])
+        ->where('ciUsuario', $usuario->ciUsuario)
+        ->where('estado', 'listo')
+        ->whereDate('fechaCreacion', now()->toDateString())
+        ->get();
+
+    return view('admin.ventas.index', compact(
+        'categorias',
+        'productos',
+        'productosModal',
+        'ventas',
+        'pedidos',
+        'pedidosActuales',
+        'pedidosListos'
+    ))
+        ->with('title', 'Gestión de Ventas')
+        ->with([
+            'categoriaSeleccionada' => $categoriaId,
+            'busqueda' => $buscar,
+        ]);
+}
 
 
     public function enviarACocina(Request $request)
@@ -378,20 +381,32 @@ public function historialPDF(Request $request)
 
 public function agregarNuevosProductos(Request $request, $pedidoId)
 {
-    // 🔹 Obtener el pedido y sus detalles
+    // 1️⃣ Obtener el pedido con sus detalles
     $pedido = Pedido::with('detalles')->findOrFail($pedidoId);
 
     $productos = $request->input('productos', []);
+    $comentarioNuevo = $request->input('comentario', null); // viene del modal
 
     if (empty($productos)) {
         return back()->with('error', 'No se enviaron productos.');
     }
 
-    $detallesNuevos = [];
+    // 2️⃣ Actualizar comentario del pedido principal si se puso uno en el modal
+    if ($comentarioNuevo) {
+        $pedido->comentarios = $comentarioNuevo;
+        $pedido->save();
+    }
 
-    // -----------------------------
-    // 1. Crear SOLO los detalles nuevos con estado 'pendiente'
-    // -----------------------------
+    // 3️⃣ Asegurar que todos los productos anteriores queden como "listo"
+    foreach ($pedido->detalles as $detalle) {
+        if ($detalle->estado !== 'listo') {
+            $detalle->estado = 'listo';
+            $detalle->es_nuevo = 0;
+            $detalle->save();
+        }
+    }
+
+    // 4️⃣ Crear los productos nuevos con estado "pendiente" y comentario del modal
     foreach ($productos as $item) {
         $idProducto = $item['idProducto'] ?? null;
         $cantidad   = (int) ($item['cantidad'] ?? 1);
@@ -400,38 +415,29 @@ public function agregarNuevosProductos(Request $request, $pedidoId)
 
         if (!$idProducto || $cantidad < 1) continue;
 
-        $detalle = DetallePedido::create([
+        DetallePedido::create([
             'idPedido'    => $pedido->idPedido,
             'idProducto'  => $idProducto,
             'variante_id' => $varianteId,
             'cantidad'    => $cantidad,
             'subtotal'    => $precio * $cantidad,
-            'es_nuevo'    => 1,           // marca que es agregado luego
-            'estado'      => 'pendiente', // el detalle nuevo debe ir a cocina
+            'estado'      => 'pendiente', // se envía a cocina
+            'es_nuevo'    => 1,
+            'comentarios' => $comentarioNuevo,
         ]);
-
-        $detallesNuevos[] = $detalle;
     }
 
-    // -----------------------------
-    // 2. Actualizar estado general del pedido
-    // -----------------------------
-    // Si existe al menos un detalle pendiente, el pedido pasa a 'pendiente'
-    $pedido->estado = $pedido->detalles()->where('estado', 'pendiente')->exists() ? 'pendiente' : 'listo';
-    $pedido->save();
+    // 5️⃣ EL ESTADO DEL PEDIDO NO SE CAMBIA NUNCA
+    //    ✔ Lo dejamos tal como estaba
 
-    // -----------------------------
-    // 3. Guardar en sesión por si se necesita reimprimir o destacar en vista
-    // -----------------------------
+    // 6️⃣ Guardar en sesión por si se quiere reimprimir
     session(['pedido_con_nuevos' => $pedido->idPedido]);
 
-    // -----------------------------
-    // 4. Redirigir al mismo pedido principal
-    // -----------------------------
     return redirect()
         ->route('ventas.pedido.recibo', ['idPedido' => $pedido->idPedido])
-        ->with('exito', 'Productos agregados al pedido y enviados a cocina.');
+        ->with('exito', 'Productos agregados y enviados a cocina.');
 }
+
 
 
 

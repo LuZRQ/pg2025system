@@ -53,56 +53,53 @@
                 <div class="space-y-1 text-[10px]">
                     <div>Fecha: {{ $pedido->fechaCreacion->format('d M Y') }}</div>
                     <div>Hora: {{ $pedido->fechaCreacion->format('H:i:s') }}</div>
-                    {{-- Mostramos número diario si existe, sino ID --}}
                     <div>Orden #: {{ $pedido->numero_diario ?? str_pad($pedido->idPedido, 3, '0', STR_PAD_LEFT) }}</div>
                     <div>Mesa: {{ $pedido->mesa ?? '---' }}</div>
                     <div>Atendido por: {{ $pedido->usuario->nombre ?? '---' }}</div>
-                    {{-- Comentario opcional --}}
-                    @if ($pedido->comentarios)
+
+                    {{-- Comentario principal solo si no hay comentarios individuales en productos nuevos --}}
+                    @php
+                        $detallesNuevos = $pedido->detalles->where('es_nuevo', 1);
+                        $tieneNuevos = $detallesNuevos->count() > 0;
+                    @endphp
+
+                    @if (!$tieneNuevos && $pedido->comentarios)
                         <div>Comentario: {{ $pedido->comentarios }}</div>
                     @endif
                 </div>
 
-
                 <hr class="my-2 border-dashed border-gray-400">
-@php
-    $tieneNuevos = $pedido->detalles->contains('es_nuevo', 1);
-@endphp
 
-@if($tieneNuevos)
-    <div class="my-2 text-[10px] bg-yellow-100 border-l-4 border-yellow-600 px-2 py-1 font-semibold text-yellow-800">
-        ⚠️ ACTUALIZACIÓN DEL PEDIDO
-        <div class="text-[9px] font-normal text-yellow-700">
-            Se añadieron productos adicionales a esta orden.
-        </div>
-    </div>
-@endif
+                @if ($tieneNuevos)
+                    <div class="my-2 text-[10px] bg-gray-100 border-l-4 border-r-4 border-gray-400 px-2 py-1 rounded font-semibold text-gray-800">
+                        Se añadieron productos adicionales a esta orden.
+                    </div>
+                @endif
+
                 <div class="space-y-1 text-[10px]">
                     @foreach ($pedido->detalles as $detalle)
                         @php
-                            $variante = $detalle->producto->variantes->firstWhere(
-                                'idVariante',
-                                $detalle->variante_id ?? null,
-                            );
+                            $variante = $detalle->producto->variantes->firstWhere('idVariante', $detalle->variante_id ?? null);
                         @endphp
 
-                        <div class="flex justify-between">
+                        <div class="flex justify-between {{ $detalle->es_nuevo ? 'bg-yellow-50 border-l-4 border-yellow-500' : '' }} rounded p-1">
                             <span>
                                 {{ $detalle->cantidad }} x {{ $detalle->producto->nombre }}
                                 @if ($variante)
-                                    <span class="ml-1 text-[9px] font-medium">
-                                        ({{ ucfirst($variante->tipo) }})
-                                    </span>
+                                    <span class="ml-1 text-[9px] font-medium">({{ ucfirst($variante->tipo) }})</span>
+                                @endif
+                                @if ($detalle->es_nuevo)
+                                    <span class="text-[8px] text-yellow-800 font-semibold">(Nuevo)</span>
                                 @endif
                             </span>
                             <span>Bs. {{ number_format($detalle->subtotal, 2) }}</span>
                         </div>
 
+                        {{-- Comentario individual por detalle, si existe --}}
                         @if ($detalle->comentarios)
-                            <div class="ml-2 text-[9px] text-gray-500 italic">({{ $detalle->comentarios }})</div>
+                            <div class="ml-2 text-[9px] text-gray-500 italic">Comentario: {{ $detalle->comentarios }}</div>
                         @endif
                     @endforeach
-
                 </div>
 
                 <hr class="my-2 border-dashed border-gray-400">
@@ -112,7 +109,8 @@
                         <span>Total</span>
                         <span>Bs. {{ number_format($pedido->total, 2) }}</span>
                     </div>
-                    <div>Estado de pago: {{ ucfirst($pedido->estado) }}</div>
+                  <div>Estado de pago: Pendiente</div>
+
                 </div>
 
                 <hr class="my-2 border-dashed border-gray-400">
@@ -122,6 +120,7 @@
                     <div class="italic text-[8px]">“El café sabe mejor con una sonrisa”</div>
                     <div class="text-sm">♥ ☕ ♥</div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -129,19 +128,9 @@
     @push('scripts')
         <style>
             @media print {
-                @page {
-                    margin: 0;
-                }
-
-                body {
-                    margin: 0;
-                }
-
-                #ticket {
-                    float: left;
-                    max-width: 5cm;
-                    padding: 0.5cm;
-                }
+                @page { margin: 0; }
+                body { margin: 0; }
+                #ticket { float: left; max-width: 5cm; padding: 0.5cm; }
             }
         </style>
 
@@ -151,12 +140,10 @@
             const ticketWidthInput = document.getElementById('ticketWidth');
             const ticketWidthValue = document.getElementById('ticketWidthValue');
 
-
             ticketWidthInput.addEventListener('input', () => {
                 ticket.style.maxWidth = `${ticketWidthInput.value}cm`;
                 ticketWidthValue.textContent = ticketWidthInput.value;
             });
-
 
             btnPrint.addEventListener('click', () => {
                 const ticketContent = ticket.outerHTML;
@@ -167,38 +154,19 @@
 
                 const printWindow = window.open('', '', `width=${widthPx},height=${heightPx},top=${top},left=${left}`);
                 printWindow.document.write(`
-        <html>
-            <head>
-                <title>Recibo</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        font-size: 12px;
-                        margin: 0;
-                        padding: 0;
-                        text-align: left;
-                    }
-                    #ticket {
-                        max-width: ${ticketWidthInput.value}cm;
-                        line-height: 1.3;
-                        font-family: monospace;
-                        margin: 0;
-                        padding: 0.5cm;
-                    }
-                    #ticket img {
-                        max-width: 100%;
-                        height: auto;
-                        display: block;
-                        margin: 0 0 0.2cm 0;
-                    }
-                    @page { margin: 0; } /* eliminar encabezado/pie navegador */
-                </style>
-            </head>
-            <body>
-                ${ticketContent}
-            </body>
-        </html>
-    `);
+                    <html>
+                        <head>
+                            <title>Recibo</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; font-size: 12px; margin:0; padding:0; text-align:left; }
+                                #ticket { max-width: ${ticketWidthInput.value}cm; line-height:1.3; font-family: monospace; margin:0; padding:0.5cm; }
+                                #ticket img { max-width:100%; height:auto; display:block; margin:0 0 0.2cm 0; }
+                                @page { margin:0; }
+                            </style>
+                        </head>
+                        <body>${ticketContent}</body>
+                    </html>
+                `);
                 printWindow.document.close();
                 printWindow.focus();
                 printWindow.print();

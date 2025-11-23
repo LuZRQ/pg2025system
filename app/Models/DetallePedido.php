@@ -17,7 +17,13 @@ class DetallePedido extends Model
         'idProducto',
         'variante_id',
         'cantidad',
-        'subtotal'
+        'subtotal',
+        'estado',
+        'es_nuevo',
+         'comentarios', 
+    ];
+    protected $casts = [
+        'es_nuevo' => 'boolean',
     ];
 
     public function producto()

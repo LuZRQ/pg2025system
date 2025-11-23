@@ -4,8 +4,20 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Título y SEO -->
+    <title>@yield('title', 'Garabato Café - Cafetería 2D, Menú y Experiencia Única')</title>
+    <meta name="description" content="Visita Garabato Café, una cafetería en 2D con ambiente único. Descubre nuestro menú, conoce nuestra historia, horarios, ubicación y comparte tu experiencia con nosotros.">
+    <meta name="robots" content="index, follow">
 
-    <title>@yield('title', 'Garabato Café')</title>
+<!-- Open Graph para redes y Google -->
+<meta property="og:title" content="Garabato Café - Cafetería 2D, Menú y Experiencia Única">
+<meta property="og:description" content="Visita Garabato Café, una cafetería en 2D con ambiente único. Descubre nuestro menú, conoce nuestra historia, horarios, ubicación y comparte tu experiencia.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ url()->current() }}">
+<meta property="og:image" content="{{ asset('img/fondo6.png') }}">
+<meta property="og:image:alt" content="Garabato Café, interior en 2D con ambiente único">
+<meta property="og:site_name" content="Garabato Café">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
